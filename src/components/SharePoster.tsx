@@ -171,7 +171,7 @@ export function SharePoster({ storyTitle, story, date, onClose }: SharePosterPro
     ctx.lineTo(360, 310)
     ctx.stroke()
 
-    // Story text (first 300 chars)
+    // Story text (preview - first 300 chars)
     const storyPreview = story.slice(0, 300) + (story.length > 300 ? '...' : '')
     ctx.fillStyle = '#E8E8E8'
     ctx.font = '28px "DM Sans", -apple-system, sans-serif'

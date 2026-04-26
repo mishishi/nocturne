@@ -108,7 +108,7 @@ export function Story() {
   }, [status, story, navigate])
 
   const handleShareToWeChat = async () => {
-    const shareText = `「${storyTitle}」\n\n${story?.slice(0, 200)}...`
+    const shareText = `「${storyTitle}」\n\n${story}`
 
     if (navigator.share) {
       try {
