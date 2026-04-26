@@ -131,6 +131,15 @@ export function Questions() {
   // Ceremonial loading for story generation
   const isGeneratingStory = loading && isLastQuestion
 
+  // AI persona context based on question type
+  const getAIContext = () => {
+    if (isLastQuestion) return '最后一个问题咯'
+    if (currentQuestionIndex === 0) return '想更好地了解你的梦'
+    return '继续说说看'
+  }
+
+  const aiContext = getAIContext()
+
   return (
     <div className={styles.page}>
       {isGeneratingStory && (
@@ -213,10 +222,31 @@ export function Questions() {
           </span>
         </div>
 
-        {/* Question Card */}
-        <div className={styles.questionCard}>
-          <p className={styles.questionNumber}>追问 {currentQuestionIndex + 1}</p>
-          <h2 className={styles.questionText}>{currentQuestion}</h2>
+        {/* Chat-style Question Bubble */}
+        <div className={styles.chatContainer}>
+          <div className={styles.chatBubble}>
+            <div className={styles.aiHeader}>
+              <div className={styles.aiAvatar}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              </div>
+              <div className={styles.aiInfo}>
+                <span className={styles.aiLabel}>梦境伙伴</span>
+                <span className={styles.aiContext}>{aiContext}</span>
+              </div>
+            </div>
+            <div className={styles.questionContent}>
+              <p className={styles.questionTag}>追问 {currentQuestionIndex + 1}</p>
+              <h2 className={styles.questionText}>{currentQuestion}</h2>
+            </div>
+            <div className={styles.questionHint}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 8v4M12 16h.01" />
+              </svg>
+              说说看，越详细越好
+            </div>
+          </div>
         </div>
 
         {/* Previous Answers */}
@@ -249,7 +279,7 @@ export function Questions() {
               setCurrentAnswer(e.target.value)
               setError('')
             }}
-            placeholder="描述你记得的细节..."
+            placeholder="在这里写下你的回答……"
             className={styles.textarea}
             error={error}
             autoFocus={!isGeneratingStory}
