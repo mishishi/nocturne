@@ -1,0 +1,19 @@
+{
+  "name": "yeelin-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.0",
+    "fastify": "^4.26.0",
+    "@fastify/cors": "^9.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.10.0"
+  }
+}

@@ -1,0 +1,22 @@
+.card {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 58, 92, 0.6) 0%,
+    rgba(26, 47, 74, 0.4) 100%
+  );
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s var(--ease-dream);
+}
+
+.hoverable {
+  cursor: pointer;
+}
+
+.hoverable:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}

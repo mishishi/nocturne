@@ -1,0 +1,134 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-silver);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: var(--space-5);
+  background: rgba(26, 58, 92, 0.4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-moonlight);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.7;
+  resize: vertical;
+  transition: all 0.3s var(--ease-dream);
+}
+
+.textarea::placeholder {
+  color: rgba(139, 157, 195, 0.5);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-golden);
+  box-shadow: 0 0 0 3px rgba(244, 211, 94, 0.1);
+  background: rgba(26, 58, 92, 0.6);
+}
+
+.textarea.error {
+  border-color: var(--color-error);
+}
+
+.textarea.error:focus {
+  box-shadow: 0 0 0 3px var(--color-error-bg);
+}
+
+.textarea.shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); opacity: 0.8; }
+  20%, 40%, 60%, 80% { transform: translateX(3px); opacity: 0.9; }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .textarea.shake {
+    animation: none;
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 3px var(--color-error-bg);
+  }
+}
+
+.errorText {
+  font-size: 0.875rem;
+  color: var(--color-error);
+  margin-top: var(--space-1);
+}
+
+.countWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.charCount {
+  font-size: 0.8125rem;
+  color: var(--color-silver);
+  opacity: 0.6;
+  text-align: right;
+  margin-left: auto;
+}
+
+.countWithError {
+  margin-left: 0;
+}
+
+.charCount {
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.countNear {
+  color: var(--color-golden);
+  opacity: 1;
+}
+
+.countWarning {
+  color: #f59e0b;
+  opacity: 1;
+  font-weight: 500;
+}
+
+.countDanger {
+  color: var(--color-error);
+  opacity: 1;
+  font-weight: 600;
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@media (max-width: 640px) {
+  .textarea {
+    min-height: 160px;
+    padding: var(--space-4);
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .textarea {
+    min-height: 140px;
+    padding: var(--space-3);
+    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+  }
+}

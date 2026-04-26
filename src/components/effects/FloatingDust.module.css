@@ -1,0 +1,40 @@
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.dust {
+  position: absolute;
+  background: radial-gradient(circle, rgba(244, 211, 94, 0.6) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: floatDust linear infinite;
+  will-change: transform;
+}
+
+/* Slow floating dust with drift */
+@keyframes floatDust {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(var(--drift-x), var(--drift-y)) scale(1.2);
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(calc(var(--drift-x) * 2), calc(var(--drift-y) * 2)) scale(1);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,471 @@
+/* ============================================
+   夜棂 Yeelin - Global Styles & Design Tokens
+   ============================================ */
+
+/* CSS Variables */
+:root {
+  /* ==========================================
+     DESIGN TOKENS
+     ========================================== */
+
+  /* Colors - Brand */
+  --color-night-deep: #0D1B2A;
+  --color-night-surface: #1A3A5C;
+  --color-night-mid: #1A2F4A;
+  --color-golden: #F4D35E;
+  --color-golden-bright: #FFD666;
+  --color-moonlight: #E8E8E8;
+  --color-silver: #A8B5C9;
+  --color-silver-dim: #7A8BA5;
+
+  /* Colors - Semantic */
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(239, 68, 68, 0.3);
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.1);
+  --color-focus-ring: rgba(244, 211, 94, 0.5);
+
+  /* Colors - Surface & Border */
+  --color-border: rgba(139, 157, 195, 0.15);
+  --color-border-subtle: rgba(139, 157, 195, 0.08);
+  --color-border-light: rgba(139, 157, 195, 0.12);
+  --color-border-hover: rgba(139, 157, 195, 0.3);
+  --color-border-strong: rgba(139, 157, 195, 0.35);
+  --color-surface: rgba(26, 58, 92, 0.4);
+  --color-surface-hover: rgba(26, 58, 92, 0.6);
+  --color-surface-light: rgba(139, 157, 195, 0.1);
+  --color-surface-medium: rgba(139, 157, 195, 0.15);
+  --color-overlay: rgba(13, 27, 42, 0.95);
+
+  /* Typography */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+
+  /* Font Sizes - Base (Medium) */
+  --text-xs: 0.6875rem;   /* 11px */
+  --text-sm: 0.75rem;     /* 12px */
+  --text-base: 0.875rem;  /* 14px */
+  --text-md: 0.9375rem;   /* 15px */
+  --text-lg: 1rem;        /* 16px */
+  --text-xl: 1.125rem;    /* 18px */
+  --text-2xl: 1.25rem;    /* 20px */
+  --text-3xl: 1.5rem;     /* 24px */
+  --text-4xl: 1.875rem;   /* 30px */
+  --text-5xl: 2.25rem;    /* 36px */
+
+  /* Font Size Scale (user preference) */
+  --font-scale: 1;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+
+  /* Spacing */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --ease-dream: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+
+  /* Shadows */
+  --shadow-glow: 0 0 30px rgba(244, 211, 94, 0.3);
+  --shadow-glow-strong: 0 0 60px rgba(244, 211, 94, 0.5);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+  /* Z-Index Scale */
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-tooltip: 60;
+
+  /* Touch Target */
+  --touch-target-min: 44px;
+}
+
+/* Font Size Variations */
+html[data-font-size="small"] {
+  font-size: 14px;
+}
+
+html[data-font-size="large"] {
+  font-size: 18px;
+}
+
+/* ==========================================
+   THEME: Aurora
+   ========================================== */
+[data-theme="aurora"] {
+  /* Aurora color overrides */
+  --color-night-deep: #0A1A1F;
+  --color-night-surface: #0F3545;
+  --color-night-mid: #1A4A4A;
+  --color-golden: #64D8CB;
+  --color-golden-bright: #8EEEE6;
+  --color-moonlight: #E0F4F1;
+  --color-silver: #8ECDC8;
+  --color-silver-dim: #5BBFB5;
+
+  /* Aurora gradients */
+  --aurora-gradient: linear-gradient(135deg,
+    rgba(100, 216, 203, 0.15) 0%,
+    rgba(78, 205, 196, 0.1) 50%,
+    rgba(138, 180, 180, 0.15) 100%);
+
+  /* Aurora glow */
+  --shadow-glow: 0 0 30px rgba(100, 216, 203, 0.3);
+  --shadow-glow-strong: 0 0 60px rgba(100, 216, 203, 0.5);
+}
+
+/* ==========================================
+   THEME: High Contrast
+   ========================================== */
+[data-theme="highcontrast"] {
+  /* High contrast color overrides */
+  --color-night-deep: #000000;
+  --color-night-surface: #1A1A1A;
+  --color-night-mid: #2D2D2D;
+  --color-golden: #FFDD00;
+  --color-golden-bright: #FFFF00;
+  --color-moonlight: #FFFFFF;
+  --color-silver: #CCCCCC;
+  --color-silver-dim: #999999;
+
+  /* Stronger borders for high contrast */
+  --color-border: rgba(255, 255, 255, 0.4);
+  --color-border-subtle: rgba(255, 255, 255, 0.2);
+  --color-border-light: rgba(255, 255, 255, 0.3);
+  --color-border-hover: rgba(255, 255, 255, 0.6);
+  --color-border-strong: rgba(255, 255, 255, 0.5);
+
+  /* Stronger shadows */
+  --shadow-glow: 0 0 20px rgba(255, 221, 0, 0.6);
+  --shadow-glow-strong: 0 0 40px rgba(255, 221, 0, 0.8);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+  /* Higher contrast focus */
+  --color-focus-ring: rgba(255, 221, 0, 0.8);
+}
+
+/* High contrast mode also increases text contrast */
+[data-theme="highcontrast"] body {
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-moonlight);
+  background: var(--color-night-deep);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-golden);
+  color: var(--color-night-deep);
+}
+
+/* Caret */
+caret-color: var(--color-golden);
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-night-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-silver-dim);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-silver);
+}
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid var(--color-golden);
+  outline-offset: 2px;
+}
+
+/* Links */
+a {
+  color: var(--color-golden);
+  text-decoration: none;
+  transition: color 0.2s var(--ease-dream);
+}
+
+a:hover {
+  color: var(--color-golden-bright);
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-moonlight);
+}
+
+h1 {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+p {
+  margin-bottom: var(--space-4);
+}
+
+/* Utility Classes */
+.text-golden {
+  color: var(--color-golden);
+}
+
+.text-silver {
+  color: var(--color-silver);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: var(--shadow-glow);
+  }
+  50% {
+    box-shadow: var(--shadow-glow-strong);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fadeIn 0.6s var(--ease-dream) forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s var(--ease-dream) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s var(--ease-dream) forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.delay-1 { animation-delay: 100ms; }
+.delay-2 { animation-delay: 200ms; }
+.delay-3 { animation-delay: 300ms; }
+.delay-4 { animation-delay: 400ms; }
+.delay-5 { animation-delay: 500ms; }
+.delay-6 { animation-delay: 600ms; }
+.delay-7 { animation-delay: 700ms; }
+.delay-8 { animation-delay: 800ms; }
+
+/* Gradient Background */
+.bg-gradient {
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(74, 111, 165, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(107, 91, 149, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(26, 58, 92, 0.4) 0%, transparent 70%),
+    linear-gradient(180deg, var(--color-night-deep) 0%, var(--color-night-mid) 50%, var(--color-night-deep) 100%);
+}
+
+/* Noise Overlay */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable decorative/long animations but keep essential state feedback */
+  .animate-float,
+  .animate-glow,
+  .twinkle,
+  .floatUp {
+    animation: none !important;
+  }
+
+  /* Keep essential transitions for state feedback (focus, hover, active) */
+  * {
+    transition-duration: 150ms !important;
+  }
+
+  /* Disable scroll-behavior smooth */
+  html {
+    scroll-behavior: auto !important;
+  }
+}

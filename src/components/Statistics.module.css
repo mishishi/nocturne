@@ -1,0 +1,231 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Summary Grid */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.summaryCard {
+  background: rgba(26, 58, 92, 0.3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.summaryValue {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-golden);
+}
+
+.summaryLabel {
+  font-size: 0.75rem;
+  color: var(--color-silver);
+}
+
+/* Section */
+.section {
+  background: rgba(26, 58, 92, 0.2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-silver);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.sectionTitle svg {
+  color: var(--color-golden);
+}
+
+/* Week Chart */
+.weekChart {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+  height: 100px;
+  align-items: end;
+}
+
+.dayColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+}
+
+.dayBarWrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.dayBar {
+  width: 80%;
+  max-width: 32px;
+  background: linear-gradient(180deg, var(--color-golden) 0%, rgba(244, 211, 94, 0.4) 100%);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  min-height: 4px;
+  transition: height 0.5s var(--ease-dream);
+}
+
+.dayName {
+  font-size: 0.6875rem;
+  color: var(--color-silver);
+}
+
+.insight {
+  margin: var(--space-4) 0 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-silver);
+  opacity: 0.8;
+  text-align: center;
+}
+
+/* Month Chart */
+.monthChart {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-3);
+  height: 80px;
+  align-items: end;
+}
+
+.monthColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+}
+
+.monthBarWrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.monthValue {
+  font-size: 0.625rem;
+  color: var(--color-silver);
+  margin-bottom: var(--space-1);
+}
+
+.monthBar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--color-golden) 0%, rgba(244, 211, 94, 0.3) 100%);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  min-height: 4px;
+  transition: height 0.5s var(--ease-dream);
+}
+
+.monthName {
+  font-size: 0.6875rem;
+  color: var(--color-silver);
+}
+
+/* Quick Stats */
+.quickStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.quickStat {
+  background: rgba(26, 58, 92, 0.2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.quickStatIcon {
+  font-size: 1rem;
+}
+
+.quickStatLabel {
+  font-size: 0.6875rem;
+  color: var(--color-silver);
+  opacity: 0.7;
+}
+
+.quickStatValue {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-moonlight);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .summaryGrid {
+    gap: var(--space-2);
+  }
+
+  .summaryCard {
+    padding: var(--space-3);
+  }
+
+  .summaryValue {
+    font-size: 1.25rem;
+  }
+
+  .weekChart {
+    gap: var(--space-1);
+  }
+
+  .dayBar {
+    width: 100%;
+  }
+
+  .monthChart {
+    gap: var(--space-2);
+  }
+
+  .quickStats {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .quickStat {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .quickStatLabel {
+    flex: 1;
+  }
+
+  .quickStatValue {
+    text-align: right;
+  }
+}

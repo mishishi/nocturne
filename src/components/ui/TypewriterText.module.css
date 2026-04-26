@@ -1,0 +1,19 @@
+.typewriter {
+  display: inline;
+}
+
+.cursor {
+  display: inline-block;
+  animation: blink 0.8s ease-in-out infinite;
+  margin-left: 2px;
+  color: var(--color-golden);
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
