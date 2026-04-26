@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { api } from '../services/api'
@@ -19,6 +19,8 @@ export function Questions() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
+  const [showQuestion, setShowQuestion] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { questions, answers, currentQuestionIndex, sessionId } = currentSession
 
@@ -28,6 +30,11 @@ export function Questions() {
 
   const handleNext = async () => {
     if (!currentAnswer.trim()) return
+
+    // Dismiss keyboard
+    if (textareaRef.current) {
+      textareaRef.current.blur()
+    }
 
     setLoading(true)
     setError('')
@@ -140,6 +147,13 @@ export function Questions() {
 
   const aiContext = getAIContext()
 
+  // Trigger typewriter effect on question change
+  useEffect(() => {
+    setShowQuestion(false)
+    const timer = setTimeout(() => setShowQuestion(true), 50)
+    return () => clearTimeout(timer)
+  }, [currentQuestionIndex])
+
   return (
     <div className={styles.page}>
       {isGeneratingStory && (
@@ -238,7 +252,13 @@ export function Questions() {
             </div>
             <div className={styles.questionContent}>
               <p className={styles.questionTag}>追问 {currentQuestionIndex + 1}</p>
-              <h2 className={styles.questionText}>{currentQuestion}</h2>
+              <h2 className={styles.questionText}>
+                {showQuestion ? (
+                  <TypewriterText text={currentQuestion} speed={25} />
+                ) : (
+                  currentQuestion
+                )}
+              </h2>
             </div>
             <div className={styles.questionHint}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -274,6 +294,7 @@ export function Questions() {
         {/* Input */}
         <div className={styles.inputSection}>
           <Textarea
+            ref={textareaRef}
             value={currentAnswer}
             onChange={(e) => {
               setCurrentAnswer(e.target.value)
