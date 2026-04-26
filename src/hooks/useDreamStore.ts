@@ -59,6 +59,7 @@ interface DreamState {
     sessionId: string
     openid: string
     dreamText: string
+    dreamElements: string[]
     questions: string[]
     answers: string[]
     currentQuestionIndex: number
@@ -84,6 +85,7 @@ interface DreamState {
   setSessionId: (id: string) => void
   setOpenid: (id: string) => void
   setDreamText: (text: string) => void
+  setDreamElements: (elements: string[]) => void
   setQuestions: (questions: string[]) => void
   setAnswer: (index: number, answer: string) => void
   nextQuestion: () => void
@@ -94,6 +96,7 @@ interface DreamState {
   removeFromHistory: (id: string) => void
   restoreItem: (item: DreamSession) => void
   clearHistory: () => void
+  setHistory: (history: DreamSession[]) => void
   loadFromHistory: (item: DreamSession) => void
   toggleFavorite: (id: string) => void
   updatePrivateNote: (id: string, note: string) => void
@@ -140,6 +143,7 @@ const initialState = {
     sessionId: '',
     openid: '',
     dreamText: '',
+    dreamElements: [],
     questions: [],
     answers: [],
     currentQuestionIndex: 0,
@@ -174,6 +178,11 @@ export const useDreamStore = create<DreamState>()(
       setDreamText: (text) =>
         set((state) => ({
           currentSession: { ...state.currentSession, dreamText: text }
+        })),
+
+      setDreamElements: (elements) =>
+        set((state) => ({
+          currentSession: { ...state.currentSession, dreamElements: elements }
         })),
 
       setQuestions: (questions) =>
@@ -327,12 +336,16 @@ export const useDreamStore = create<DreamState>()(
       clearHistory: () =>
         set({ history: [] }),
 
+      setHistory: (history) =>
+        set({ history }),
+
       loadFromHistory: (item) =>
         set({
           currentSession: {
             sessionId: '',
             openid: '',
             dreamText: item.dreamSnippet,
+            dreamElements: [],
             questions: item.questions,
             answers: item.answers,
             currentQuestionIndex: 0,

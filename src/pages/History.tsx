@@ -1,10 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDreamStore, DreamSession, DREAM_TAGS } from '../hooks/useDreamStore'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { DreamWeather } from '../components/DreamWeather'
+import { api } from '../services/api'
 import styles from './History.module.css'
 
 const SWIPE_THRESHOLD = 80
@@ -12,7 +14,7 @@ const UNDO_TIMEOUT = 5000
 
 export function History() {
   const navigate = useNavigate()
-  const { history, removeFromHistory, restoreItem, toggleFavorite, updatePrivateNote } = useDreamStore()
+  const { history, removeFromHistory, restoreItem, toggleFavorite, updatePrivateNote, setHistory } = useDreamStore()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
@@ -42,6 +44,51 @@ export function History() {
   // Tag filter state
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null)
+
+  // Sync history from backend API (only on mount)
+  useEffect(() => {
+    let isMounted = true
+    const syncHistoryFromBackend = async () => {
+      const openid = localStorage.getItem('yeelin_openid')
+      if (!openid) return
+
+      try {
+        const { sessions } = await api.getHistory(openid)
+        if (!isMounted) return
+
+        if (sessions && sessions.length > 0) {
+          // Convert backend session format to DreamSession format
+          const backendHistory: DreamSession[] = sessions.map((s: any) => {
+            const dateObj = new Date(s.date)
+            const dateStr = dateObj.toLocaleDateString('zh-CN')
+
+            return {
+              id: s.id,
+              date: dateStr,
+              dreamSnippet: s.dreamFragment?.slice(0, 100) + (s.dreamFragment?.length > 100 ? '...' : '') || '',
+              storyTitle: s.storyTitle,
+              story: s.story,
+              questions: [],
+              answers: [],
+              tags: []
+            }
+          })
+
+          // Dedup by id (in case backend returns dupes)
+          const dedupedMap = new Map()
+          backendHistory.forEach(item => dedupedMap.set(item.id, item))
+          const finalHistory = Array.from(dedupedMap.values())
+
+          setHistory(finalHistory)
+        }
+      } catch (err) {
+        console.error('Failed to sync history from backend:', err)
+      }
+    }
+
+    syncHistoryFromBackend()
+    return () => { isMounted = false }
+  }, [])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -283,6 +330,19 @@ export function History() {
     return true
   })
 
+  // Debug: check for duplicate IDs in filteredHistory
+  useEffect(() => {
+    const ids = filteredHistory.map(item => item.id)
+    const uniqueIds = new Set(ids)
+    if (ids.length !== uniqueIds.size) {
+      console.error('DUPLICATE IDs in filteredHistory!', {
+        total: ids.length,
+        unique: uniqueIds.size,
+        duplicates: ids.filter((id, i) => ids.indexOf(id) !== i)
+      })
+    }
+  }, [filteredHistory])
+
   // Tag filter handlers
   const toggleTag = (tagId: string) => {
     setSelectedTags(prev =>
@@ -352,6 +412,9 @@ export function History() {
               : '记录你的每一个梦'}
           </p>
         </header>
+
+        {/* Dream Weather Easter Egg */}
+        {history.length > 0 && <DreamWeather />}
 
         {/* Search */}
         {history.length > 0 && (
@@ -464,11 +527,31 @@ export function History() {
         {history.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>
-              <svg viewBox="0 0 80 80" fill="none">
-                <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M40 15 Q55 30 40 45 Q25 30 40 15" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                <circle cx="40" cy="55" r="8" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-                <path d="M25 65 Q40 72 55 65" stroke="currentColor" strokeWidth="1" opacity="0.3" />
+              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Background stars */}
+                <circle cx="20" cy="25" r="1.5" fill="currentColor" opacity="0.3" />
+                <circle cx="95" cy="20" r="1" fill="currentColor" opacity="0.4" />
+                <circle cx="100" cy="80" r="1.5" fill="currentColor" opacity="0.3" />
+                <circle cx="15" cy="90" r="1" fill="currentColor" opacity="0.4" />
+                <circle cx="50" cy="10" r="1" fill="currentColor" opacity="0.3" />
+                <circle cx="75" cy="105" r="1.5" fill="currentColor" opacity="0.3" />
+                {/* Moon glow */}
+                <circle cx="60" cy="55" r="30" fill="url(#moonGlow)" opacity="0.15" />
+                {/* Moon crescent */}
+                <path d="M60 25C45 25 35 37 35 55C35 73 45 85 60 85C48 85 40 73 40 55C40 37 48 25 60 25Z" fill="currentColor" opacity="0.8" />
+                {/* Cloud wisps */}
+                <path d="M25 70C25 70 30 65 38 68C46 71 50 78 55 75" stroke="currentColor" strokeWidth="1.5" opacity="0.2" strokeLinecap="round" />
+                <path d="M70 90C70 90 78 85 85 90C92 95 95 102 100 100" stroke="currentColor" strokeWidth="1.5" opacity="0.2" strokeLinecap="round" />
+                {/* Z's for dreaming */}
+                <text x="78" y="35" fontSize="12" fill="currentColor" opacity="0.4" fontFamily="var(--font-display)">z</text>
+                <text x="88" y="25" fontSize="10" fill="currentColor" opacity="0.3" fontFamily="var(--font-display)">z</text>
+                <text x="95" y="18" fontSize="8" fill="currentColor" opacity="0.2" fontFamily="var(--font-display)">z</text>
+                <defs>
+                  <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="currentColor" />
+                    <stop offset="100%" stopColor="transparent" />
+                  </radialGradient>
+                </defs>
               </svg>
             </div>
             <h2 className={styles.emptyTitle}>暂无记录</h2>

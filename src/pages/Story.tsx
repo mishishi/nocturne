@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
+import { useAchievementSound } from '../hooks/useAchievementSound'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { SharePoster } from '../components/SharePoster'
@@ -11,14 +12,37 @@ export function Story() {
   const navigate = useNavigate()
   const location = useLocation()
   const { currentSession, addToHistory, reset } = useDreamStore()
+  const { playSound } = useAchievementSound()
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [showPosterModal, setShowPosterModal] = useState(false)
   const [readProgress, setReadProgress] = useState(0)
+  const [isRevealed, setIsRevealed] = useState(false)
+  const [showContent, setShowContent] = useState(false)
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const shareMenuRef = useRef<HTMLDivElement>(null)
+
+  // Check if we navigated from history with state
+  const fromHistory = location.state?.fromHistory
+
+  // Story reveal animation on mount
+  useEffect(() => {
+    // When coming from history, data is already available - show immediately
+    if (fromHistory) {
+      setIsRevealed(true)
+      setShowContent(true)
+      return
+    }
+    // For new stories, use animation delay
+    const timer = setTimeout(() => setIsRevealed(true), 50)
+    const contentTimer = setTimeout(() => setShowContent(true), 100)
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(contentTimer)
+    }
+  }, [fromHistory])
 
   // Track reading progress
   useEffect(() => {
@@ -72,8 +96,6 @@ export function Story() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [showShareMenu])
 
-  // Check if we navigated from history with state
-  const fromHistory = location.state?.fromHistory
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle
   const story = fromHistory?.story || currentSession.story
   const dreamText = fromHistory?.dreamSnippet || currentSession.dreamText
@@ -127,6 +149,7 @@ export function Story() {
   const handleDone = () => {
     addToHistory()
     reset()
+    playSound('celebration')
     setToastMessage('故事已保存')
     setToastVisible(true)
     setTimeout(() => navigate('/'), 800)
@@ -140,7 +163,10 @@ export function Story() {
   if (!story) return null
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${isRevealed ? styles.revealed : ''}`}>
+      {/* Reveal glow effect */}
+      <div className={styles.revealGlow} />
+
       {/* Reading Progress */}
       <div className={styles.readProgress} style={{ width: `${readProgress}%` }} role="progressbar" aria-valuenow={readProgress} aria-valuemin={0} aria-valuemax={100} aria-label="阅读进度" />
       <div className={styles.container}>
@@ -154,16 +180,28 @@ export function Story() {
         />
 
         {/* Header */}
-        <header className={styles.header}>
-          <span className={styles.badge}>你的故事</span>
+        <header className={`${styles.header} ${showContent ? styles.headerVisible : ''}`}>
+          <div className={styles.badgeWrapper}>
+            <span className={styles.badgeIcon}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </span>
+            <span className={styles.badge}>你的故事</span>
+          </div>
           <h1 className={styles.title}>{storyTitle}</h1>
+          <div className={styles.headerDecor}>
+            <span className={styles.decorStar} />
+            <span className={styles.decorStar} />
+            <span className={styles.decorStar} />
+          </div>
         </header>
 
         {/* Story Content */}
-        <article className={styles.story}>
+        <article className={`${styles.story} ${showContent ? styles.storyVisible : ''}`}>
           {story.split('\n').map((paragraph: string, index: number) => (
             paragraph.trim() && (
-              <p key={index} className={styles.paragraph}>
+              <p key={index} className={styles.paragraph} style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
                 {paragraph}
               </p>
             )
@@ -180,13 +218,15 @@ export function Story() {
 
         {/* Actions */}
         <div className={styles.actions}>
-          <Button onClick={handleDone} size="lg" className={styles.doneBtn}>
-            保存并返回
-          </Button>
+          {!fromHistory && (
+            <Button onClick={handleDone} size="lg" className={styles.doneBtn}>
+              保存并返回
+            </Button>
+          )}
 
           <div className={styles.secondaryActions}>
             <div className={styles.shareWrapper} ref={shareWrapperRef}>
-              <Button variant="ghost" onClick={() => setShowShareMenu(!showShareMenu)} aria-expanded={showShareMenu} aria-label="分享">
+              <Button variant="secondary" onClick={() => setShowShareMenu(!showShareMenu)} aria-expanded={showShareMenu} aria-label="分享">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
                   <circle cx="18" cy="5" r="3" />
                   <circle cx="6" cy="12" r="3" />
@@ -227,11 +267,20 @@ export function Story() {
                 </div>
               )}
             </div>
-            <Button variant="ghost" onClick={handleReadAgain}>
+            <Button variant="secondary" onClick={handleReadAgain}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                <path d="M17 1l4 4-4 4" />
+                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                <path d="M7 23l-4-4 4-4" />
+                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+              </svg>
               再读一遍
             </Button>
             <Link to="/dream">
-              <Button variant="secondary">
+              <Button variant="primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
                 记录新梦境
               </Button>
             </Link>
@@ -251,6 +300,21 @@ export function Story() {
           onClose={() => setShowPosterModal(false)}
         />
       )}
+
+      {/* Floating particles */}
+      <div className={styles.particles}>
+        {[...Array(12)].map((_, i) => (
+          <span
+            key={i}
+            className={styles.particle}
+            style={{
+              left: `${8 + Math.random() * 84}%`,
+              animationDelay: `${Math.random() * 8}s`,
+              animationDuration: `${6 + Math.random() * 6}s`
+            }}
+          />
+        ))}
+      </div>
 
       {/* Decorative elements */}
       <div className={styles.decorLeft}>
