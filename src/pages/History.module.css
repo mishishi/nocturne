@@ -47,7 +47,7 @@
 .searchWrapper {
   position: relative;
   max-width: 400px;
-  margin: 0 auto var(--space-6);
+  margin: var(--space-4) auto var(--space-6);
   animation: fadeInUp 0.6s var(--ease-dream) forwards;
 }
 
@@ -191,7 +191,7 @@
   text-align: center;
   padding: var(--space-12) var(--space-6);
   color: var(--color-silver);
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
 .noResults p {
@@ -202,34 +202,67 @@
   text-align: center;
   padding: var(--space-16) var(--space-6);
   animation: fadeIn 0.6s var(--ease-dream);
+  position: relative;
+}
+
+.emptyState::before {
+  content: '';
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(244, 211, 94, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
 }
 
 .emptyIcon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto var(--space-6);
-  opacity: 0.3;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto var(--space-8);
   color: var(--color-golden);
+  animation: float 8s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(244, 211, 94, 0.3));
+}
+
+.emptyIcon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .emptyTitle {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   color: var(--color-moonlight);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.05em;
+  animation: fadeInUp 0.8s var(--ease-dream) 0.2s forwards;
+  opacity: 0;
 }
 
 .emptyText {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--color-silver);
-  margin-bottom: var(--space-8);
-  opacity: 0.7;
+  margin-bottom: var(--space-10);
+  line-height: 1.8;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  animation: fadeInUp 0.8s var(--ease-dream) 0.4s forwards;
+  opacity: 0;
 }
 
 .historyList {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-8);
 }
 
 .historyItem {
@@ -242,7 +275,7 @@
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   backdrop-filter: blur(10px);
-  transition: transform 0.3s var(--ease-dream), box-shadow 0.3s var(--ease-dream);
+  transition: transform 0.3s var(--ease-dream), box-shadow 0.3s var(--ease-dream), border-color 0.3s ease;
 }
 
 /* Only animate first 5 items */
@@ -260,6 +293,7 @@
 .historyItem:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border-color: rgba(244, 211, 94, 0.25);
 }
 
 .historyItem:focus-visible {
@@ -563,7 +597,7 @@
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-silver);
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .tagsEditBtn {
@@ -577,7 +611,7 @@
   cursor: pointer;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
-  opacity: 0.6;
+  opacity: 0.85;
   transition: all 0.2s ease;
 }
 
@@ -657,7 +691,7 @@
 .noTags {
   font-size: 0.875rem;
   color: var(--color-silver);
-  opacity: 0.5;
+  opacity: 0.7;
   font-style: italic;
 }
 
@@ -680,7 +714,7 @@
 .dreamRef {
   font-size: 0.8125rem;
   color: var(--color-silver);
-  opacity: 0.5;
+  opacity: 0.8;
   display: flex;
   align-items: center;
   gap: var(--space-2);
