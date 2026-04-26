@@ -4,6 +4,7 @@ import { useDreamStore } from '../hooks/useDreamStore'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { SharePoster } from '../components/SharePoster'
+import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Story.module.css'
 
 export function Story() {
@@ -143,6 +144,15 @@ export function Story() {
       {/* Reading Progress */}
       <div className={styles.readProgress} style={{ width: `${readProgress}%` }} role="progressbar" aria-valuenow={readProgress} aria-valuemin={0} aria-valuemax={100} aria-label="阅读进度" />
       <div className={styles.container}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: '首页', href: '/' },
+            { label: '历史', href: '/history' },
+            { label: storyTitle || '故事' }
+          ]}
+        />
+
         {/* Header */}
         <header className={styles.header}>
           <span className={styles.badge}>你的故事</span>

@@ -43,7 +43,7 @@ function App() {
       <AtmosphereEffects />
       <Navbar />
       <PageTransition>
-        <main id="main-content">
+        <main id="main-content" role="main" aria-label="主内容区域">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dream" element={<Dream />} />
@@ -60,6 +60,10 @@ function App() {
         isOpen={currentAchievement !== null}
         onClose={handleClose}
       />
+
+      <footer role="contentinfo" className="sr-only" aria-label="页脚">
+        <p>夜棂 - 记录你的每一个梦境</p>
+      </footer>
     </div>
   )
 }

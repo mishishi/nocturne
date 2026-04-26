@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
 import { Toast } from '../components/ui/Toast'
 import { TypewriterText } from '../components/ui/TypewriterText'
+import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Questions.module.css'
 
 export function Questions() {
@@ -180,6 +181,15 @@ export function Questions() {
       )}
 
       <div className={styles.container}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: '首页', href: '/' },
+            { label: '记录梦境', href: '/dream' },
+            { label: '回答问题' }
+          ]}
+        />
+
         {/* Back button */}
         <button className={styles.backBtn} onClick={() => navigate('/dream')} aria-label="返回上一步">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

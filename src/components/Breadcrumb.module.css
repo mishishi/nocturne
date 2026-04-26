@@ -1,0 +1,51 @@
+.breadcrumb {
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-3);
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.link {
+  color: var(--color-silver);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  color: var(--color-moonlight);
+  text-decoration: underline;
+}
+
+.text {
+  color: var(--color-silver);
+  font-size: 0.8125rem;
+}
+
+.current {
+  color: var(--color-moonlight);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.separator {
+  width: 8px;
+  height: 14px;
+  color: var(--color-silver);
+  opacity: 0.5;
+  flex-shrink: 0;
+}

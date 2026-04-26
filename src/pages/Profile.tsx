@@ -4,6 +4,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
 import { Statistics } from '../components/Statistics'
 import { AmbientPlayer } from '../components/AmbientPlayer'
+import { Breadcrumb } from '../components/Breadcrumb'
 import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
 import styles from './Profile.module.css'
 
@@ -38,6 +39,13 @@ export function Profile() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: '首页', href: '/' },
+            { label: '个人中心' }
+          ]}
+        />
         <header className={styles.header}>
           <span className={styles.badge}>个人中心</span>
           <h1 className={styles.title}>梦境档案</h1>

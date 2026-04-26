@@ -5,6 +5,7 @@ import { api } from '../services/api'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
 import { DreamFormSkeleton } from '../components/ui/Skeleton'
+import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Dream.module.css'
 
 const DRAFT_KEY = 'yeelin_draft'
@@ -104,6 +105,14 @@ export function Dream() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: '首页', href: '/' },
+            { label: '记录梦境' }
+          ]}
+        />
+
         {/* Header */}
         <div className={styles.header}>
           <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="返回首页">

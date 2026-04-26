@@ -4,6 +4,7 @@ import { useDreamStore, DreamSession, DREAM_TAGS } from '../hooks/useDreamStore'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
+import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './History.module.css'
 
 const SWIPE_THRESHOLD = 80
@@ -333,6 +334,14 @@ export function History() {
       </div>
 
       <div className={styles.container}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: '首页', href: '/' },
+            { label: '历史记录' }
+          ]}
+        />
+
         {/* Header */}
         <header className={styles.header}>
           <span className={styles.badge}>梦境档案</span>

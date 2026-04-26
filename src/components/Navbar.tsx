@@ -7,8 +7,9 @@ export function Navbar() {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <nav className={styles.navbar}>
-      <div className={styles.container}>
+    <header role="banner" className={styles.header}>
+      <nav className={styles.navbar} aria-label="主导航">
+        <div className={styles.container}>
         <Link to="/" className={styles.logo}>
           <span className={styles.logoIcon}>
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -39,7 +40,8 @@ export function Navbar() {
             </Link>
           </li>
         </ul>
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </header>
   )
 }
