@@ -121,14 +121,15 @@ export function Story() {
 
   // Check if this session was already published
   useEffect(() => {
-    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || currentSession.sessionId
+    // Use sessionId from location state (fromHistory) since currentSession resets on refresh
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id
     if (sessionId) {
       const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
       if (publishedSessions.includes(sessionId)) {
         setIsPublished(true)
       }
     }
-  }, [location.state, currentSession.sessionId])
+  }, [location.state])
 
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle
   const story = fromHistory?.story || currentSession.story
@@ -304,7 +305,7 @@ export function Story() {
 
   const handlePublishToWall = async () => {
     const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
-    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || currentSession.sessionId
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id
 
     if (!openid) {
       setToastType('error')
