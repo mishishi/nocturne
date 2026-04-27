@@ -31,7 +31,7 @@ export function Story() {
   const [isGeneratingImage] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [isPublished, setIsPublished] = useState(false)
-  const { speak, stop, isSpeaking, isSupported: isTtsSupported } = useTextToSpeech()
+  const { speak, stop, isSpeaking, isSupported: isTtsSupported, voices, selectedVoice, setVoice } = useTextToSpeech()
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const shareMenuRef = useRef<HTMLDivElement>(null)
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -499,29 +499,47 @@ export function Story() {
               </Button>
             )}
             {isTtsSupported && (
-              <Button
-                variant="secondary"
-                onClick={handleSpeakStory}
-                className={isSpeaking ? styles.ttsButtonActive : ''}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                  {isSpeaking ? (
-                    // Pause icon when speaking
-                    <>
-                      <rect x="6" y="4" width="4" height="16" rx="1" />
-                      <rect x="14" y="4" width="4" height="16" rx="1" />
-                    </>
-                  ) : (
-                    // Speaker icon when not speaking
-                    <>
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                    </>
-                  )}
-                </svg>
-                {isSpeaking ? '停止' : '听故事'}
-              </Button>
+              <div className={styles.ttsWrapper}>
+                <Button
+                  variant="secondary"
+                  onClick={handleSpeakStory}
+                  className={isSpeaking ? styles.ttsButtonActive : ''}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                    {isSpeaking ? (
+                      // Pause icon when speaking
+                      <>
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
+                      </>
+                    ) : (
+                      // Speaker icon when not speaking
+                      <>
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                      </>
+                    )}
+                  </svg>
+                  {isSpeaking ? '停止' : '听故事'}
+                </Button>
+                {voices.length > 1 && (
+                  <select
+                    className={styles.voiceSelect}
+                    value={selectedVoice?.name || ''}
+                    onChange={(e) => {
+                      const voice = voices.find(v => v.name === e.target.value)
+                      if (voice) setVoice(voice)
+                    }}
+                  >
+                    {voices.slice(0, 6).map((voice) => (
+                      <option key={voice.name} value={voice.name}>
+                        {voice.name.length > 20 ? voice.name.substring(0, 20) + '...' : voice.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
             )}
             <Button variant="secondary" onClick={handleInterpret} disabled={isInterpreting}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>

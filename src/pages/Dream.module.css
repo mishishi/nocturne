@@ -220,6 +220,17 @@
   opacity: 0.6;
 }
 
+.waveformCanvas {
+  margin-top: var(--space-3);
+  border-radius: var(--radius-md);
+  background: rgba(13, 27, 42, 0.5);
+  display: none;
+}
+
+.waveformCanvas.active {
+  display: block;
+}
+
 /* ============================================
    Text Input
    ============================================ */

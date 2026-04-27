@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDreamStore, DREAM_TAGS } from '../hooks/useDreamStore'
+import { useVoiceWaveform } from '../hooks/useVoiceWaveform'
 import { api } from '../services/api'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
@@ -83,6 +84,7 @@ export function Dream() {
   const lastSavedRef = useRef<string>(currentSession.dreamText)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const finalTranscriptRef = useRef<string>('')
+  const { startWaveform, stopWaveform, canvasRef } = useVoiceWaveform()
 
   // Restore draft on mount
   useEffect(() => {
@@ -181,14 +183,17 @@ export function Dream() {
     lastSavedRef.current = ''
   }
 
-  const handleStartRecording = () => {
+  const handleStartRecording = async () => {
     if (recognitionRef.current && !isRecording) {
       finalTranscriptRef.current = currentSession.dreamText // Preserve existing text
       try {
+        // Start waveform visualization
+        await startWaveform()
         recognitionRef.current.start()
         setIsRecording(true)
         setError('') // Clear any previous errors
       } catch {
+        stopWaveform()
         setError('无法启动语音识别，请刷新页面重试')
       }
     }
@@ -197,6 +202,7 @@ export function Dream() {
   const handleStopRecording = () => {
     if (recognitionRef.current && isRecording) {
       recognitionRef.current.stop()
+      stopWaveform()
       setIsRecording(false)
     }
   }
@@ -370,6 +376,12 @@ export function Dream() {
                 <span className={styles.voiceHint}>
                   {isRecording ? '正在聆听...' : '支持语音转文字'}
                 </span>
+                <canvas
+                  ref={canvasRef}
+                  className={`${styles.waveformCanvas} ${isRecording ? styles.active : ''}`}
+                  width={280}
+                  height={60}
+                />
               </div>
             )}
 
