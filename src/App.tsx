@@ -8,6 +8,7 @@ import { AtmosphereEffects } from './components/effects/AtmosphereEffects'
 import { SkipLink } from './components/SkipLink'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary'
+import { PageErrorBoundary } from './components/PageErrorBoundary'
 import { useDreamStore, ACHIEVEMENTS } from './hooks/useDreamStore'
 import { useAchievementSound } from './hooks/useAchievementSound'
 import { Home } from './pages/Home'
@@ -74,7 +75,7 @@ function App() {
             <Route path="/questions" element={<Questions />} />
             <Route path="/story" element={<Story />} />
             <Route path="/history" element={<History />} />
-            <Route path="/wall" element={<DreamWall />} />
+            <Route path="/wall" element={<PageErrorBoundary><DreamWall /></PageErrorBoundary>} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={
