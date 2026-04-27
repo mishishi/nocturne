@@ -375,8 +375,8 @@
 
 /* TTS Button Active State */
 .ttsButtonActive {
-  background: var(--color-moonlight) !important;
-  color: var(--color-night) !important;
+  border-color: var(--color-golden) !important;
+  box-shadow: 0 0 16px rgba(244, 211, 94, 0.3);
 }
 
 /* Button icon alignment */
