@@ -314,6 +314,47 @@
   min-height: 200px;
 }
 
+/* Error Banner with Retry */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(231, 111, 81, 0.1);
+  border: 1px solid rgba(231, 111, 81, 0.3);
+  border-radius: var(--radius-md);
+  animation: fadeInUp 0.2s ease-out;
+}
+
+.errorText {
+  font-size: 0.875rem;
+  color: var(--color-sunset);
+}
+
+.retryBtn {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-sunset);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.retryBtn:hover {
+  background: #d85a3c;
+  transform: scale(1.02);
+}
+
+.retryBtn:active {
+  transform: scale(0.98);
+}
+
 /* ============================================
    Quick Elements
    ============================================ */
@@ -473,6 +514,48 @@
   color: var(--color-silver);
   margin: 0;
   animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+/* ============================================
+   Emotion Transition State
+   ============================================ */
+.transitionState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.transitionMoon {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: var(--space-8);
+  animation: float 3s ease-in-out infinite;
+}
+
+.transitionText {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--color-moonlight);
+  margin: 0 0 var(--space-3);
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.transitionEmotion {
+  color: var(--color-golden);
+  font-weight: 500;
+}
+
+.transitionHint {
+  font-size: 0.875rem;
+  color: var(--color-silver);
+  opacity: 0.7;
+  margin: 0;
+  animation: fadeInUp 0.6s ease-out 0.3s both;
 }
 
 /* ============================================

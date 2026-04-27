@@ -15,23 +15,7 @@ const EMOTION_TAGS = [
   { icon: '✨', label: '奇幻', color: '#A8DADC' }
 ]
 
-// Value proposition screens
-const VALUE_SCREENS = [
-  {
-    quote: '记录梦，比记住更重要',
-    subtext: '醒来后第一时间记录，能记住更多细节'
-  },
-  {
-    quote: 'AI 帮你把碎片拼成故事',
-    subtext: '每一个梦境都藏着专属的奇幻世界'
-  },
-  {
-    quote: '每一个梦，都是礼物',
-    subtext: '探索无意识的智慧与创造力'
-  }
-]
-
-type OnboardingPhase = 'intro' | 'values' | 'cta'
+type OnboardingPhase = 'intro' | 'cta'
 
 interface OnboardingOverlayProps {
   onComplete: () => void
@@ -56,19 +40,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
     return () => clearInterval(breathInterval)
   }, [phase])
 
-  // Handle values phase auto-advance
-  useEffect(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
-    }
-
-    if (phase !== 'values') return
-
-    // Auto-advance to CTA after showing all cards
-    timerRef.current = setTimeout(() => {
-      setPhase('cta')
-    }, 5000) // 5 seconds for displaying 3 cards
-  }, [phase])
+  // Removed values phase - now just intro → cta
 
   // Initial mount
   useEffect(() => {
@@ -96,7 +68,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
     if (navigator.vibrate) {
       navigator.vibrate(5)
     }
-    setPhase('values')
+    setPhase('cta')
 
     // Reset guard after a short delay
     setTimeout(() => {
@@ -160,28 +132,6 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
         </div>
       )}
 
-      {/* Phase: Values - Static Display */}
-      {phase === 'values' && (
-        <div className={styles.valuesPhase}>
-          {VALUE_SCREENS.map((screen, idx) => (
-            <div className={styles.valueCard} key={idx}>
-              <div className={styles.valueQuote}>
-                <span className={styles.quoteMark}>"</span>
-                {screen.quote}
-              </div>
-              <p className={styles.valueSubtext}>
-                {screen.subtext}
-              </p>
-            </div>
-          ))}
-
-          {/* Skip hint */}
-          <button className={styles.skipHint} onClick={handleDismiss}>
-            跳过
-          </button>
-        </div>
-      )}
-
       {/* Phase: CTA */}
       {phase === 'cta' && (
         <div className={styles.ctaPhase}>
@@ -191,7 +141,8 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
             </svg>
           </div>
 
-          <p className={styles.ctaText}>用一个梦开始</p>
+          <p className={styles.ctaText}>用一个梦开始探索</p>
+          <p className={styles.ctaSubtext}>记录梦，比记住更重要</p>
 
           <Button onClick={handleStartRecording} size="lg" className={styles.ctaBtn}>
             记录你的第一个梦

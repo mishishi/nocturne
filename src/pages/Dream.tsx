@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore, DREAM_TAGS } from '../hooks/useDreamStore'
 import { useVoiceWaveform } from '../hooks/useVoiceWaveform'
 import { api } from '../services/api'
@@ -67,7 +67,7 @@ const DREAM_ELEMENTS = [
   { id: 'beach', icon: '🏖️', label: '海滩' }
 ]
 
-type DreamStep = 'emotion' | 'describe' | 'elements' | 'submitting'
+type DreamStep = 'emotion' | 'emotionTransition' | 'describe' | 'elements' | 'submitting'
 
 export function Dream() {
   const navigate = useNavigate()
@@ -75,9 +75,11 @@ export function Dream() {
 
   const [step, setStep] = useState<DreamStep>('emotion')
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null)
+  const [transitionEmotion, setTransitionEmotion] = useState<string | null>(null)
   const [dreamElements, setDreamElementsLocal] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isNetworkError, setIsNetworkError] = useState(false)
   const [draftRestored, setDraftRestored] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [isSrSupported, setIsSrSupported] = useState(false)
@@ -86,6 +88,23 @@ export function Dream() {
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const finalTranscriptRef = useRef<string>('')
   const { startWaveform, stopWaveform, canvasRef } = useVoiceWaveform()
+  const [searchParams] = useSearchParams()
+
+  // Check if this is a new dream request - clear old draft if so
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      localStorage.removeItem(DRAFT_KEY)
+      // Reset step to emotion for new dream
+      setStep('emotion')
+      setSelectedEmotion(null)
+      setTransitionEmotion(null)
+      setDreamElementsLocal([])
+      setError('')
+      setIsNetworkError(false)
+      // Also reset store's dreamText to avoid showing old content
+      setDreamText('')
+    }
+  }, []) // Run once on mount
 
   // Restore draft on mount
   useEffect(() => {
@@ -216,7 +235,13 @@ export function Dream() {
 
   const handleEmotionNext = () => {
     if (selectedEmotion) {
-      setStep('describe')
+      const tag = DREAM_TAGS.find(t => t.id === selectedEmotion)
+      setTransitionEmotion(tag?.label || selectedEmotion)
+      setStep('emotionTransition')
+      // After transition animation, go to describe
+      setTimeout(() => {
+        setStep('describe')
+      }, 1800)
     }
   }
 
@@ -266,9 +291,11 @@ export function Dream() {
     } catch (err) {
       setStep('elements')
       const error = err as { response?: { data?: { error?: string } }; message?: string }
+      const isNetError = error.message?.includes('network') || error.message?.includes('fetch')
+      setIsNetworkError(isNetError)
       if (error.response?.data?.error) {
         setError(error.response.data.error)
-      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+      } else if (isNetError) {
         setError('网络连接失败，请检查网络后重试')
       } else {
         setError('发送失败了，请稍后重试')
@@ -291,7 +318,7 @@ export function Dream() {
 
         {/* Step Indicator */}
         <div className={styles.stepIndicator}>
-          <div className={`${styles.stepDot} ${step === 'emotion' ? styles.active : ''} ${['describe', 'elements', 'submitting'].includes(step) ? styles.completed : ''}`}>
+          <div className={`${styles.stepDot} ${step === 'emotion' || step === 'emotionTransition' ? styles.active : ''} ${['describe', 'elements', 'submitting'].includes(step) ? styles.completed : ''}`}>
             {['describe', 'elements', 'submitting'].includes(step) ? '✓' : '1'}
           </div>
           <div className={`${styles.stepLine} ${['describe', 'elements', 'submitting'].includes(step) ? styles.completed : ''}`} />
@@ -342,6 +369,20 @@ export function Dream() {
                 直接描述 →
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Emotion Transition - narrative between emotion and describe */}
+        {step === 'emotionTransition' && transitionEmotion && (
+          <div className={styles.transitionState}>
+            <div className={styles.transitionMoon}>
+              <div className={styles.moonGlow} />
+              <div className={styles.moonCore} />
+            </div>
+            <p className={styles.transitionText}>
+              你感受到了<span className={styles.transitionEmotion}>{transitionEmotion}</span>
+            </p>
+            <p className={styles.transitionHint}>正在打开记忆的画卷...</p>
           </div>
         )}
 
@@ -405,6 +446,7 @@ export function Dream() {
                 onChange={(e) => {
                   setDreamText(e.target.value)
                   setError('')
+                  setIsNetworkError(false)
                 }}
                 placeholder="我梦到了...
 
@@ -418,6 +460,14 @@ export function Dream() {
                 className={styles.textarea}
                 aria-label="梦境描述"
               />
+              {isNetworkError && error && (
+                <div className={styles.errorBanner}>
+                  <span className={styles.errorText}>{error}</span>
+                  <button className={styles.retryBtn} onClick={handleSubmit}>
+                    重试
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className={styles.stepActions}>

@@ -24,6 +24,7 @@ export function Story() {
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [showAiMenu, setShowAiMenu] = useState(false)
+  const [showFabMenu, setShowFabMenu] = useState(false)
   const [showPosterModal, setShowPosterModal] = useState(false)
   const [readProgress, setReadProgress] = useState(0)
   const [showProgressInfo, setShowProgressInfo] = useState(false)
@@ -46,6 +47,7 @@ export function Story() {
   const aiWrapperRef = useRef<HTMLDivElement>(null)
   const shareMenuRef = useRef<HTMLDivElement>(null)
   const aiMenuRef = useRef<HTMLDivElement>(null)
+  const fabMenuRef = useRef<HTMLDivElement>(null)
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Check if we navigated from history with state
@@ -105,7 +107,7 @@ export function Story() {
 
   // Close share menu on outside click
   useEffect(() => {
-    if (!showShareMenu && !showAiMenu) return
+    if (!showShareMenu && !showAiMenu && !showFabMenu) return
     const handleClickOutside = (e: MouseEvent) => {
       if (showShareMenu && shareWrapperRef.current && !shareWrapperRef.current.contains(e.target as Node)) {
         setShowShareMenu(false)
@@ -113,10 +115,13 @@ export function Story() {
       if (showAiMenu && aiWrapperRef.current && !aiWrapperRef.current.contains(e.target as Node)) {
         setShowAiMenu(false)
       }
+      if (showFabMenu && fabMenuRef.current && !fabMenuRef.current.contains(e.target as Node)) {
+        setShowFabMenu(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showShareMenu, showAiMenu])
+  }, [showShareMenu, showAiMenu, showFabMenu])
 
   // Focus trap and Escape for share menu
   useEffect(() => {
@@ -551,7 +556,7 @@ export function Story() {
         <Breadcrumb
           items={[
             { label: '首页', href: '/' },
-            { label: '历史', href: '/history' },
+            ...(fromDreamWall ? [{ label: '梦墙', href: '/wall' }] : fromHistory ? [{ label: '历史', href: '/history' }] : []),
             { label: storyTitle || '故事' }
           ]}
         />
@@ -611,79 +616,111 @@ export function Story() {
 
           {!fromDreamWall && (
             <div className={styles.secondaryActions}>
-            <div className={styles.shareWrapper} ref={shareWrapperRef}>
-              <Button variant="secondary" onClick={() => setShowShareMenu(!showShareMenu)} aria-expanded={showShareMenu} aria-label="分享">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                  <circle cx="18" cy="5" r="3" />
-                  <circle cx="6" cy="12" r="3" />
-                  <circle cx="18" cy="19" r="3" />
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                </svg>
-                分享
-              </Button>
-              {showShareMenu && (
-                <div className={styles.shareMenu} role="menu" aria-label="分享选项" ref={shareMenuRef}>
-                  <button className={styles.shareMenuItem} onClick={() => handleShareToWeChat('friend')} role="menuitem" tabIndex={0}>
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8.69 13.3c-.39-.39-.39-1.02 0-1.41l6.25-6.25c.39-.39 1.02-.39 1.41 0s.39 1.02 0 1.41L10.1 13.3a.996.996 0 0 1-1.41 0z"/>
-                      <path d="M15.31 21.7c-.39-.39-.39-1.02 0-1.41l6.25-6.25c.39-.39 1.02-.39 1.41 0s.39 1.02 0 1.41L16.72 21.7a.996.996 0 0 1-1.41 0z"/>
-                      <path d="M17.56 17.56c-.39-.39-.39-1.02 0-1.41l.71-.71c.39-.39 1.02-.39 1.41 0s.39 1.02 0 1.41l-.71.71c-.39.39-1.02.39-1.41 0z"/>
-                    </svg>
-                    微信好友
-                  </button>
-                  <button className={styles.shareMenuItem} onClick={() => handleShareToWeChat('moment')} role="menuitem" tabIndex={0}>
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                    </svg>
-                    朋友圈
-                  </button>
-                  <button className={styles.shareMenuItem} onClick={handleCopyLink} role="menuitem" tabIndex={0}>
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-                    复制链接
-                  </button>
-                  <button className={styles.shareMenuItem} onClick={handleGeneratePoster} role="menuitem" tabIndex={0}>
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5-7l-3 3.72L9 13l-3 4h12l-4-5z"/>
-                    </svg>
-                    生成海报
-                  </button>
-                </div>
-              )}
+              {/* FAB for secondary actions */}
+              <div className={styles.fabWrapper} ref={fabMenuRef}>
+                <button
+                  className={styles.fab}
+                  onClick={() => setShowFabMenu(!showFabMenu)}
+                  aria-expanded={showFabMenu}
+                  aria-label="更多操作"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 20, height: 20 }}>
+                    <circle cx="12" cy="5" r="1.5" fill="currentColor" />
+                    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                    <circle cx="12" cy="19" r="1.5" fill="currentColor" />
+                  </svg>
+                </button>
+                {showFabMenu && (
+                  <div className={styles.fabMenu} role="menu" aria-label="更多操作">
+                    <button
+                      className={styles.fabMenuItem}
+                      onClick={() => {
+                        setShowFabMenu(false)
+                        setShowShareMenu(true)
+                      }}
+                      role="menuitem"
+                      tabIndex={0}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                      </svg>
+                      分享
+                    </button>
+                    {!isPublished && (
+                      <button
+                        className={styles.fabMenuItem}
+                        onClick={() => {
+                          setShowFabMenu(false)
+                          handlePublishToWall()
+                        }}
+                        role="menuitem"
+                        tabIndex={0}
+                        disabled={isPublishing}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 2a7 7 0 0 1 0 14 7 7 0 0 1 0-14" />
+                          <circle cx="12" cy="9" r="3" />
+                        </svg>
+                        {isPublishing ? '发布中...' : '发布到梦墙'}
+                      </button>
+                    )}
+                    {isPublished && (
+                      <span className={styles.fabMenuItemDisabled}>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 18, height: 18 }}>
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                        已在梦墙
+                      </span>
+                    )}
+                    <Link to="/dream" className={styles.fabMenuLink} onClick={() => setShowFabMenu(false)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      记录新梦境
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Share dropdown (triggered by FAB) */}
+              <div className={styles.shareWrapper} ref={shareWrapperRef}>
+                {showShareMenu && (
+                  <div className={styles.shareMenu} role="menu" aria-label="分享选项" ref={shareMenuRef}>
+                    <button className={styles.shareMenuItem} onClick={() => handleShareToWeChat('friend')} role="menuitem" tabIndex={0}>
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8.69 13.3c-.39-.39-.39-1.02 0-1.41l6.25-6.25c.39-.39 1.02-.39 1.41 0s.39 1.02 0 1.41L10.1 13.3a.996.996 0 0 1-1.41 0z"/>
+                        <path d="M15.31 21.7c-.39-.39-.39-1.02 0-1.41l6.25-6.25c.39-.39 1.02-.39 1.41 0s.39 1.02 0 1.41L16.72 21.7a.996.996 0 0 1-1.41 0z"/>
+                        <path d="M17.56 17.56c-.39-.39-.39-1.02 0-1.41l.71-.71c.39-.39 1.02-.39 1.41 0s.39 1.02 0 1.41l-.71.71c-.39.39-1.02.39-1.41 0z"/>
+                      </svg>
+                      微信好友
+                    </button>
+                    <button className={styles.shareMenuItem} onClick={() => handleShareToWeChat('moment')} role="menuitem" tabIndex={0}>
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                      </svg>
+                      朋友圈
+                    </button>
+                    <button className={styles.shareMenuItem} onClick={handleCopyLink} role="menuitem" tabIndex={0}>
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                      </svg>
+                      复制链接
+                    </button>
+                    <button className={styles.shareMenuItem} onClick={handleGeneratePoster} role="menuitem" tabIndex={0}>
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5-7l-3 3.72L9 13l-3 4h12l-4-5z"/>
+                      </svg>
+                      生成海报
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            {!isPublished && !fromDreamWall && (
-              <Button
-                variant="secondary"
-                onClick={handlePublishToWall}
-                disabled={isPublishing}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 2a7 7 0 0 1 0 14 7 7 0 0 1 0-14" />
-                  <circle cx="12" cy="9" r="3" />
-                </svg>
-                {isPublishing ? '发布中...' : '发布到梦墙'}
-              </Button>
-            )}
-            {isPublished && !fromDreamWall && (
-              <span className={styles.publishedText}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                已发布到梦墙
-              </span>
-            )}
-            <Link to="/dream">
-              <Button variant="primary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                记录新梦境
-              </Button>
-            </Link>
-          </div>
           )}
 
           {/* AI Assistant Dropdown - for normal flow or authors from Dream Wall */}
@@ -763,19 +800,26 @@ export function Story() {
                     </div>
                   )}
                   <button
-                    className={styles.shareMenuItem}
+                    className={`${styles.shareMenuItem} ${!user ? styles.menuItemDisabled : ''}`}
                     onClick={() => {
                       handleInterpret()
                       setShowAiMenu(false)
                     }}
                     role="menuitem"
                     tabIndex={0}
+                    title={!user ? '请先登录' : user.points < 10 ? '积分不足' : ''}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                      <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
-                      <path d="M9 21h6" />
+                      {!user ? (
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      ) : (
+                        <>
+                          <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+                          <path d="M9 21h6" />
+                        </>
+                      )}
                     </svg>
-                    {isInterpreting ? '解读生成中...' : 'AI 梦境解读'}
+                    {isInterpreting ? '解读生成中...' : user ? 'AI 梦境解读' : '登录后使用'}
                   </button>
                 </div>
               )}

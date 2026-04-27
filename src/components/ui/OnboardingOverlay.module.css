@@ -156,65 +156,6 @@
 }
 
 /* ============================================
-   VALUES PHASE - Static Display
-   ============================================ */
-.valuesPhase {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-6);
-  padding: var(--space-8);
-  max-width: 400px;
-}
-
-.valueCard {
-  text-align: center;
-  padding: var(--space-6);
-  background: rgba(26, 58, 92, 0.4);
-  border: 1px solid rgba(244, 211, 94, 0.15);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(10px);
-  animation: fadeInUp 0.6s ease-out both;
-  min-width: 280px;
-  width: 100%;
-  max-width: 320px;
-  box-sizing: border-box;
-}
-
-.valueCard:nth-child(1) { animation-delay: 0.1s; }
-.valueCard:nth-child(2) { animation-delay: 0.3s; }
-.valueCard:nth-child(3) { animation-delay: 0.5s; }
-
-.valueCard:hover {
-  border-color: rgba(244, 211, 94, 0.3);
-  transform: translateY(-2px);
-  transition: all 0.3s ease;
-}
-
-.valueQuote {
-  font-family: var(--font-display);
-  font-size: clamp(1.5rem, 5vw, 2rem);
-  font-weight: 500;
-  color: var(--color-moonlight);
-  line-height: 1.4;
-  margin-bottom: var(--space-4);
-}
-
-.quoteMark {
-  color: var(--color-golden);
-  opacity: 0.6;
-}
-
-.valueSubtext {
-  font-size: 0.9375rem;
-  color: var(--color-silver);
-  margin: 0;
-  opacity: 0.7;
-  line-height: 1.6;
-}
-
-/* ============================================
    CTA PHASE - Minimal Action
    ============================================ */
 .ctaPhase {
@@ -262,6 +203,14 @@
   color: var(--color-moonlight);
   margin: 0;
   animation: fadeInUp 0.5s ease-out 0.1s both;
+}
+
+.ctaSubtext {
+  font-size: 0.9375rem;
+  color: var(--color-silver);
+  margin: 0;
+  opacity: 0.7;
+  animation: fadeInUp 0.5s ease-out 0.15s both;
 }
 
 .ctaBtn {
