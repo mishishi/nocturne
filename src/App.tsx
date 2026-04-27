@@ -24,7 +24,7 @@ import { DreamWall } from './pages/DreamWall'
 import { WeChatCallback } from './pages/WeChatCallback'
 
 function App() {
-  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion } = useDreamStore()
+  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement } = useDreamStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
 
@@ -48,6 +48,13 @@ function App() {
       playSound('unlock')
     }
   }, [recentlyUnlocked, playSound])
+
+  // Retroactive achievement check on app start (catches stories loaded from backend)
+  useEffect(() => {
+    if (history.length > 0 && !achievements.includes('first_dream')) {
+      unlockAchievement('first_dream')
+    }
+  }, [])
 
   // Get the first recently unlocked achievement to show
   const currentAchievement = recentlyUnlocked.length > 0

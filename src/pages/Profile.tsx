@@ -308,15 +308,15 @@ export function Profile() {
                 清除
               </Button>
             </div>
-            <button
-              className={styles.settingItem}
-              onClick={() => setShowExportModal(true)}
-            >
-              <span>导出我的数据</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.chevron}>
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <span className={styles.settingLabel}>导出我的数据</span>
+                <span className={styles.settingDesc}>将导出所有个人信息</span>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.chevron} onClick={() => setShowExportModal(true)}>
                 <path d="M9 18l6-6-6-6" />
               </svg>
-            </button>
+            </div>
             {user && (
               <div className={styles.settingItem}>
                 <div className={styles.settingInfo}>

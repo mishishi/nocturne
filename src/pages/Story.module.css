@@ -881,6 +881,37 @@
   flex-shrink: 0;
 }
 
+/* Share Confirmation Button - appears after share sheet closes */
+.shareConfirmBtn {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(244, 211, 94, 0.15);
+  border: 1px solid rgba(244, 211, 94, 0.4);
+  border-radius: var(--radius-full);
+  color: var(--color-golden);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: var(--z-dropdown);
+  animation: fadeInUp var(--duration-fast) var(--ease-dream);
+  box-shadow: var(--shadow-elevated);
+  white-space: nowrap;
+}
+
+.shareConfirmBtn:hover {
+  background: rgba(244, 211, 94, 0.25);
+}
+
+.shareConfirmBtn:active {
+  transform: translateX(-50%) scale(0.98);
+}
+
 .selectedVoice {
   background: rgba(244, 211, 94, 0.15);
   color: var(--color-golden);

@@ -245,7 +245,7 @@ export default async function authRoutes(fastify) {
           openid: user.openid,
           nickname: user.nickname || null,
           phone: user.phone || null,
-          createdAt: user.createdAt.toISOString(),
+          createdAt: user.firstSeen.toISOString(),
           isMember: user.isMember || false,
           points: user.points || 0,
           medals: user.medals || []

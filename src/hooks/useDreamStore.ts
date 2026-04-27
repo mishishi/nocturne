@@ -437,7 +437,10 @@ export const useDreamStore = create<DreamState>()(
       unlockAchievement: (id) =>
         set((state) => {
           if (state.achievements.includes(id)) return state
-          return { achievements: [...state.achievements, id] }
+          return {
+            achievements: [...state.achievements, id],
+            recentlyUnlocked: [...state.recentlyUnlocked, id]
+          }
         }),
 
       clearRecentlyUnlocked: (id) =>

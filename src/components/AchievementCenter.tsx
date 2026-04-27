@@ -4,20 +4,29 @@ import { useDreamStore, ACHIEVEMENTS, type Achievement } from '../hooks/useDream
 import { AchievementShareCard } from './AchievementShareCard'
 import styles from './AchievementCenter.module.css'
 
+// Medal definitions (mirrors server-side MEDALS and Profile.tsx)
+const MEDALS = [
+  { id: 'moonlight', name: '月光勋章', icon: '🌙', description: '朋友圈首次分享' },
+  { id: 'newmoon', name: '新月勋章', icon: '🌑', description: '邀请好友成功' },
+  { id: 'meteor', name: '流星成就', icon: '☄️', description: '连续分享7天' }
+]
+
 interface AchievementCenterProps {
   isOpen: boolean
   onClose: () => void
 }
 
 export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
-  const { achievements, history } = useDreamStore()
-  const [activeTab, setActiveTab] = useState<'all' | 'locked'>('all')
+  const { achievements, history, medals } = useDreamStore()
+  const [activeTab, setActiveTab] = useState<'all' | 'locked' | 'medals'>('all')
   const [sharingAchievement, setSharingAchievement] = useState<Achievement | null>(null)
 
   if (!isOpen) return null
 
   const unlockedAchievements = ACHIEVEMENTS.filter(a => achievements.includes(a.id))
   const lockedAchievements = ACHIEVEMENTS.filter(a => !achievements.includes(a.id))
+  const unlockedMedals = MEDALS.filter(m => medals.includes(m.id))
+  const lockedMedals = MEDALS.filter(m => !medals.includes(m.id))
 
   // Calculate next achievement progress
   const getProgress = (achievementId: string) => {
@@ -74,6 +83,11 @@ export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
             <span className={styles.statValue}>{history.length}</span>
             <span className={styles.statLabel}>梦境故事</span>
           </div>
+          <div className={styles.statDivider} />
+          <div className={styles.statItem}>
+            <span className={styles.statValue}>{unlockedMedals.length}/{MEDALS.length}</span>
+            <span className={styles.statLabel}>勋章</span>
+          </div>
         </div>
 
         <div className={styles.tabs}>
@@ -88,6 +102,12 @@ export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
             onClick={() => setActiveTab('locked')}
           >
             进行中
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'medals' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('medals')}
+          >
+            勋章
           </button>
         </div>
 
@@ -188,10 +208,53 @@ export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
               </div>
             )
           })}
+
+          {activeTab === 'medals' && unlockedMedals.map(medal => (
+            <div key={medal.id} className={`${styles.achievementCard} ${styles.unlocked}`}>
+              <div className={styles.achievementIcon}>
+                <span className={styles.iconEmoji}>{medal.icon}</span>
+              </div>
+              <div className={styles.achievementInfo}>
+                <div className={styles.achievementName}>{medal.name}</div>
+                <div className={styles.achievementDesc}>{medal.description}</div>
+              </div>
+              <div className={styles.unlockedBadge}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </div>
+            </div>
+          ))}
+
+          {activeTab === 'medals' && lockedMedals.map(medal => (
+            <div key={medal.id} className={`${styles.achievementCard} ${styles.locked}`}>
+              <div className={styles.achievementIcon}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.iconLock} aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+              </div>
+              <div className={styles.achievementInfo}>
+                <div className={styles.achievementName}>{medal.name}</div>
+                <div className={styles.achievementDesc}>{medal.description}</div>
+              </div>
+            </div>
+          ))}
+
+          {activeTab === 'medals' && MEDALS.length === 0 && (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>🏅</span>
+              <p>暂无勋章</p>
+            </div>
+          )}
         </div>
 
         <div className={styles.footer}>
-          <p className={styles.footerText}>继续记录梦境，解锁更多成就</p>
+          <p className={styles.footerText}>
+            {activeTab === 'medals'
+              ? '分享故事和邀请好友可解锁勋章'
+              : '继续记录梦境，解锁更多成就'}
+          </p>
         </div>
 
         {sharingAchievement && (

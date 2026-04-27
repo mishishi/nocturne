@@ -46,6 +46,8 @@ export function Story() {
   const [isLoadingDreamWallStory, setIsLoadingDreamWallStory] = useState(
     isFromDreamWall && !wallContext.storyFull
   )
+  // Pending share confirmation state (Web Share API resolves on sheet open, not share complete)
+  const [pendingShareConfirm, setPendingShareConfirm] = useState<{ type: 'friend' | 'moment' | 'poster', openid: string } | null>(null)
   const { speak, stop, isSpeaking, isSupported: isTtsSupported, voices, selectedVoice, setVoice } = useTextToSpeech()
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const aiWrapperRef = useRef<HTMLDivElement>(null)
@@ -308,28 +310,17 @@ export function Story() {
           title: '夜棂 - 梦境故事',
           text: shareText
         })
-        // Share sheet opened successfully - show immediate feedback
-        setToastType('success')
-        setToastMessage('分享成功')
-        setToastVisible(true)
-
-        // Log share and get rewards - only for author
+        // Share sheet opened successfully - Web Share API doesn't tell us if share completed
+        // Set pending confirmation state so user can confirm when they actually share
         if (isAuthor && openid) {
-          try {
-            const result = await shareApi.logShare(openid, type)
-            if (result.success) {
-              const parts: string[] = []
-              if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
-              if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
-              if (parts.length) {
-                setToastType('success')
-                setToastMessage(parts.join(' '))
-                setToastVisible(true)
-              }
-            }
-          } catch {
-            // Silently fail - we already showed success toast
-          }
+          setPendingShareConfirm({ type, openid })
+          setToastType('info')
+          setToastMessage('分享完成后请点击"确认分享"领取奖励')
+          setToastVisible(true)
+        } else {
+          setToastType('success')
+          setToastMessage('分享成功')
+          setToastVisible(true)
         }
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
@@ -341,6 +332,32 @@ export function Story() {
     } else {
       setToastType('info')
       setToastMessage('请长按复制内容分享')
+      setToastVisible(true)
+    }
+  }
+
+  const handleConfirmShare = async () => {
+    if (!pendingShareConfirm) return
+    const { type, openid } = pendingShareConfirm
+    setPendingShareConfirm(null)
+
+    try {
+      const result = await shareApi.logShare(openid, type)
+      if (result.success) {
+        const parts: string[] = ['分享成功']
+        if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
+        if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
+        setToastType('success')
+        setToastMessage(parts.join(' '))
+        setToastVisible(true)
+      } else if (result.reason) {
+        setToastType('info')
+        setToastMessage(result.reason)
+        setToastVisible(true)
+      }
+    } catch {
+      setToastType('error')
+      setToastMessage('记录分享失败')
       setToastVisible(true)
     }
   }
@@ -783,6 +800,19 @@ export function Story() {
                   </div>
                 )}
               </div>
+
+              {/* Pending share confirmation - appears after share sheet closes */}
+              {pendingShareConfirm && (
+                <button
+                  className={styles.shareConfirmBtn}
+                  onClick={handleConfirmShare}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                  确认分享
+                </button>
+              )}
             </div>
           )}
 

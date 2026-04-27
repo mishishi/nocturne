@@ -182,7 +182,6 @@ export const api = {
     const res = await fetchWithTimeout(`${API_BASE}/auth/export-data`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       }
     })
