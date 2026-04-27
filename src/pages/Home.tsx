@@ -8,9 +8,12 @@ import { useDreamStore } from '../hooks/useDreamStore'
 import styles from './Home.module.css'
 
 export function Home() {
-  const { achievements } = useDreamStore()
+  const { achievements, history } = useDreamStore()
   const [showAchievementCenter, setShowAchievementCenter] = useState(false)
   const handleOnboardingComplete = useCallback(() => {}, [])
+
+  const isNewUser = history.length === 0
+  const lastDreamDate = history.length > 0 ? history[0].date : null
 
   return (
     <div className={styles.page}>
@@ -50,13 +53,26 @@ export function Home() {
         </div>
 
         <h1 className={styles.heroTitle}>
-          <span className={styles.heroTitleLine}>你在夜棂存的</span>
-          <span className={styles.heroTitleLine}>每一篇梦</span>
-          <span className={styles.heroTitleAccent}>都是你自己</span>
+          {isNewUser ? (
+            <>
+              <span className={styles.heroTitleLine}>你在夜棂存的</span>
+              <span className={styles.heroTitleLine}>每一篇梦</span>
+              <span className={styles.heroTitleAccent}>都是你自己</span>
+            </>
+          ) : (
+            <>
+              <span className={styles.heroTitleLine}>昨晚做了什么梦？</span>
+              <span className={styles.heroTitleAccent}>继续探索吧</span>
+            </>
+          )}
         </h1>
 
         <p className={styles.heroSubtitle}>
-          把醒来就忘的梦，变成能留住的文字
+          {isNewUser
+            ? '把醒来就忘的梦，变成能留住的文字'
+            : lastDreamDate
+              ? `上次记录：${lastDreamDate}`
+              : '继续记录你的梦境'}
         </p>
 
         <div className={styles.heroCta}>

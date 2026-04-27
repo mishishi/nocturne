@@ -445,6 +445,17 @@ export function Story() {
 
   return (
     <>
+      {/* Pre-reveal loading state */}
+      {!isRevealed && (
+        <div className={styles.revealLoader}>
+          <div className={styles.revealLoaderMoon}>
+            <div className={styles.revealLoaderMoonCore} />
+            <div className={styles.revealLoaderMoonGlow} />
+          </div>
+          <p className={styles.revealLoaderText}>正在为你编织梦境</p>
+        </div>
+      )}
+
       {/* Reading Progress - outside .page to avoid transform affecting fixed positioning */}
       <div className={styles.progressWrapper}>
         <div className={styles.readProgress} style={{ width: `${readProgress}%` }} role="progressbar" aria-valuenow={readProgress} aria-valuemin={0} aria-valuemax={100} aria-label="阅读进度" />
