@@ -26,6 +26,7 @@ export function Story() {
   const [showAiMenu, setShowAiMenu] = useState(false)
   const [showPosterModal, setShowPosterModal] = useState(false)
   const [readProgress, setReadProgress] = useState(0)
+  const [showProgressInfo, setShowProgressInfo] = useState(false)
   const [isRevealed, setIsRevealed] = useState(false)
   const [showContent, setShowContent] = useState(false)
   const [showInterpretation, setShowInterpretation] = useState(false)
@@ -68,6 +69,7 @@ export function Story() {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
       const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
       setReadProgress(Math.min(100, Math.max(0, progress)))
+      if (scrollTop > 0) setShowProgressInfo(true)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
@@ -442,11 +444,8 @@ export function Story() {
   }
 
   return (
-    <div className={`${styles.page} ${isRevealed ? styles.revealed : ''}`}>
-      {/* Reveal glow effect */}
-      <div className={styles.revealGlow} />
-
-      {/* Reading Progress */}
+    <>
+      {/* Reading Progress - outside .page to avoid transform affecting fixed positioning */}
       <div className={styles.progressWrapper}>
         <div className={styles.readProgress} style={{ width: `${readProgress}%` }} role="progressbar" aria-valuenow={readProgress} aria-valuemin={0} aria-valuemax={100} aria-label="阅读进度" />
         <div className={styles.progressInfo}>
@@ -456,7 +455,11 @@ export function Story() {
           )}
         </div>
       </div>
-      <div className={styles.container}>
+
+      <div className={`${styles.page} ${isRevealed ? styles.revealed : ''}`}>
+        {/* Reveal glow effect */}
+        <div className={styles.revealGlow} />
+        <div className={styles.container}>
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -766,5 +769,6 @@ export function Story() {
         </svg>
       </div>
     </div>
+    </>
   )
 }

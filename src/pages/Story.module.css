@@ -11,7 +11,7 @@
 
 .page.revealed {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(10px);
 }
 
 /* Reveal glow effect */
@@ -73,13 +73,6 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.progressWrapper:hover .progressInfo,
-.readProgress[style*="width: 0"] ~ .progressInfo {
-  opacity: 0;
 }
 
 .progressPercent {
@@ -103,18 +96,7 @@
   border: 1px solid var(--color-border-light);
 }
 
-/* Show progress info when scrolling */
-.progressWrapper:has(.readProgress[style*="1"]) .progressInfo,
-.progressWrapper:has(.readProgress[style*="2"]) .progressInfo,
-.progressWrapper:has(.readProgress[style*="3"]) .progressInfo,
-.progressWrapper:has(.readProgress[style*="4"]) .progressInfo,
-.progressWrapper:has(.readProgress[style*="5"]) .progressInfo,
-.progressWrapper:has(.readProgress[style*="6"]) .progressInfo,
-.progressWrapper:has(.readProgress[style*="7"]) .progressInfo,
-.progressWrapper:has(.readProgress[style*="8"]) .progressInfo,
-.progressWrapper:has(.readProgress[style*="9"]) .progressInfo {
-  opacity: 1;
-}
+/* Progress info shown via React inline style */
 
 /* Atmospheric background */
 .page::before {
