@@ -343,14 +343,42 @@ export function Story() {
         setToastMessage('发布成功！')
         setToastVisible(true)
       } else {
+        // Check if already published error
+        if (result.message?.includes('已在') || result.message?.includes('已经')) {
+          // Mark as published even if backend says already published
+          setIsPublished(true)
+          const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
+          if (!publishedSessions.includes(sessionId)) {
+            publishedSessions.push(sessionId)
+            localStorage.setItem(PUBLISHED_SESSIONS_KEY, JSON.stringify(publishedSessions))
+          }
+          setToastType('info')
+          setToastMessage('已在梦墙发布过')
+          setToastVisible(true)
+        } else {
+          setToastType('error')
+          setToastMessage(result.message || '发布失败')
+          setToastVisible(true)
+        }
+      }
+    } catch (err) {
+      // Check if it's the "already published" error from backend
+      const error = err as { message?: string }
+      if (error.message?.includes('已在') || error.message?.includes('已经')) {
+        setIsPublished(true)
+        const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
+        if (!publishedSessions.includes(sessionId)) {
+          publishedSessions.push(sessionId)
+          localStorage.setItem(PUBLISHED_SESSIONS_KEY, JSON.stringify(publishedSessions))
+        }
+        setToastType('info')
+        setToastMessage('已在梦墙发布过')
+        setToastVisible(true)
+      } else {
         setToastType('error')
-        setToastMessage(result.message || '发布失败')
+        setToastMessage('网络错误，请重试')
         setToastVisible(true)
       }
-    } catch {
-      setToastType('error')
-      setToastMessage('网络错误，请重试')
-      setToastVisible(true)
     } finally {
       setIsPublishing(false)
     }
