@@ -201,6 +201,7 @@
   width: 24px;
   height: 24px;
   color: var(--color-golden);
+  transition: color 0.3s ease;
 }
 
 .voiceIcon svg {
@@ -212,12 +213,33 @@
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--color-golden);
+  transition: color 0.3s ease;
+}
+
+.voiceBtn.recording .voiceIcon {
+  color: var(--color-sunset);
+}
+
+.voiceBtn.recording .voiceText {
+  color: var(--color-sunset);
 }
 
 .voiceHint {
   font-size: 0.75rem;
   color: var(--color-silver);
   opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.voiceHint.recording {
+  color: var(--color-sunset);
+  opacity: 1;
+  animation: hintPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes hintPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 .waveformCanvas {
@@ -229,6 +251,8 @@
 
 .waveformCanvas.active {
   display: block;
+  box-shadow: 0 0 20px rgba(231, 111, 81, 0.15);
+  border: 1px solid rgba(231, 111, 81, 0.2);
 }
 
 /* ============================================

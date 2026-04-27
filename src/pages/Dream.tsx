@@ -373,7 +373,7 @@ export function Dream() {
                     {isRecording ? '点击停止' : '点击说话'}
                   </span>
                 </button>
-                <span className={styles.voiceHint}>
+                <span className={`${styles.voiceHint} ${isRecording ? styles.recording : ''}`}>
                   {isRecording ? '正在聆听...' : '支持语音转文字'}
                 </span>
                 <canvas

@@ -23,6 +23,7 @@ export function Story() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [showShareMenu, setShowShareMenu] = useState(false)
+  const [showAiMenu, setShowAiMenu] = useState(false)
   const [showPosterModal, setShowPosterModal] = useState(false)
   const [readProgress, setReadProgress] = useState(0)
   const [isRevealed, setIsRevealed] = useState(false)
@@ -35,7 +36,9 @@ export function Story() {
   const [isPublished, setIsPublished] = useState(false)
   const { speak, stop, isSpeaking, isSupported: isTtsSupported, voices, selectedVoice, setVoice } = useTextToSpeech()
   const shareWrapperRef = useRef<HTMLDivElement>(null)
+  const aiWrapperRef = useRef<HTMLDivElement>(null)
   const shareMenuRef = useRef<HTMLDivElement>(null)
+  const aiMenuRef = useRef<HTMLDivElement>(null)
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Check if we navigated from history with state
@@ -72,15 +75,18 @@ export function Story() {
 
   // Close share menu on outside click
   useEffect(() => {
-    if (!showShareMenu) return
+    if (!showShareMenu && !showAiMenu) return
     const handleClickOutside = (e: MouseEvent) => {
-      if (shareWrapperRef.current && !shareWrapperRef.current.contains(e.target as Node)) {
+      if (showShareMenu && shareWrapperRef.current && !shareWrapperRef.current.contains(e.target as Node)) {
         setShowShareMenu(false)
+      }
+      if (showAiMenu && aiWrapperRef.current && !aiWrapperRef.current.contains(e.target as Node)) {
+        setShowAiMenu(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showShareMenu])
+  }, [showShareMenu, showAiMenu])
 
   // Focus trap and Escape for share menu
   useEffect(() => {
@@ -109,6 +115,34 @@ export function Story() {
     firstItem?.focus()
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [showShareMenu])
+
+  // Focus trap and Escape for AI menu
+  useEffect(() => {
+    if (!showAiMenu || !aiMenuRef.current) return
+    const menuItems = aiMenuRef.current.querySelectorAll('button')
+    const firstItem = menuItems[0]
+    const lastItem = menuItems[menuItems.length - 1]
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAiMenu(false)
+        return
+      }
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === firstItem) {
+          e.preventDefault()
+          lastItem.focus()
+        } else if (!e.shiftKey && document.activeElement === lastItem) {
+          e.preventDefault()
+          firstItem.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    firstItem?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showAiMenu])
 
   // Cleanup copy timeout on unmount
   useEffect(() => {
@@ -145,6 +179,7 @@ export function Story() {
   const handleShareToWeChat = async (type: 'friend' | 'moment') => {
     const shareText = `「${storyTitle}」\n\n${story}`
     const openid = currentSession.openid
+    setShowShareMenu(false)
 
     if (navigator.share) {
       try {
@@ -152,23 +187,27 @@ export function Story() {
           title: '夜棂 - 梦境故事',
           text: shareText
         })
-        // Log successful share
+        // Share sheet opened successfully - show immediate feedback
+        setToastType('success')
+        setToastMessage('分享成功')
+        setToastVisible(true)
+
+        // Log share and get rewards
         if (openid) {
           try {
             const result = await shareApi.logShare(openid, type)
             if (result.success) {
-              const msg = result.pointsEarned ? `+${result.pointsEarned} 积分` : ''
-              const medalMsg = result.medalsUnlocked?.length ? ` ${result.medalsUnlocked.join(',')} 已解锁！` : ''
-              setToastType('success')
-              setToastMessage(`${msg}${medalMsg}` || '分享成功')
-              setToastVisible(true)
-            } else if (result.reason) {
-              setToastType('info')
-              setToastMessage(result.reason)
-              setToastVisible(true)
+              const parts: string[] = []
+              if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
+              if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
+              if (parts.length) {
+                setToastType('success')
+                setToastMessage(parts.join(' '))
+                setToastVisible(true)
+              }
             }
           } catch {
-            // Silently fail if share logging fails
+            // Silently fail - we already showed success toast
           }
         }
       } catch (err) {
@@ -183,40 +222,45 @@ export function Story() {
       setToastMessage('请长按复制内容分享')
       setToastVisible(true)
     }
-    setShowShareMenu(false)
   }
 
   const handleCopyLink = async () => {
     const url = window.location.href
     const openid = currentSession.openid
+    setShowShareMenu(false)
 
     navigator.clipboard.writeText(url).then(async () => {
+      // Immediate feedback
       setToastType('success')
       setToastMessage('链接已复制到剪贴板')
       setToastVisible(true)
 
-      // Log share after clipboard copy
+      // Log share and show rewards
       if (openid) {
         try {
           const result = await shareApi.logShare(openid, 'link')
-          if (result.success && result.pointsEarned) {
-            // Clear any existing timeout
-            if (copyTimeoutRef.current) {
-              clearTimeout(copyTimeoutRef.current)
+          if (result.success) {
+            const parts: string[] = []
+            if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
+            if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
+            if (parts.length) {
+              // Clear any existing timeout
+              if (copyTimeoutRef.current) {
+                clearTimeout(copyTimeoutRef.current)
+              }
+              copyTimeoutRef.current = setTimeout(() => {
+                setToastType('success')
+                setToastMessage(parts.join(' '))
+                setToastVisible(true)
+                copyTimeoutRef.current = null
+              }, 1000)
             }
-            copyTimeoutRef.current = setTimeout(() => {
-              setToastType('success')
-              setToastMessage(`+${result.pointsEarned} 积分`)
-              setToastVisible(true)
-              copyTimeoutRef.current = null
-            }, 1500)
           }
         } catch {
-          // Silently fail
+          // Silently fail - already showed copy confirmation
         }
       }
     })
-    setShowShareMenu(false)
   }
 
   const handleGeneratePoster = () => {
@@ -532,56 +576,99 @@ export function Story() {
                 已发布到梦墙
               </span>
             )}
-            {isTtsSupported && (
-              <div className={styles.ttsWrapper}>
-                <Button
-                  variant="secondary"
-                  onClick={handleSpeakStory}
-                  className={isSpeaking ? styles.ttsButtonActive : ''}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                    {isSpeaking ? (
-                      // Pause icon when speaking
-                      <>
-                        <rect x="6" y="4" width="4" height="16" rx="1" />
-                        <rect x="14" y="4" width="4" height="16" rx="1" />
-                      </>
-                    ) : (
-                      // Speaker icon when not speaking
-                      <>
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                      </>
-                    )}
-                  </svg>
-                  {isSpeaking ? '停止' : '听故事'}
-                </Button>
-                {voices.length > 1 && (
-                  <select
-                    className={styles.voiceSelect}
-                    value={selectedVoice?.name || ''}
-                    onChange={(e) => {
-                      const voice = voices.find(v => v.name === e.target.value)
-                      if (voice) setVoice(voice)
+            {/* AI Assistant Dropdown - combines TTS and Interpretation */}
+            <div className={styles.aiWrapper} ref={aiWrapperRef}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowAiMenu(!showAiMenu)}
+                aria-expanded={showAiMenu}
+                disabled={isInterpreting}
+                className={isSpeaking ? styles.ttsButtonActive : ''}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                  {isSpeaking ? (
+                    <>
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+                      <path d="M9 21h6" />
+                    </>
+                  )}
+                </svg>
+                AI 助手
+              </Button>
+              {showAiMenu && (
+                <div className={styles.shareMenu} role="menu" aria-label="AI 助手选项" ref={aiMenuRef}>
+                  <button
+                    className={styles.shareMenuItem}
+                    onClick={() => {
+                      handleSpeakStory()
+                      setShowAiMenu(false)
                     }}
+                    role="menuitem"
+                    tabIndex={0}
                   >
-                    {voices.slice(0, 6).map((voice) => (
-                      <option key={voice.name} value={voice.name}>
-                        {voice.name.length > 20 ? voice.name.substring(0, 20) + '...' : voice.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            )}
-            <Button variant="secondary" onClick={handleInterpret} disabled={isInterpreting}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
-                <path d="M9 21h6" />
-              </svg>
-              {isInterpreting ? '解读中...' : '听听解读'}
-            </Button>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                      {isSpeaking ? (
+                        <>
+                          <rect x="6" y="4" width="4" height="16" rx="1" />
+                          <rect x="14" y="4" width="4" height="16" rx="1" />
+                        </>
+                      ) : (
+                        <>
+                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                        </>
+                      )}
+                    </svg>
+                    {isSpeaking ? '停止朗读' : '听故事朗读'}
+                  </button>
+                  {voices.length > 1 && !isSpeaking && (
+                    <div className={styles.voiceSubMenu}>
+                      <span className={styles.subMenuLabel}>选择声音</span>
+                      {voices
+                        .filter(v => v.name.toLowerCase().includes('google'))
+                        .slice(0, 6)
+                        .map((voice) => (
+                          <button
+                            key={voice.name}
+                            className={`${styles.shareMenuItem} ${selectedVoice?.name === voice.name ? styles.selectedVoice : ''}`}
+                            onClick={() => {
+                              setVoice(voice)
+                            }}
+                            role="menuitem"
+                            tabIndex={0}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
+                              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                            </svg>
+                            {voice.name.length > 18 ? voice.name.substring(0, 18) + '...' : voice.name}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                  <button
+                    className={styles.shareMenuItem}
+                    onClick={() => {
+                      handleInterpret()
+                      setShowAiMenu(false)
+                    }}
+                    role="menuitem"
+                    tabIndex={0}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                      <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+                      <path d="M9 21h6" />
+                    </svg>
+                    {isInterpreting ? '解读生成中...' : 'AI 梦境解读'}
+                  </button>
+                </div>
+              )}
+            </div>
             <Link to="/dream">
               <Button variant="primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
@@ -619,16 +706,25 @@ export function Story() {
           onClose={() => setShowPosterModal(false)}
           onShare={async (type) => {
             const openid = currentSession.openid
+            // Show immediate feedback
+            setToastType('success')
+            setToastMessage('海报已保存')
+            setToastVisible(true)
             if (openid) {
               try {
                 const result = await shareApi.logShare(openid, type)
-                if (result.success && result.pointsEarned) {
-                  setToastType('success')
-                  setToastMessage(`+${result.pointsEarned} 积分`)
-                  setToastVisible(true)
+                if (result.success) {
+                  const parts: string[] = []
+                  if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
+                  if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
+                  if (parts.length) {
+                    setToastType('success')
+                    setToastMessage(parts.join(' '))
+                    setToastVisible(true)
+                  }
                 }
               } catch {
-                // Silently fail
+                // Silently fail - already showed initial toast
               }
             }
           }}

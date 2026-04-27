@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { BottomNav } from './components/BottomNav'
 import { PageTransition } from './components/PageTransition'
-import { AchievementUnlockModal } from './components/ui/AchievementUnlockModal'
+import { AchievementToast } from './components/AchievementToast'
 import { AtmosphereEffects } from './components/effects/AtmosphereEffects'
 import { SkipLink } from './components/SkipLink'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -82,10 +82,9 @@ function App() {
 
       <BottomNav />
 
-      <AchievementUnlockModal
+      <AchievementToast
         achievement={currentAchievement}
-        isOpen={currentAchievement !== null}
-        onClose={handleClose}
+        onDismiss={handleClose}
       />
     </div>
   )
