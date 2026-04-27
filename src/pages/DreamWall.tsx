@@ -387,7 +387,7 @@ export function DreamWall() {
                     <button
                       className={styles.actionBtn}
                       onClick={() => {
-                        navigator.clipboard.writeText(`${post.storyTitle}\n\n${post.storySnippet}`)
+                        navigator.clipboard.writeText(`${post.storyTitle}\n\n${post.storyFull || post.storySnippet}`)
                         setToastType('success')
                         setToastMessage('内容已复制')
                         setToastVisible(true)
@@ -418,6 +418,11 @@ export function DreamWall() {
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* End of results */}
+              {!hasMore && posts.length > 0 && activeTab !== 'my' && (
+                <p className={styles.endMessage}>— 已加载全部 —</p>
               )}
             </div>
           )}

@@ -471,6 +471,14 @@ export function History() {
                   key={tag.id}
                   className={`${styles.tagFilterChip} ${selectedTags.includes(tag.id) ? styles.tagFilterActive : ''}`}
                   onClick={() => toggleTag(tag.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      toggleTag(tag.id)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   aria-pressed={selectedTags.includes(tag.id)}
                   style={{ '--tag-color': tag.color } as React.CSSProperties}
                 >
@@ -741,6 +749,7 @@ export function History() {
                             <button
                               className={styles.noteEditBtn}
                               onClick={() => handleStartEditNote(item)}
+                              aria-label={item.privateNote ? '编辑笔记' : '添加笔记'}
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
                                 <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />

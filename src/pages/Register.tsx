@@ -17,6 +17,7 @@ export function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
   const [inviteCode, setInviteCode] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   const handleCredentialsSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,6 +40,11 @@ export function Register() {
 
     if (password !== confirmPassword) {
       setError('两次密码不一致')
+      return
+    }
+
+    if (!agreedToTerms) {
+      setError('请先同意用户协议和隐私政策')
       return
     }
 
@@ -154,6 +160,18 @@ export function Register() {
                   />
                 </div>
 
+                <div className={styles.passwordHints}>
+                  <span className={`${styles.hint} ${password.length >= 6 ? styles.hintOk : ''}`}>
+                    {password.length >= 6 ? '✓' : '○'} 至少6位
+                  </span>
+                  <span className={`${styles.hint} ${/\d/.test(password) ? styles.hintOk : ''}`}>
+                    {/\d/.test(password) ? '✓' : '○'} 含数字
+                  </span>
+                  <span className={`${styles.hint} ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? styles.hintOk : ''}`}>
+                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? '✓' : '○'} 含特殊字符
+                  </span>
+                </div>
+
                 <div className={styles.inputWrapper}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.inputIcon}>
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -173,7 +191,22 @@ export function Register() {
 
               {error && <p className={styles.error}>{error}</p>}
 
-              <button type="submit" className={styles.submitButton}>
+              <label className={styles.termsCheckbox}>
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span className={styles.checkboxLabel}>
+                  我已阅读并同意
+                  <a href="#" className={styles.link}>《用户协议》</a>
+                  和
+                  <a href="#" className={styles.link}>《隐私政策》</a>
+                </span>
+              </label>
+
+              <button type="submit" className={styles.submitButton} disabled={!agreedToTerms}>
                 继续
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={styles.arrowIcon}>
                   <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -251,8 +284,10 @@ export function Register() {
                 type="button"
                 className={styles.backButton}
                 onClick={() => {
-                  setStep('credentials')
-                  setError('')
+                  if (window.confirm('返回将丢失已填写的信息，确定要返回吗？')) {
+                    setStep('credentials')
+                    setError('')
+                  }
                 }}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

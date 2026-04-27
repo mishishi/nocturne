@@ -187,7 +187,14 @@ export function Login() {
 
               <button
                 className={styles.phoneToggle}
-                onClick={() => setShowPhoneLogin(true)}
+                onClick={() => {
+                  if (phone || password) {
+                    if (!window.confirm('切换登录方式将清空已填写的信息，确定继续吗？')) {
+                      return
+                    }
+                  }
+                  setShowPhoneLogin(true)
+                }}
               >
                 使用手机号登录
               </button>
@@ -205,6 +212,13 @@ export function Login() {
               <button
                 className={styles.backButton}
                 onClick={() => {
+                  if (phone || password) {
+                    if (!window.confirm('切换登录方式将清空已填写的信息，确定继续吗？')) {
+                      return
+                    }
+                    setPhone('')
+                    setPassword('')
+                  }
                   setShowPhoneLogin(false)
                   setError('')
                 }}

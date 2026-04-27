@@ -138,6 +138,8 @@ export function Profile() {
                 <div
                   key={medal.id}
                   className={`${styles.medalCard} ${isUnlocked ? styles.medalUnlocked : ''}`}
+                  title={isUnlocked ? `${medal.name} - ${medal.description}` : `解锁条件: ${medal.description}`}
+                  aria-label={`${medal.name}，${isUnlocked ? '已解锁' : `未解锁，解锁条件: ${medal.description}`}`}
                 >
                   <span className={styles.medalIcon}>{medal.icon}</span>
                   <div className={styles.medalInfo}>
