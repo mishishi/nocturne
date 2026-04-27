@@ -70,21 +70,21 @@ function App() {
         <main id="main-content" role="main" aria-label="主内容区域">
           <GlobalErrorBoundary>
             <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/dream" element={<Dream />} />
-            <Route path="/questions" element={<Questions />} />
-            <Route path="/story" element={<Story />} />
-            <Route path="/history" element={<History />} />
+            <Route path="/" element={<PageErrorBoundary><Home /></PageErrorBoundary>} />
+            <Route path="/dream" element={<PageErrorBoundary><Dream /></PageErrorBoundary>} />
+            <Route path="/questions" element={<PageErrorBoundary><Questions /></PageErrorBoundary>} />
+            <Route path="/story" element={<PageErrorBoundary><Story /></PageErrorBoundary>} />
+            <Route path="/history" element={<PageErrorBoundary><History /></PageErrorBoundary>} />
             <Route path="/wall" element={<PageErrorBoundary><DreamWall /></PageErrorBoundary>} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<PageErrorBoundary><Login /></PageErrorBoundary>} />
+            <Route path="/register" element={<PageErrorBoundary><Register /></PageErrorBoundary>} />
             <Route path="/profile" element={
-              <ProtectedRoute><Profile /></ProtectedRoute>
+              <PageErrorBoundary><ProtectedRoute><Profile /></ProtectedRoute></PageErrorBoundary>
             } />
             <Route path="/friends" element={
-              <ProtectedRoute><Friends /></ProtectedRoute>
+              <PageErrorBoundary><ProtectedRoute><Friends /></ProtectedRoute></PageErrorBoundary>
             } />
-            <Route path="/auth/wechat/callback" element={<WeChatCallback />} />
+            <Route path="/auth/wechat/callback" element={<PageErrorBoundary><WeChatCallback /></PageErrorBoundary>} />
           </Routes>
           </GlobalErrorBoundary>
         </main>
