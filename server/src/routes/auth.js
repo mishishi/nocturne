@@ -1,3 +1,4 @@
+import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 
@@ -188,6 +189,114 @@ export default async function authRoutes(fastify) {
     } catch (error) {
       console.error('Verify token error:', error)
       return res.status(500).send({ error: '验证失败' })
+    }
+  })
+
+  // POST /api/auth/export-data - 导出用户数据 (GDPR数据 portability)
+  fastify.post('/auth/export-data', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    try {
+      // 1. Get user info via authService to get openid
+      const user = await authService.getUser(req.userId)
+      if (!user) {
+        return res.status(401).send({ error: '用户不存在' })
+      }
+      const { openid } = user
+
+      // 2. All sessions (dreams) with answers and story
+      const sessions = await prisma.session.findMany({
+        where: { openid },
+        include: { answers: true, story: true },
+        orderBy: { createdAt: 'asc' }
+      })
+
+      // 3. Wall posts with comments
+      const wallPosts = await prisma.dreamWall.findMany({
+        where: { openid },
+        include: {
+          comments: {
+            select: { id: true, content: true, isAnonymous: true, createdAt: true }
+          }
+        },
+        orderBy: { createdAt: 'asc' }
+      })
+
+      // 4. Friends (accepted only)
+      const friends = await prisma.friend.findMany({
+        where: { userId: user.id, status: 'ACCEPTED' },
+        include: { friend: true },
+        orderBy: { createdAt: 'asc' }
+      })
+
+      // 5. Share logs
+      const shareLogs = await prisma.shareLog.findMany({
+        where: { openid },
+        orderBy: { createdAt: 'asc' }
+      })
+
+      // Build export JSON
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        appVersion: '1.0.0',
+        user: {
+          openid: user.openid,
+          nickname: user.nickname || null,
+          phone: user.phone || null,
+          createdAt: user.createdAt.toISOString(),
+          isMember: user.isMember || false,
+          points: user.points || 0,
+          medals: user.medals || []
+        },
+        dreams: sessions.map(s => ({
+          id: s.id,
+          createdAt: s.createdAt.toISOString(),
+          status: s.status,
+          answers: s.answers.map(a => a.content),
+          story: s.story ? {
+            id: s.story.id,
+            content: s.story.content,
+            title: s.story.title
+          } : null
+        })),
+        wallPosts: wallPosts.map(w => ({
+          id: w.id,
+          storyTitle: w.storyTitle,
+          storySnippet: w.storySnippet,
+          isAnonymous: w.isAnonymous,
+          likeCount: w.likeCount || 0,
+          commentCount: w.comments.length,
+          createdAt: w.createdAt.toISOString(),
+          comments: w.comments.map(c => ({
+            id: c.id,
+            content: c.content,
+            isAnonymous: c.isAnonymous,
+            createdAt: c.createdAt.toISOString()
+          }))
+        })),
+        friends: friends.map(f => ({
+          friendOpenid: f.friend.openid,
+          friendNickname: f.friend.nickname || null,
+          status: f.status,
+          createdAt: f.createdAt.toISOString()
+        })),
+        shareLogs: shareLogs.map(s => ({
+          type: s.type,
+          createdAt: s.createdAt.toISOString()
+        }))
+      }
+
+      const json = JSON.stringify(exportData, null, 2)
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+
+      res.header('Content-Type', 'application/json')
+      res.header('Content-Disposition', `attachment; filename="yeelin_data_${today}.json"`)
+      return res.send(json)
+    } catch (error) {
+      console.error('Export data error:', error)
+      return res.status(500).send({ error: '导出失败' })
     }
   })
 }
