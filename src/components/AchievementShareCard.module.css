@@ -1,0 +1,139 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background: linear-gradient(180deg, var(--color-night-mid) 0%, var(--color-night-deep) 100%);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-2xl);
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  animation: slideUp 0.3s var(--ease-dream);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin: 0;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-silver);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-moonlight);
+}
+
+.closeBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.preview {
+  padding: var(--space-6);
+  display: flex;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.canvas {
+  width: 240px;
+  height: 240px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.incentive {
+  padding: 0 var(--space-6) var(--space-4);
+}
+
+.incentiveContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(244, 211, 94, 0.08);
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: var(--radius-lg);
+}
+
+.incentiveIcon {
+  color: var(--color-golden);
+}
+
+.incentiveText {
+  font-size: 0.875rem;
+  color: var(--color-silver);
+}
+
+.incentiveText strong {
+  color: var(--color-golden);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6) var(--space-6);
+}
+
+.downloadBtn,
+.shareBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

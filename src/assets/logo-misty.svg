@@ -1,0 +1,46 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0D1B2A"/>
+      <stop offset="60%" stop-color="#1A3A5C"/>
+      <stop offset="100%" stop-color="#2D5A7B"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F4D35E" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#F4D35E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cloud" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E8E8E8" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#E8E8E8" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#E8E8E8" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#sky)"/>
+
+  <!-- Moon glow halo -->
+  <circle cx="220" cy="200" r="160" fill="url(#moonGlow)"/>
+
+  <!-- Crescent moon (partially hidden by cloud) -->
+  <circle cx="240" cy="200" r="90" fill="#F4D35E"/>
+  <circle cx="295" cy="180" r="80" fill="url(#sky)"/>
+
+  <!-- Cloud layer 1 (in front of moon) -->
+  <ellipse cx="180" cy="230" rx="100" ry="40" fill="url(#cloud)"/>
+  <ellipse cx="260" cy="250" rx="80" ry="35" fill="url(#cloud)"/>
+
+  <!-- Distant stars -->
+  <circle cx="380" cy="120" r="2" fill="#F4D35E" opacity="0.6"/>
+  <circle cx="420" cy="180" r="1.5" fill="#F4D35E" opacity="0.4"/>
+  <circle cx="100" cy="150" r="1.5" fill="#F4D35E" opacity="0.5"/>
+  <circle cx="450" cy="280" r="1" fill="#F4D35E" opacity="0.3"/>
+
+  <!-- Cloud layer 2 (lower, more prominent) -->
+  <ellipse cx="150" cy="340" rx="120" ry="50" fill="url(#cloud)" opacity="0.8"/>
+  <ellipse cx="350" cy="360" rx="100" ry="45" fill="url(#cloud)" opacity="0.6"/>
+  <ellipse cx="256" cy="400" rx="140" ry="40" fill="url(#cloud)" opacity="0.4"/>
+
+  <!-- Horizon glow -->
+  <ellipse cx="256" cy="480" rx="200" ry="60" fill="#F4D35E" opacity="0.05"/>
+</svg>

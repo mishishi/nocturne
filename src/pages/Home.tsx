@@ -1,13 +1,37 @@
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { OnboardingOverlay } from '../components/ui/OnboardingOverlay'
+import { AchievementCenter } from '../components/AchievementCenter'
+import { useDreamStore } from '../hooks/useDreamStore'
 import styles from './Home.module.css'
 
 export function Home() {
+  const { achievements } = useDreamStore()
+  const [showAchievementCenter, setShowAchievementCenter] = useState(false)
+  const handleOnboardingComplete = useCallback(() => {}, [])
+
   return (
     <div className={styles.page}>
-      <OnboardingOverlay onComplete={() => {}} />
+      {/* Achievement Badge */}
+      {achievements.length > 0 && (
+        <button
+          className={styles.achievementBadge}
+          onClick={() => setShowAchievementCenter(true)}
+          aria-label={`已解锁 ${achievements.length} 个成就`}
+        >
+          <span className={styles.achievementBadgeIcon}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="8" r="6" />
+              <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+            </svg>
+          </span>
+          <span className={styles.achievementBadgeCount}>{achievements.length}</span>
+        </button>
+      )}
+
+      <OnboardingOverlay onComplete={handleOnboardingComplete} />
       {/* Hero Section */}
       <section className={styles.hero}>
         <div className={styles.moon}>
@@ -98,6 +122,11 @@ export function Home() {
           "每个人的梦里都住着另一个自己，那个自己比醒着的更真实、更勇敢、更脆弱。"
         </blockquote>
       </footer>
+
+      <AchievementCenter
+        isOpen={showAchievementCenter}
+        onClose={() => setShowAchievementCenter(false)}
+      />
     </div>
   )
 }

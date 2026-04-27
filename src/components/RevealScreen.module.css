@@ -1,0 +1,325 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--color-overlay);
+  backdrop-filter: blur(24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.6s var(--ease-dream);
+}
+
+.content {
+  text-align: center;
+  max-width: 400px;
+  padding: var(--space-8);
+}
+
+/* Loading Phase */
+.moonContainer {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto var(--space-10);
+}
+
+.moon {
+  width: 100%;
+  height: 100%;
+  animation: moonGlow 2s ease-in-out infinite;
+}
+
+.moon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 30px rgba(244, 211, 94, 0.5));
+}
+
+.rays {
+  position: absolute;
+  inset: -20px;
+  animation: rotate 20s linear infinite;
+}
+
+.ray {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(to top, rgba(244, 211, 94, 0.6), transparent);
+  left: 50%;
+  top: 0;
+  transform-origin: center 70px;
+  opacity: 0.5;
+}
+
+.ray:nth-child(1) { transform: rotate(0deg); }
+.ray:nth-child(2) { transform: rotate(30deg); }
+.ray:nth-child(3) { transform: rotate(60deg); }
+.ray:nth-child(4) { transform: rotate(90deg); }
+.ray:nth-child(5) { transform: rotate(120deg); }
+.ray:nth-child(6) { transform: rotate(150deg); }
+.ray:nth-child(7) { transform: rotate(180deg); }
+.ray:nth-child(8) { transform: rotate(210deg); }
+.ray:nth-child(9) { transform: rotate(240deg); }
+.ray:nth-child(10) { transform: rotate(270deg); }
+.ray:nth-child(11) { transform: rotate(300deg); }
+.ray:nth-child(12) { transform: rotate(330deg); }
+
+.loadingTitle {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin: 0 0 var(--space-3) 0;
+  animation: fadeInUp 0.8s var(--ease-dream);
+}
+
+.loadingMessage {
+  font-size: 1rem;
+  color: var(--color-silver);
+  margin: 0 0 var(--space-8) 0;
+  min-height: 1.5em;
+}
+
+.progressBar {
+  width: 200px;
+  height: 4px;
+  background: rgba(139, 157, 195, 0.2);
+  border-radius: 2px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(90deg, var(--color-golden), var(--color-moonlight));
+  border-radius: 2px;
+  animation: progressIndeterminate 1.5s ease-in-out infinite;
+}
+
+/* Ready Phase */
+.readyMoon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto var(--space-8);
+}
+
+.readyMoon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 40px rgba(244, 211, 94, 0.6));
+}
+
+.moonPulse {
+  animation: moonPulse 1.5s ease-in-out infinite;
+}
+
+.readyStars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--color-golden);
+  border-radius: 50%;
+  animation: starFadeIn 0.5s var(--ease-dream) forwards;
+  opacity: 0;
+}
+
+.readyTitle {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin: 0 0 var(--space-2) 0;
+  animation: fadeInUp 0.6s var(--ease-dream);
+}
+
+.readySubtitle {
+  font-size: 0.875rem;
+  color: var(--color-silver);
+  opacity: 0.7;
+  animation: fadeInUp 0.6s var(--ease-dream) 0.2s backwards;
+}
+
+.readyStoryTitle {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-golden);
+  margin: var(--space-4) 0 0 0;
+  opacity: 0.9;
+  animation: fadeInUp 0.6s var(--ease-dream) 0.3s backwards;
+}
+
+/* Countdown Phase */
+.countdownMoon {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto var(--space-8);
+  animation: moonReveal 0.8s var(--ease-dream);
+}
+
+.countdownMoon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 50px rgba(244, 211, 94, 0.7));
+}
+
+.countdownStars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.twinkleStar {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--color-golden);
+  border-radius: 50%;
+  animation: twinkle 1.5s ease-in-out infinite;
+}
+
+.countdownNumber {
+  font-family: var(--font-display);
+  font-size: 6rem;
+  font-weight: 600;
+  color: var(--color-golden);
+  text-shadow: 0 0 40px rgba(244, 211, 94, 0.5);
+  animation: countdownPop 1s var(--ease-dream);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes moonGlow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 30px rgba(244, 211, 94, 0.5));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 40px rgba(244, 211, 94, 0.6));
+  }
+}
+
+@keyframes moonPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes moonReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.8) rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes progressIndeterminate {
+  0% {
+    transform: translateX(-100%);
+    width: 30%;
+  }
+  50% {
+    width: 50%;
+  }
+  100% {
+    transform: translateX(400%);
+    width: 30%;
+  }
+}
+
+@keyframes starFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes countdownPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .content {
+    padding: var(--space-6);
+  }
+
+  .loadingTitle {
+    font-size: 1.5rem;
+  }
+
+  .moonContainer {
+    width: 100px;
+    height: 100px;
+  }
+
+  .readyMoon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .countdownMoon {
+    width: 110px;
+    height: 110px;
+  }
+
+  .countdownNumber {
+    font-size: 5rem;
+  }
+}

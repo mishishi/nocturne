@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 
 export interface DreamSession {
   id: string
+  sessionId: string  // Backend session ID for publishing
   date: string
   dreamSnippet: string
   storyTitle: string
@@ -12,6 +13,42 @@ export interface DreamSession {
   isFavorite?: boolean
   privateNote?: string
   tags: string[]
+}
+
+// User type
+export interface User {
+  id: string
+  openid: string
+  nickname?: string
+  avatar?: string
+  phone?: string
+  isMember: boolean
+  memberSince?: string
+  points: number
+  medals: string[]
+  consecutiveShares: number
+  lastShareDate?: string
+}
+
+// Friend type
+export interface Friend {
+  id: string
+  friendId: string
+  nickname?: string
+  avatar?: string
+  isMember: boolean
+  memberSince?: string
+  friendsSince: string
+}
+
+// Pending friend request type
+export interface PendingRequest {
+  id: string
+  fromId?: string
+  toId?: string
+  nickname?: string
+  avatar?: string
+  createdAt: string
 }
 
 // Predefined tags
@@ -75,6 +112,20 @@ interface DreamState {
   achievements: string[]
   recentlyUnlocked: string[]
 
+  // Sharing / Points
+  points: number
+  medals: string[]
+  consecutiveShares: number
+  lastShareDate: string | null
+
+  // User auth
+  user: User | null
+  token: string | null
+
+  // Friends
+  friends: Friend[]
+  pendingRequests: { received: PendingRequest[]; sent: PendingRequest[] }
+
   // Settings
   fontSize: 'small' | 'medium' | 'large'
   theme: 'starry' | 'aurora' | 'highcontrast'
@@ -103,11 +154,22 @@ interface DreamState {
   updateTags: (id: string, tags: string[]) => void
   unlockAchievement: (id: string) => void
   clearRecentlyUnlocked: (id: string) => void
+  addPoints: (amount: number) => void
+  unlockMedal: (medalId: string) => void
+  setShareStats: (stats: { points: number; medals: string[]; consecutiveShares: number; lastShareDate: string | null }) => void
   setFontSize: (size: 'small' | 'medium' | 'large') => void
   setTheme: (theme: 'starry' | 'aurora' | 'highcontrast') => void
   setAmbientSound: (sound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain') => void
   setAmbientVolume: (volume: number) => void
   reset: () => void
+  // Auth actions
+  setUser: (user: User | null, token?: string | null) => void
+  logout: () => void
+  // Friend actions
+  setFriends: (friends: Friend[]) => void
+  setPendingRequests: (received: PendingRequest[], sent: PendingRequest[]) => void
+  addFriend: (friend: Friend) => void
+  removeFriend: (friendId: string) => void
 }
 
 // Helper to check 7-day streak
@@ -154,6 +216,14 @@ const initialState = {
   history: [],
   achievements: [],
   recentlyUnlocked: [],
+  points: 0,
+  medals: [],
+  consecutiveShares: 0,
+  lastShareDate: null,
+  user: null,
+  token: null,
+  friends: [],
+  pendingRequests: { received: [] as PendingRequest[], sent: [] as PendingRequest[] },
   fontSize: 'medium' as const,
   theme: 'starry' as const,
   ambientSound: 'none' as const,
@@ -258,7 +328,8 @@ export const useDreamStore = create<DreamState>()(
         if (!dreamText || !story) return
 
         const newSession: DreamSession = {
-          id: Date.now().toString(),
+          id: `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          sessionId: state.currentSession.sessionId,
           date: new Date().toLocaleDateString('zh-CN'),
           dreamSnippet: dreamText.slice(0, 100) + (dreamText.length > 100 ? '...' : ''),
           storyTitle,
@@ -342,7 +413,7 @@ export const useDreamStore = create<DreamState>()(
       loadFromHistory: (item) =>
         set({
           currentSession: {
-            sessionId: '',
+            sessionId: item.sessionId || '',
             openid: '',
             dreamText: item.dreamSnippet,
             dreamElements: [],
@@ -366,6 +437,25 @@ export const useDreamStore = create<DreamState>()(
           recentlyUnlocked: state.recentlyUnlocked.filter(item => item !== id)
         })),
 
+      addPoints: (amount) =>
+        set((state) => ({
+          points: state.points + amount
+        })),
+
+      unlockMedal: (medalId) =>
+        set((state) => {
+          if (state.medals.includes(medalId)) return state
+          return { medals: [...state.medals, medalId] }
+        }),
+
+      setShareStats: (stats) =>
+        set(() => ({
+          points: stats.points,
+          medals: stats.medals,
+          consecutiveShares: stats.consecutiveShares,
+          lastShareDate: stats.lastShareDate
+        })),
+
       setFontSize: (size) =>
         set({ fontSize: size }),
 
@@ -379,7 +469,36 @@ export const useDreamStore = create<DreamState>()(
         set({ ambientVolume: volume }),
 
       reset: () =>
-        set({ currentSession: initialState.currentSession })
+        set({ currentSession: initialState.currentSession }),
+
+      // Auth actions
+      setUser: (user, token = null) => {
+        if (token) {
+          localStorage.setItem('yeelin_token', token)
+        }
+        set({ user, token: token ?? null })
+      },
+
+      logout: () => {
+        localStorage.removeItem('yeelin_openid')
+        localStorage.removeItem('yeelin_token')
+        set({ user: null, token: null, friends: [], pendingRequests: { received: [], sent: [] } })
+      },
+
+      // Friend actions
+      setFriends: (friends) =>
+        set({ friends }),
+
+      setPendingRequests: (received: PendingRequest[], sent: PendingRequest[]) =>
+        set({ pendingRequests: { received, sent } }),
+
+      addFriend: (friend) =>
+        set((state) => ({ friends: [...state.friends, friend] })),
+
+      removeFriend: (friendId) =>
+        set((state) => ({
+          friends: state.friends.filter(f => f.friendId !== friendId)
+        }))
     }),
     {
       name: 'yeelin-dream-storage',
@@ -390,7 +509,14 @@ export const useDreamStore = create<DreamState>()(
         fontSize: state.fontSize,
         theme: state.theme,
         ambientSound: state.ambientSound,
-        ambientVolume: state.ambientVolume
+        ambientVolume: state.ambientVolume,
+        points: state.points,
+        medals: state.medals,
+        consecutiveShares: state.consecutiveShares,
+        lastShareDate: state.lastShareDate,
+        user: state.user,
+        token: state.token,
+        friends: state.friends
       })
     }
   )

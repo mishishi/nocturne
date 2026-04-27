@@ -1,22 +1,86 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDreamStore } from '../hooks/useDreamStore'
+import { useDreamStore, DREAM_TAGS } from '../hooks/useDreamStore'
 import { api } from '../services/api'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
-import { DreamFormSkeleton } from '../components/ui/Skeleton'
 import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Dream.module.css'
 
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+}
+
+interface SpeechRecognitionResultList {
+  length: number
+  item(index: number): SpeechRecognitionResult
+  [index: number]: SpeechRecognitionResult
+}
+
+interface SpeechRecognitionResult {
+  length: number
+  item(index: number): SpeechRecognitionAlternative
+  [index: number]: SpeechRecognitionAlternative
+  isFinal: boolean
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface ISpeechRecognition extends EventTarget {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onerror: ((event: Event) => void) | null
+  onend: (() => void) | null
+  start(): void
+  stop(): void
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => ISpeechRecognition
+    webkitSpeechRecognition: new () => ISpeechRecognition
+  }
+}
+
 const DRAFT_KEY = 'yeelin_draft'
+
+// Dream elements for quick selection
+const DREAM_ELEMENTS = [
+  { id: 'person', icon: '👤', label: '人物' },
+  { id: 'animal', icon: '🐾', label: '动物' },
+  { id: 'food', icon: '🍜', label: '食物' },
+  { id: 'water', icon: '🌊', label: '水' },
+  { id: 'sky', icon: '☁️', label: '天空' },
+  { id: 'building', icon: '🏛️', label: '建筑' },
+  { id: 'flying', icon: '✈️', label: '飞行' },
+  { id: 'falling', icon: '⬇️', label: '坠落' },
+  { id: 'chase', icon: '🏃', label: '追逐' },
+  { id: 'vehicle', icon: '🚗', label: '车辆' },
+  { id: 'forest', icon: '🌲', label: '森林' },
+  { id: 'beach', icon: '🏖️', label: '海滩' }
+]
+
+type DreamStep = 'emotion' | 'describe' | 'elements' | 'submitting'
 
 export function Dream() {
   const navigate = useNavigate()
-  const { currentSession, setSessionId, setOpenid, setDreamText, setQuestions, setStatus } = useDreamStore()
+  const { currentSession, setSessionId, setOpenid, setDreamText, setQuestions, setStatus, setDreamElements } = useDreamStore()
+
+  const [step, setStep] = useState<DreamStep>('emotion')
+  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null)
+  const [dreamElements, setDreamElementsLocal] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [draftRestored, setDraftRestored] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
   const lastSavedRef = useRef<string>(currentSession.dreamText)
+  const recognitionRef = useRef<ISpeechRecognition | null>(null)
 
   // Restore draft on mount
   useEffect(() => {
@@ -24,10 +88,14 @@ export function Dream() {
     if (savedDraft && !draftRestored) {
       setDreamText(savedDraft)
       setDraftRestored(true)
+      // If we have draft, skip to describe step
+      if (savedDraft.length > 10) {
+        setStep('describe')
+      }
     }
   }, [draftRestored, setDreamText])
 
-  // Auto-save draft every 30 seconds
+  // Auto-save draft
   useEffect(() => {
     const intervalId = setInterval(() => {
       const currentText = useDreamStore.getState().currentSession.dreamText
@@ -37,7 +105,6 @@ export function Dream() {
       }
     }, 30000)
 
-    // Save on unmount
     const saveOnUnmount = () => {
       const currentText = useDreamStore.getState().currentSession.dreamText
       if (currentText && currentText !== lastSavedRef.current) {
@@ -53,15 +120,79 @@ export function Dream() {
     }
   }, [])
 
-  // Clear draft when successfully submitting
+  // Speech recognition setup
+  useEffect(() => {
+    const SRConstructor = window.SpeechRecognition || (window as unknown as { webkitSpeechRecognition: new () => ISpeechRecognition }).webkitSpeechRecognition
+    if (SRConstructor) {
+      const recognition = new SRConstructor()
+      recognition.lang = 'zh-CN'
+      recognition.continuous = true
+      recognition.interimResults = true
+
+      recognition.onresult = (event) => {
+        let transcript = ''
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript
+        }
+        setDreamText(transcript)
+      }
+
+      recognition.onerror = () => {
+        setIsRecording(false)
+      }
+
+      recognition.onend = () => {
+        setIsRecording(false)
+      }
+
+      recognitionRef.current = recognition
+    }
+  }, [setDreamText])
+
   const clearDraft = () => {
     localStorage.removeItem(DRAFT_KEY)
     lastSavedRef.current = ''
   }
 
+  const handleStartRecording = () => {
+    if (recognitionRef.current && !isRecording) {
+      recognitionRef.current.start()
+      setIsRecording(true)
+    }
+  }
+
+  const handleStopRecording = () => {
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop()
+      setIsRecording(false)
+    }
+  }
+
+  const handleEmotionSelect = (emotionId: string) => {
+    setSelectedEmotion(emotionId)
+  }
+
+  const handleEmotionNext = () => {
+    if (selectedEmotion) {
+      setStep('describe')
+    }
+  }
+
+  const handleSkipEmotion = () => {
+    setStep('describe')
+  }
+
+  const handleElementsToggle = (elementId: string) => {
+    setDreamElementsLocal(prev =>
+      prev.includes(elementId)
+        ? prev.filter(id => id !== elementId)
+        : [...prev, elementId]
+    )
+  }
+
   const handleSubmit = async () => {
     if (!currentSession.dreamText.trim()) {
-      setError('请输入你记得的梦境片段')
+      setError('请描述你记得的梦境片段')
       return
     }
 
@@ -72,9 +203,9 @@ export function Dream() {
 
     setLoading(true)
     setError('')
+    setStep('submitting')
 
     try {
-      // Create session first (use device ID as openid for web)
       const openid = localStorage.getItem('yeelin_openid') || `web_${Date.now()}`
       localStorage.setItem('yeelin_openid', openid)
 
@@ -82,13 +213,16 @@ export function Dream() {
       setSessionId(sessionId)
       setOpenid(openid)
 
-      // Submit dream and get all questions
+      // Store elements in session
+      setDreamElements(dreamElements)
+
       const { questions } = await api.submitDream(sessionId, currentSession.dreamText)
       clearDraft()
       setQuestions(questions)
       setStatus('questions')
       navigate('/questions')
     } catch (err) {
+      setStep('elements')
       const error = err as { response?: { data?: { error?: string } }; message?: string }
       if (error.response?.data?.error) {
         setError(error.response.data.error)
@@ -113,78 +247,200 @@ export function Dream() {
           ]}
         />
 
-        {/* Header */}
-        <div className={styles.header}>
-          <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="返回首页">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <span className={styles.step}>第一步</span>
-          <h1 className={styles.title}>记录你的梦境</h1>
-          <p className={styles.subtitle}>
-            把你能记得的片段写下来——场景、人物、情绪，任何细节都好
-          </p>
+        {/* Step Indicator */}
+        <div className={styles.stepIndicator}>
+          <div className={`${styles.stepDot} ${step === 'emotion' ? styles.active : ''} ${['describe', 'elements', 'submitting'].includes(step) ? styles.completed : ''}`}>
+            {['describe', 'elements', 'submitting'].includes(step) ? '✓' : '1'}
+          </div>
+          <div className={`${styles.stepLine} ${['describe', 'elements', 'submitting'].includes(step) ? styles.completed : ''}`} />
+          <div className={`${styles.stepDot} ${step === 'describe' ? styles.active : ''} ${['elements', 'submitting'].includes(step) ? styles.completed : ''}`}>
+            {['elements', 'submitting'].includes(step) ? '✓' : '2'}
+          </div>
+          <div className={`${styles.stepLine} ${['elements', 'submitting'].includes(step) ? styles.completed : ''}`} />
+          <div className={`${styles.stepDot} ${step === 'elements' ? styles.active : ''} ${step === 'submitting' ? styles.completed : ''}`}>
+            {step === 'submitting' ? '✓' : '3'}
+          </div>
         </div>
 
-        {/* Form or Loading Overlay */}
-        {loading ? (
-          <div className={styles.loadingOverlay} role="status" aria-live="polite" aria-label="正在发送梦境">
-            <DreamFormSkeleton />
+        {/* Step 1: Emotion Selection */}
+        {step === 'emotion' && (
+          <div className={styles.stepContent}>
+            <div className={styles.stepHeader}>
+              <h1 className={styles.title}>昨晚的梦，你感觉如何？</h1>
+              <p className={styles.subtitle}>选择最接近的情绪标签</p>
+            </div>
+
+            <div className={styles.emotionGrid}>
+              {DREAM_TAGS.map((tag, index) => (
+                <button
+                  key={tag.id}
+                  className={`${styles.emotionCard} ${selectedEmotion === tag.id ? styles.selected : ''}`}
+                  onClick={() => handleEmotionSelect(tag.id)}
+                  style={{
+                    '--tag-color': tag.color,
+                    animationDelay: `${index * 0.05}s`
+                  } as React.CSSProperties}
+                >
+                  <span className={styles.emotionIcon}>{tag.icon}</span>
+                  <span className={styles.emotionLabel}>{tag.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.stepActions}>
+              <Button
+                onClick={handleEmotionNext}
+                size="lg"
+                disabled={!selectedEmotion}
+                className={styles.nextBtn}
+              >
+                继续
+              </Button>
+              <button className={styles.skipBtn} onClick={handleSkipEmotion}>
+                直接描述 →
+              </button>
+            </div>
           </div>
-        ) : (
-          <div className={styles.form}>
-            <Textarea
-              value={currentSession.dreamText}
-              onChange={(e) => {
-                setDreamText(e.target.value)
-                setError('')
-              }}
-              placeholder="我梦到了...
+        )}
+
+        {/* Step 2: Describe Dream */}
+        {step === 'describe' && (
+          <div className={styles.stepContent}>
+            <div className={styles.stepHeader}>
+              <h1 className={styles.title}>描述你记得的画面</h1>
+              <p className={styles.subtitle}>场景、人物、颜色、声音，任何细节都好</p>
+            </div>
+
+            {/* Voice Input */}
+            <div className={styles.voiceSection}>
+              <button
+                className={`${styles.voiceBtn} ${isRecording ? styles.recording : ''}`}
+                onMouseDown={handleStartRecording}
+                onMouseUp={handleStopRecording}
+                onMouseLeave={handleStopRecording}
+                onTouchStart={handleStartRecording}
+                onTouchEnd={handleStopRecording}
+              >
+                <span className={styles.voiceIcon}>
+                  {isRecording ? (
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="6" y="6" width="12" height="12" rx="2" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
+                    </svg>
+                  )}
+                </span>
+                <span className={styles.voiceText}>
+                  {isRecording ? '松开停止' : '按住说话'}
+                </span>
+              </button>
+              <span className={styles.voiceHint}>支持语音转文字</span>
+            </div>
+
+            {/* Text Input */}
+            <div className={styles.textSection}>
+              <Textarea
+                value={currentSession.dreamText}
+                onChange={(e) => {
+                  setDreamText(e.target.value)
+                  setError('')
+                }}
+                placeholder="我梦到了...
 
 比如：
 • 在一条很长的走廊里走路
 • 有个人在叫我，但我看不清是谁
-• 醒来的时候心里很难过"
-              error={error}
-              showCount
-              maxLength={2000}
-              className={styles.textarea}
-              aria-describedby="dream-tips"
-              aria-label="梦境描述"
-            />
-
-            <div className={styles.tips} id="dream-tips">
-              <p className={styles.tipsTitle}>小提示</p>
-              <ul className={styles.tipsList}>
-                <li>即使是很模糊的片段也可以</li>
-                <li>场景、人物、物品、颜色、声音都算</li>
-                <li>醒来后第一时间记录效果最好</li>
-              </ul>
+• 天空是紫色的，有很多星星"
+                error={error}
+                showCount
+                maxLength={2000}
+                className={styles.textarea}
+                aria-label="梦境描述"
+              />
             </div>
 
-            <Button
-              onClick={handleSubmit}
-              loading={loading}
-              size="lg"
-              className={styles.submitBtn}
-            >
-              发送给夜棂
-            </Button>
+            <div className={styles.stepActions}>
+              <button className={styles.backBtn} onClick={() => setStep('emotion')}>
+                ← 上一步
+              </button>
+              <Button
+                onClick={() => setStep('elements')}
+                size="lg"
+                disabled={currentSession.dreamText.length < 10}
+                className={styles.nextBtn}
+              >
+                下一步
+              </Button>
+            </div>
           </div>
         )}
 
-        {/* Decorative moon */}
-        <div className={styles.decorMoon}>
-          <svg viewBox="0 0 100 100" fill="none">
-            <circle cx="50" cy="50" r="40" fill="url(#moonGrad)" />
-            <defs>
-              <radialGradient id="moonGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#FFD666" />
-                <stop offset="100%" stopColor="#F4D35E" />
-              </radialGradient>
-            </defs>
-          </svg>
+        {/* Step 3: Quick Elements */}
+        {step === 'elements' && (
+          <div className={styles.stepContent}>
+            <div className={styles.stepHeader}>
+              <h1 className={styles.title}>梦里有这些吗？</h1>
+              <p className={styles.subtitle}>快速勾选，帮助 AI 更好地理解</p>
+            </div>
+
+            <div className={styles.elementsGrid}>
+              {DREAM_ELEMENTS.map((element, index) => (
+                <button
+                  key={element.id}
+                  className={`${styles.elementCard} ${dreamElements.includes(element.id) ? styles.selected : ''}`}
+                  onClick={() => handleElementsToggle(element.id)}
+                  style={{ animationDelay: `${index * 0.03}s` }}
+                >
+                  <span className={styles.elementIcon}>{element.icon}</span>
+                  <span className={styles.elementLabel}>{element.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.stepActions}>
+              <button className={styles.backBtn} onClick={() => setStep('describe')}>
+                ← 上一步
+              </button>
+              <Button
+                onClick={handleSubmit}
+                size="lg"
+                loading={loading}
+                className={styles.nextBtn}
+              >
+                生成故事 →
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Submitting State */}
+        {step === 'submitting' && (
+          <div className={styles.submittingState}>
+            <div className={styles.submittingMoon}>
+              <div className={styles.moonGlow} />
+              <div className={styles.moonCore} />
+            </div>
+            <p className={styles.submittingText}>正在编织你的梦境...</p>
+          </div>
+        )}
+
+        {/* Decorative elements */}
+        <div className={styles.decorStars}>
+          {[...Array(6)].map((_, i) => (
+            <span
+              key={i}
+              className={styles.star}
+              style={{
+                left: `${15 + Math.random() * 70}%`,
+                top: `${10 + Math.random() * 60}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
         </div>
       </div>
     </div>

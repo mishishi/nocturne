@@ -1,0 +1,142 @@
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  background: var(--color-overlay);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-2) env(safe-area-inset-bottom, var(--space-2));
+}
+
+.tabList {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: var(--space-2);
+  min-width: 60px;
+  min-height: 56px;
+  color: var(--color-silver);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: all 0.2s var(--ease-dream);
+  position: relative;
+  border-radius: var(--radius-md);
+}
+
+.tab:hover {
+  opacity: 0.9;
+}
+
+.tab:active {
+  transform: scale(0.95);
+}
+
+.tab.active {
+  color: var(--color-golden);
+  opacity: 1;
+}
+
+.tab.active .icon svg {
+  filter: drop-shadow(0 0 8px rgba(244, 211, 94, 0.5));
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+  transition: filter 0.2s ease;
+}
+
+.label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--color-golden);
+  color: var(--color-bg);
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(244, 211, 94, 0.4);
+}
+
+/* Floating Action Button */
+.fab {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--color-golden) 0%, #E8C547 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-bg);
+  text-decoration: none;
+  box-shadow:
+    0 4px 20px rgba(244, 211, 94, 0.4),
+    0 0 40px rgba(244, 211, 94, 0.2);
+  transition: all 0.2s var(--ease-dream);
+}
+
+.fab:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow:
+    0 6px 24px rgba(244, 211, 94, 0.5),
+    0 0 50px rgba(244, 211, 94, 0.3);
+}
+
+.fab:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+.fab svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Hide on larger screens - keep top nav */
+@media (min-width: 769px) {
+  .nav {
+    display: none;
+  }
+}
+
+/* Ensure main content doesn't get hidden behind FAB area */
+@media (max-width: 768px) {
+  .nav {
+    padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+  }
+}

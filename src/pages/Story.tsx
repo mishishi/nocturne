@@ -6,12 +6,15 @@ import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { SharePoster } from '../components/SharePoster'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { DreamInterpretationModal, DreamInterpretationLoadingModal } from '../components/DreamInterpretationModal'
+import { DreamIllustration } from '../components/DreamIllustration'
+import { shareApi, api, wallApi } from '../services/api'
 import styles from './Story.module.css'
 
 export function Story() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { currentSession, addToHistory, reset } = useDreamStore()
+  const { currentSession, addToHistory, reset, user } = useDreamStore()
   const { playSound } = useAchievementSound()
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -21,8 +24,15 @@ export function Story() {
   const [readProgress, setReadProgress] = useState(0)
   const [isRevealed, setIsRevealed] = useState(false)
   const [showContent, setShowContent] = useState(false)
+  const [showInterpretation, setShowInterpretation] = useState(false)
+  const [interpretation, setInterpretation] = useState<string | null>(null)
+  const [isInterpreting, setIsInterpreting] = useState(false)
+  const [isGeneratingImage] = useState(false)
+  const [isPublishing, setIsPublishing] = useState(false)
+  const [isPublished, setIsPublished] = useState(false)
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const shareMenuRef = useRef<HTMLDivElement>(null)
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Check if we navigated from history with state
   const fromHistory = location.state?.fromHistory
@@ -96,6 +106,15 @@ export function Story() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [showShareMenu])
 
+  // Cleanup copy timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+    }
+  }, [])
+
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle
   const story = fromHistory?.story || currentSession.story
   const dreamText = fromHistory?.dreamSnippet || currentSession.dreamText
@@ -107,8 +126,9 @@ export function Story() {
     }
   }, [status, story, navigate])
 
-  const handleShareToWeChat = async () => {
+  const handleShareToWeChat = async (type: 'friend' | 'moment') => {
     const shareText = `「${storyTitle}」\n\n${story}`
+    const openid = currentSession.openid
 
     if (navigator.share) {
       try {
@@ -116,6 +136,25 @@ export function Story() {
           title: '夜棂 - 梦境故事',
           text: shareText
         })
+        // Log successful share
+        if (openid) {
+          try {
+            const result = await shareApi.logShare(openid, type)
+            if (result.success) {
+              const msg = result.pointsEarned ? `+${result.pointsEarned} 积分` : ''
+              const medalMsg = result.medalsUnlocked?.length ? ` ${result.medalsUnlocked.join(',')} 已解锁！` : ''
+              setToastType('success')
+              setToastMessage(`${msg}${medalMsg}` || '分享成功')
+              setToastVisible(true)
+            } else if (result.reason) {
+              setToastType('info')
+              setToastMessage(result.reason)
+              setToastVisible(true)
+            }
+          } catch {
+            // Silently fail if share logging fails
+          }
+        }
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           setToastType('info')
@@ -131,12 +170,35 @@ export function Story() {
     setShowShareMenu(false)
   }
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const url = window.location.href
-    navigator.clipboard.writeText(url).then(() => {
+    const openid = currentSession.openid
+
+    navigator.clipboard.writeText(url).then(async () => {
       setToastType('success')
       setToastMessage('链接已复制到剪贴板')
       setToastVisible(true)
+
+      // Log share after clipboard copy
+      if (openid) {
+        try {
+          const result = await shareApi.logShare(openid, 'link')
+          if (result.success && result.pointsEarned) {
+            // Clear any existing timeout
+            if (copyTimeoutRef.current) {
+              clearTimeout(copyTimeoutRef.current)
+            }
+            copyTimeoutRef.current = setTimeout(() => {
+              setToastType('success')
+              setToastMessage(`+${result.pointsEarned} 积分`)
+              setToastVisible(true)
+              copyTimeoutRef.current = null
+            }, 1500)
+          }
+        } catch {
+          // Silently fail
+        }
+      }
     })
     setShowShareMenu(false)
   }
@@ -160,7 +222,118 @@ export function Story() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  if (!story) return null
+  const handleInterpret = async () => {
+    const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || currentSession.sessionId
+
+    if (!openid) {
+      setToastType('error')
+      setToastMessage('请先登录')
+      setToastVisible(true)
+      return
+    }
+
+    if (!sessionId) {
+      setToastType('error')
+      setToastMessage('无法获取梦境ID')
+      setToastVisible(true)
+      return
+    }
+
+    // Check if interpretation already exists in local state
+    if (interpretation) {
+      setShowInterpretation(true)
+      return
+    }
+
+    setIsInterpreting(true)
+
+    try {
+      const result = await api.interpret(sessionId, openid)
+
+      if (result.success && result.interpretation) {
+        setInterpretation(result.interpretation)
+        setShowInterpretation(true)
+
+        // Show points used toast
+        if (result.pointsUsed) {
+          setToastType('info')
+          setToastMessage(`解读消耗 ${result.pointsUsed} 积分`)
+          setToastVisible(true)
+        }
+      } else if (result.reason) {
+        setToastType('error')
+        setToastMessage(result.reason)
+        setToastVisible(true)
+      }
+    } catch {
+      setToastType('error')
+      setToastMessage('解读生成失败，请重试')
+      setToastVisible(true)
+    } finally {
+      setIsInterpreting(false)
+    }
+  }
+
+  const handlePublishToWall = async () => {
+    const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || currentSession.sessionId
+
+    if (!openid) {
+      setToastType('error')
+      setToastMessage('请先登录')
+      setToastVisible(true)
+      return
+    }
+
+    if (!sessionId) {
+      setToastType('error')
+      setToastMessage('无法获取梦境ID')
+      setToastVisible(true)
+      return
+    }
+
+    setIsPublishing(true)
+
+    try {
+      const result = await wallApi.publish({
+        openid,
+        sessionId,
+        isAnonymous: true,
+        visibility: 'public'
+      })
+
+      if (result.success) {
+        setIsPublished(true)
+        setToastType('success')
+        setToastMessage('发布成功！')
+        setToastVisible(true)
+      } else {
+        setToastType('error')
+        setToastMessage(result.message || '发布失败')
+        setToastVisible(true)
+      }
+    } catch {
+      setToastType('error')
+      setToastMessage('网络错误，请重试')
+      setToastVisible(true)
+    } finally {
+      setIsPublishing(false)
+    }
+  }
+
+  if (!story) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <p>无法加载故事，请返回重试</p>
+          <Link to="/">
+            <Button>返回首页</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={`${styles.page} ${isRevealed ? styles.revealed : ''}`}>
@@ -196,6 +369,14 @@ export function Story() {
             <span className={styles.decorStar} />
           </div>
         </header>
+
+        {/* Dream Illustration */}
+        <DreamIllustration
+          storyTitle={storyTitle}
+          story={story}
+          onGenerate={undefined}
+          isGenerating={isGeneratingImage}
+        />
 
         {/* Story Content */}
         <article className={`${styles.story} ${showContent ? styles.storyVisible : ''}`}>
@@ -238,7 +419,7 @@ export function Story() {
               </Button>
               {showShareMenu && (
                 <div className={styles.shareMenu} role="menu" aria-label="分享选项" ref={shareMenuRef}>
-                  <button className={styles.shareMenuItem} onClick={handleShareToWeChat} role="menuitem" tabIndex={0}>
+                  <button className={styles.shareMenuItem} onClick={() => handleShareToWeChat('friend')} role="menuitem" tabIndex={0}>
                     <svg viewBox="0 0 24 24" fill="currentColor">
                       <path d="M8.69 13.3c-.39-.39-.39-1.02 0-1.41l6.25-6.25c.39-.39 1.02-.39 1.41 0s.39 1.02 0 1.41L10.1 13.3a.996.996 0 0 1-1.41 0z"/>
                       <path d="M15.31 21.7c-.39-.39-.39-1.02 0-1.41l6.25-6.25c.39-.39 1.02-.39 1.41 0s.39 1.02 0 1.41L16.72 21.7a.996.996 0 0 1-1.41 0z"/>
@@ -246,7 +427,7 @@ export function Story() {
                     </svg>
                     微信好友
                   </button>
-                  <button className={styles.shareMenuItem} onClick={handleShareToWeChat} role="menuitem" tabIndex={0}>
+                  <button className={styles.shareMenuItem} onClick={() => handleShareToWeChat('moment')} role="menuitem" tabIndex={0}>
                     <svg viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
                     </svg>
@@ -276,6 +457,35 @@ export function Story() {
               </svg>
               再读一遍
             </Button>
+            {!isPublished && (
+              <Button
+                variant="secondary"
+                onClick={handlePublishToWall}
+                disabled={isPublishing}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 2a7 7 0 0 1 0 14 7 7 0 0 1 0-14" />
+                  <circle cx="12" cy="9" r="3" />
+                </svg>
+                {isPublishing ? '发布中...' : '发布到梦墙'}
+              </Button>
+            )}
+            {isPublished && (
+              <Button variant="secondary" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                已发布
+              </Button>
+            )}
+            <Button variant="secondary" onClick={handleInterpret} disabled={isInterpreting}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+                <path d="M9 21h6" />
+              </svg>
+              {isInterpreting ? '解读中...' : '听听解读'}
+            </Button>
             <Link to="/dream">
               <Button variant="primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
@@ -291,6 +501,19 @@ export function Story() {
       {/* Toast */}
       <Toast message={toastMessage} visible={toastVisible} onClose={() => setToastVisible(false)} type={toastType} />
 
+      {/* Dream Interpretation Loading Modal */}
+      {isInterpreting && (
+        <DreamInterpretationLoadingModal onClose={() => setIsInterpreting(false)} />
+      )}
+
+      {/* Dream Interpretation Modal */}
+      {showInterpretation && interpretation && (
+        <DreamInterpretationModal
+          interpretation={interpretation}
+          onClose={() => setShowInterpretation(false)}
+        />
+      )}
+
       {/* Share Poster Modal */}
       {showPosterModal && (
         <SharePoster
@@ -298,6 +521,21 @@ export function Story() {
           story={story}
           date={new Date().toLocaleDateString('zh-CN')}
           onClose={() => setShowPosterModal(false)}
+          onShare={async (type) => {
+            const openid = currentSession.openid
+            if (openid) {
+              try {
+                const result = await shareApi.logShare(openid, type)
+                if (result.success && result.pointsEarned) {
+                  setToastType('success')
+                  setToastMessage(`+${result.pointsEarned} 积分`)
+                  setToastVisible(true)
+                }
+              } catch {
+                // Silently fail
+              }
+            }
+          }}
         />
       )}
 

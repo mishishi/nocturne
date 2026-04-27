@@ -64,6 +64,7 @@ export function History() {
 
             return {
               id: s.id,
+              sessionId: s.sessionId || '',
               date: dateStr,
               dreamSnippet: s.dreamFragment?.slice(0, 100) + (s.dreamFragment?.length > 100 ? '...' : '') || '',
               storyTitle: s.storyTitle,

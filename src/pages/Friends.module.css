@@ -1,0 +1,499 @@
+/* ============================================
+   Friends Page - Celestial Observatory Theme
+   ============================================ */
+
+.page {
+  min-height: 100vh;
+  padding: var(--space-6);
+  padding-bottom: calc(60px + var(--space-6) + env(safe-area-inset-bottom));
+  background: var(--color-night-deep);
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin: 0;
+}
+
+.titleIcon {
+  width: 28px;
+  height: 28px;
+  color: var(--color-golden);
+}
+
+.friendCount {
+  font-size: var(--text-sm);
+  color: var(--color-silver-dim);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  background: rgba(26, 58, 92, 0.3);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-6);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-silver-dim);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+  position: relative;
+}
+
+.tab:hover {
+  color: var(--color-moonlight);
+}
+
+.tab.active {
+  background: var(--color-night-surface);
+  color: var(--color-golden);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  background: var(--color-golden);
+  border-radius: var(--radius-full);
+  color: var(--color-night-deep);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Content */
+.content {
+  animation: fadeIn 0.3s var(--ease-dream);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Empty State */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  color: var(--color-silver-dim);
+  opacity: 0.5;
+  margin-bottom: var(--space-4);
+}
+
+.emptyText {
+  color: var(--color-silver-dim);
+  margin: 0 0 var(--space-4);
+}
+
+.emptyButton {
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-golden);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-night-deep);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+}
+
+.emptyButton:hover {
+  background: var(--color-golden-bright);
+}
+
+/* Friend List */
+.friendList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.friendCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: rgba(26, 58, 92, 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s var(--ease-dream);
+}
+
+.friendCard:hover {
+  border-color: var(--color-border-hover);
+  background: rgba(26, 58, 92, 0.5);
+}
+
+.friendAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-night-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.friendAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friendAvatar svg {
+  width: 24px;
+  height: 24px;
+  color: var(--color-silver-dim);
+}
+
+.friendInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.friendName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-moonlight);
+}
+
+.memberBadge {
+  padding: 2px 6px;
+  background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
+  border-radius: var(--radius-sm);
+  color: var(--color-night-deep);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.friendMeta {
+  font-size: var(--text-xs);
+  color: var(--color-silver-dim);
+}
+
+.removeButton {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-silver-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s var(--ease-dream);
+  flex-shrink: 0;
+}
+
+.removeButton:hover {
+  border-color: var(--color-error);
+  color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+.removeButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Request Section */
+.requestSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.requestGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.requestTitle {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-silver-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.noRequests {
+  color: var(--color-silver-dim);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--space-6);
+  margin: 0;
+}
+
+.requestCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: rgba(26, 58, 92, 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.requestInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.requestMeta {
+  font-size: var(--text-xs);
+  color: var(--color-silver-dim);
+}
+
+.requestActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.acceptButton,
+.rejectButton,
+.cancelButton {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+}
+
+.acceptButton {
+  background: var(--color-golden);
+  color: var(--color-night-deep);
+}
+
+.acceptButton:hover {
+  background: var(--color-golden-bright);
+}
+
+.rejectButton,
+.cancelButton {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-silver);
+}
+
+.rejectButton:hover,
+.cancelButton:hover {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+/* Search Section */
+.searchSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-4);
+  width: 20px;
+  height: 20px;
+  color: var(--color-silver-dim);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: var(--space-4) var(--space-4) var(--space-4) calc(var(--space-4) + 28px);
+  background: rgba(26, 58, 92, 0.4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-moonlight);
+  font-size: var(--text-base);
+  transition: all 0.3s var(--ease-dream);
+}
+
+.searchInput::placeholder {
+  color: var(--color-silver-dim);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-golden);
+  box-shadow: 0 0 0 3px rgba(244, 211, 94, 0.1);
+}
+
+.clearButton {
+  position: absolute;
+  right: var(--space-3);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--color-night-surface);
+  border: none;
+  border-radius: 50%;
+  color: var(--color-silver-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.clearButton:hover {
+  background: var(--color-silver-dim);
+  color: var(--color-night-deep);
+}
+
+.clearButton svg {
+  width: 14px;
+  height: 14px;
+}
+
+.searchResults {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.searching {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  color: var(--color-silver-dim);
+  font-size: var(--text-sm);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-golden);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.noResults {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-silver-dim);
+  font-size: var(--text-sm);
+}
+
+.searchResultCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: rgba(26, 58, 92, 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  animation: slideIn 0.3s var(--ease-dream);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resultInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-golden);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-night-deep);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+}
+
+.addButton:hover {
+  background: var(--color-golden-bright);
+}
+
+.addButton svg {
+  width: 14px;
+  height: 14px;
+}

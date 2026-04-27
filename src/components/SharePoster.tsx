@@ -10,6 +10,7 @@ interface SharePosterProps {
   story: string
   date?: string
   onClose: () => void
+  onShare?: (type: 'poster') => void
 }
 
 const TEMPLATES: { id: TemplateType; name: string; icon: string; desc: string }[] = [
@@ -18,7 +19,7 @@ const TEMPLATES: { id: TemplateType; name: string; icon: string; desc: string }[
   { id: 'starTrail', name: '星迹', icon: '✨', desc: '流光轨迹' },
 ]
 
-export function SharePoster({ storyTitle, story, date, onClose }: SharePosterProps) {
+export function SharePoster({ storyTitle, story, date, onClose, onShare }: SharePosterProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('nightSky')
 
@@ -239,6 +240,7 @@ export function SharePoster({ storyTitle, story, date, onClose }: SharePosterPro
       link.download = `夜棂-${storyTitle}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
+      onShare?.('poster')
       onClose()
     }, 100)
   }
@@ -263,6 +265,7 @@ export function SharePoster({ storyTitle, story, date, onClose }: SharePosterPro
           title: '夜棂 - 梦境故事',
           text: `「${storyTitle}」\n\n${story}`
         })
+        onShare?.('poster')
       }
     } catch {
       handleDownload()

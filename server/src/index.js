@@ -2,6 +2,10 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { connectDB } from './config/database.js'
 import sessionRoutes from './routes/sessions.js'
+import shareRoutes from './routes/share.js'
+import authRoutes from './routes/auth.js'
+import friendRoutes from './routes/friends.js'
+import dreamWallRoutes from './routes/dreamWall.js'
 
 const fastify = Fastify({ logger: true })
 
@@ -10,6 +14,10 @@ await fastify.register(cors, { origin: true })
 
 // Register routes
 fastify.register(sessionRoutes, { prefix: '/api' })
+fastify.register(shareRoutes, { prefix: '/api' })
+fastify.register(authRoutes, { prefix: '/api' })
+fastify.register(friendRoutes, { prefix: '/api' })
+fastify.register(dreamWallRoutes, { prefix: '/api' })
 
 // Error handler
 fastify.setErrorHandler((err, req, res) => {

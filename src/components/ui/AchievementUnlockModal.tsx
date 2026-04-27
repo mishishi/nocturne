@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Achievement } from '../../hooks/useDreamStore'
+import { AchievementShareCard } from '../AchievementShareCard'
 import styles from './AchievementUnlockModal.module.css'
 
 interface AchievementUnlockModalProps {
@@ -11,6 +12,7 @@ interface AchievementUnlockModalProps {
 export function AchievementUnlockModal({ achievement, isOpen, onClose }: AchievementUnlockModalProps) {
   const [showContent, setShowContent] = useState(false)
   const [showGlow, setShowGlow] = useState(false)
+  const [showShareCard, setShowShareCard] = useState(false)
 
   useEffect(() => {
     if (isOpen && achievement) {
@@ -87,6 +89,13 @@ export function AchievementUnlockModal({ achievement, isOpen, onClose }: Achieve
                 style={{ animationDelay: `${0.5 + i * 0.1}s` }}
               />
             ))}
+            {/* Confetti particles */}
+            {[...Array(6)].map((_, i) => (
+              <span
+                key={`confetti-${i}`}
+                className={styles.confetti}
+              />
+            ))}
           </div>
         </div>
 
@@ -94,6 +103,27 @@ export function AchievementUnlockModal({ achievement, isOpen, onClose }: Achieve
         <button className={styles.dismissHint} onClick={onClose}>
           点击任意处关闭
         </button>
+
+        {/* Share button */}
+        <button className={styles.shareBtn} onClick={() => setShowShareCard(true)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          炫耀一下
+        </button>
+
+        {/* Achievement Share Card Modal */}
+        {showShareCard && achievement && (
+          <AchievementShareCard
+            achievement={achievement}
+            onClose={() => setShowShareCard(false)}
+            onShare={onClose}
+          />
+        )}
       </div>
     </div>
   )

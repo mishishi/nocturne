@@ -5,226 +5,317 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-6);
   animation: fadeIn 0.4s ease-out;
 }
 
 .backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(10, 15, 30, 0.95);
-  backdrop-filter: blur(12px);
+  background: rgba(8, 12, 25, 0.99);
 }
 
-.card {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  background: linear-gradient(145deg, rgba(26, 58, 92, 0.6), rgba(15, 40, 70, 0.8));
-  border: 1px solid rgba(244, 211, 94, 0.2);
-  border-radius: var(--radius-2xl);
-  padding: var(--space-8);
-  box-shadow:
-    0 0 80px rgba(244, 211, 94, 0.1),
-    0 30px 80px rgba(0, 0, 0, 0.6);
-  animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Ambient glow */
+.ambientGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150vmax;
+  height: 150vmax;
+  background: radial-gradient(ellipse at center,
+    rgba(244, 211, 94, 0.03) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  animation: slowRotate 60s linear infinite;
 }
 
-/* Header */
-.header {
-  text-align: center;
-  margin-bottom: var(--space-8);
+@keyframes slowRotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-.logo {
-  display: inline-block;
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 500;
-  color: var(--color-golden);
-  margin-bottom: var(--space-3);
-  text-shadow: 0 0 30px rgba(244, 211, 94, 0.4);
-}
-
-.welcome {
-  font-size: 1rem;
+/* Skip hint - always visible but subtle */
+.skipHint {
+  position: absolute;
+  bottom: var(--space-8);
+  left: 50%;
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
   color: var(--color-silver);
-  margin: 0;
+  font-size: 0.8125rem;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.2s, color 0.2s;
+  padding: var(--space-2) var(--space-4);
 }
 
-/* Tips section */
-.tipsSection {
-  margin-bottom: var(--space-6);
+.skipHint:hover {
+  opacity: 0.8;
+  color: var(--color-moonlight);
 }
 
-.tipContent {
-  text-align: center;
-  min-height: 140px;
+/* ============================================
+   INTRO PHASE - Brand Impact
+   ============================================ */
+.introPhase {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--space-10);
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-.tipIcon {
-  width: 56px;
-  height: 56px;
-  background: rgba(244, 211, 94, 0.1);
-  border: 1px solid rgba(244, 211, 94, 0.2);
-  border-radius: var(--radius-xl);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--space-4);
-  animation: iconFadeIn 0.4s ease-out;
+.introPhase.visible {
+  opacity: 1;
 }
 
-.tipIcon svg {
-  width: 28px;
-  height: 28px;
-  color: var(--color-golden);
+/* Breathing Moon */
+.moon {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  transition: transform 2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.tipTitle {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--color-moonlight);
-  margin: 0 0 var(--space-2) 0;
-  animation: textFadeIn 0.4s ease-out 0.1s both;
+.moon.inhale {
+  transform: scale(1);
 }
 
-.tipDesc {
-  font-size: 0.9375rem;
-  color: var(--color-silver);
-  margin: 0;
-  line-height: 1.6;
-  animation: textFadeIn 0.4s ease-out 0.2s both;
+.moon.exhale {
+  transform: scale(1.15);
 }
 
-/* Dots */
-.dots {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-2);
-  margin-top: var(--space-6);
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  background: rgba(139, 157, 195, 0.3);
+.moonGlow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle,
+    rgba(244, 211, 94, 0.2) 0%,
+    rgba(244, 211, 94, 0.1) 30%,
+    transparent 70%
+  );
   border-radius: 50%;
-  transition: all 0.3s ease;
+  animation: glowPulse 4s ease-in-out infinite;
 }
 
-.dot.active {
-  width: 24px;
-  border-radius: 4px;
-  background: var(--color-golden);
+.moonCore {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 35% 35%,
+    rgba(255, 248, 220, 0.95) 0%,
+    rgba(244, 211, 94, 0.9) 40%,
+    rgba(200, 170, 100, 0.8) 100%
+  );
+  border-radius: 50%;
+  box-shadow:
+    0 0 60px rgba(244, 211, 94, 0.4),
+    inset -10px -10px 30px rgba(180, 140, 60, 0.3);
 }
 
-/* Example section */
-.exampleSection {
-  background: rgba(26, 58, 92, 0.3);
-  border: 1px solid rgba(139, 157, 195, 0.1);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5);
-  margin-bottom: var(--space-6);
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
-.exampleLabel {
-  font-size: 0.75rem;
+/* Brand */
+.brand {
+  text-align: center;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.logo {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 600;
+  color: var(--color-golden);
+  text-shadow: 0 0 60px rgba(244, 211, 94, 0.6);
+  letter-spacing: 0.15em;
+  margin-bottom: var(--space-4);
+}
+
+.tagline {
+  font-size: 1.125rem;
   color: var(--color-silver);
-  margin: 0 0 var(--space-3) 0;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.exampleDream {
-  font-size: 0.875rem;
-  color: var(--color-moonlight);
-  line-height: 1.8;
   margin: 0;
-  font-style: normal;
   opacity: 0.8;
 }
 
-/* Actions */
-.actions {
+.exploreBtn {
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+  min-width: 180px;
+}
+
+/* ============================================
+   VALUES PHASE - Static Display
+   ============================================ */
+.valuesPhase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-8);
+  max-width: 400px;
+}
+
+.valueCard {
+  text-align: center;
+  padding: var(--space-6);
+  background: rgba(26, 58, 92, 0.4);
+  border: 1px solid rgba(244, 211, 94, 0.15);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(10px);
+  animation: fadeInUp 0.6s ease-out both;
+  min-width: 280px;
+  width: 100%;
+  max-width: 320px;
+  box-sizing: border-box;
+}
+
+.valueCard:nth-child(1) { animation-delay: 0.1s; }
+.valueCard:nth-child(2) { animation-delay: 0.3s; }
+.valueCard:nth-child(3) { animation-delay: 0.5s; }
+
+.valueCard:hover {
+  border-color: rgba(244, 211, 94, 0.3);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.valueQuote {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 500;
+  color: var(--color-moonlight);
+  line-height: 1.4;
+  margin-bottom: var(--space-4);
+}
+
+.quoteMark {
+  color: var(--color-golden);
+  opacity: 0.6;
+}
+
+.valueSubtext {
+  font-size: 0.9375rem;
+  color: var(--color-silver);
+  margin: 0;
+  opacity: 0.7;
+  line-height: 1.6;
+}
+
+/* ============================================
+   CTA PHASE - Minimal Action
+   ============================================ */
+.ctaPhase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.ctaIcon {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.15), rgba(244, 211, 94, 0.05));
+  border: 1px solid rgba(244, 211, 94, 0.25);
+  border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  justify-content: center;
+  animation: iconPulse 2s ease-in-out infinite;
 }
 
-.skipBtn {
-  background: transparent;
-  border: none;
-  color: var(--color-silver);
-  font-size: 0.875rem;
-  padding: var(--space-3) var(--space-4);
-  cursor: pointer;
-  transition: color 0.2s;
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(244, 211, 94, 0.2);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(244, 211, 94, 0.4);
+  }
 }
 
-.skipBtn:hover {
+.ctaIcon svg {
+  width: 36px;
+  height: 36px;
+  color: var(--color-golden);
+}
+
+.ctaText {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
   color: var(--color-moonlight);
+  margin: 0;
+  animation: fadeInUp 0.5s ease-out 0.1s both;
 }
 
-.nextBtn {
-  flex: 1;
+.ctaBtn {
+  animation: fadeInUp 0.5s ease-out 0.2s both;
+  min-width: 220px;
 }
 
-/* Decorative stars */
-.decorStars {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
+/* Emotion preview */
+.emotionPreview {
+  display: flex;
+  gap: var(--space-2);
+  animation: fadeInUp 0.5s ease-out 0.3s both;
 }
 
-.star {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  background: var(--color-golden);
-  border-radius: 50%;
+.emotionTag {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--tag-color, var(--color-border));
+  border-radius: var(--radius-full);
+  font-size: 1rem;
   opacity: 0;
-  animation: twinkle var(--duration) ease-in-out infinite;
+  animation: tagPop 0.4s ease forwards;
 }
 
-/* Animations */
+@keyframes tagPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   Animations
+   ============================================ */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes slideUp {
+@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes iconFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes textFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -232,29 +323,54 @@
   }
 }
 
-@keyframes twinkle {
-  0%, 100% {
-    opacity: 0;
-    transform: scale(0.5);
+/* ============================================
+   Reduced Motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .introPhase,
+  .valuesPhase,
+  .ctaPhase,
+  .ambientGlow,
+  .moon,
+  .moonGlow {
+    animation: none;
+    transition: opacity 0.2s;
   }
-  50% {
-    opacity: 0.8;
+
+  .moon.inhale,
+  .moon.exhale {
     transform: scale(1);
+  }
+
+  .emotionTag {
+    animation: none;
+    opacity: 0.7;
   }
 }
 
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .overlay,
-  .card,
-  .tipIcon,
-  .tipTitle,
-  .tipDesc,
-  .star {
-    animation: none;
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 480px) {
+  .logo {
+    font-size: 2.5rem;
   }
 
-  .star {
-    opacity: 0.5;
+  .tagline {
+    font-size: 1rem;
+  }
+
+  .moon {
+    width: 120px;
+    height: 120px;
+  }
+
+  .valueQuote {
+    font-size: 1.375rem;
+  }
+
+  .ctaText {
+    font-size: 1.25rem;
   }
 }

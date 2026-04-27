@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D1B2A"/>
+      <stop offset="100%" stop-color="#1A3A5C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#sky)"/>
+
+  <!-- Large crescent moon -->
+  <circle cx="240" cy="220" r="100" fill="#F4D35E"/>
+  <circle cx="290" cy="200" r="90" fill="url(#sky)"/>
+
+  <!-- Single star -->
+  <path d="M400 140 L404 152 L416 152 L407 160 L410 172 L400 164 L390 172 L393 160 L384 152 L396 152 Z" fill="#F4D35E"/>
+
+  <!-- Subtle glow under moon -->
+  <ellipse cx="260" cy="360" rx="120" ry="20" fill="#F4D35E" opacity="0.1"/>
+</svg>

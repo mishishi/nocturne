@@ -7,6 +7,7 @@ import { Textarea } from '../components/ui/Textarea'
 import { Toast } from '../components/ui/Toast'
 import { TypewriterText } from '../components/ui/TypewriterText'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { RevealScreen } from '../components/RevealScreen'
 import styles from './Questions.module.css'
 
 export function Questions() {
@@ -20,6 +21,8 @@ export function Questions() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [showQuestion, setShowQuestion] = useState(false)
+  const [showReveal, setShowReveal] = useState(false)
+  const [storyReady, setStoryReady] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { questions, answers, currentQuestionIndex, sessionId } = currentSession
@@ -53,7 +56,10 @@ export function Questions() {
       clearTimeout(timeoutId)
       if (result.story) {
         setStory(result.story.title, result.story.content)
-        navigate('/story')
+        // Show reveal ceremony instead of navigating directly
+        setShowReveal(true)
+        setLoading(false) // Reset loading immediately since we're showing reveal
+        return
       } else if (result.nextQuestion) {
         setAnswer(currentQuestionIndex + 1, '')
         nextQuestion()
@@ -67,7 +73,10 @@ export function Questions() {
       setToastMessage(errorMsg)
       setToastVisible(true)
     } finally {
-      setLoading(false)
+      // Keep loading true during reveal animation
+      if (!showReveal) {
+        setLoading(false)
+      }
     }
   }
 
@@ -91,33 +100,73 @@ export function Questions() {
   }
 
   const handleFinalSubmit = async () => {
+    // Build complete answers array including current answer
+    const allAnswers = [...answers]
+    allAnswers[currentQuestionIndex] = currentAnswer
+
+    // Check if all questions were skipped
+    const hasValidAnswer = allAnswers.some(a => a && a.trim() !== '' && a !== '（未回答）')
+    if (!hasValidAnswer && currentQuestionIndex === questions.length - 1) {
+      setToastType('error')
+      setToastMessage('请至少回答一个问题，让我更好地为你编织梦境')
+      setToastVisible(true)
+      return
+    }
+
+    // Save all answers to store first
+    allAnswers.forEach((answer, idx) => {
+      setAnswer(idx, answer || '')
+    })
+
+    // Immediately show reveal ceremony animation
+    setShowReveal(true)
     setLoading(true)
     setError('')
 
     // Timeout warning after 30 seconds
-    const timeoutId = setTimeout(() => {
+    let timeoutId = setTimeout(() => {
       setToastType('info')
       setToastMessage('生成中，请稍候...')
       setToastVisible(true)
     }, 30000)
 
     try {
-      const result = await api.submitAnswer(sessionId, '')
-      clearTimeout(timeoutId)
-      if (result.story) {
-        setStory(result.story.title, result.story.content)
-        navigate('/story')
+      // Submit all answers in sequence (including skipped ones)
+      let currentIdx = 0
+      let result
+
+      while (currentIdx < questions.length) {
+        const answerToSubmit = allAnswers[currentIdx] || ''
+        result = await api.submitAnswer(sessionId, answerToSubmit)
+        clearTimeout(timeoutId)
+
+        if (result.story) {
+          setStory(result.story.title, result.story.content)
+          setStoryReady(true) // Tell RevealScreen story is ready
+          setLoading(false) // Loading stops, RevealScreen continues to countdown
+          return
+        }
+
+        // Move to next question
+        currentIdx = result.nextIndex ?? currentIdx + 1
+
+        // Update timeout for next request
+        timeoutId = setTimeout(() => {
+          setToastType('info')
+          setToastMessage('生成中，请稍候...')
+          setToastVisible(true)
+        }, 30000)
       }
     } catch (err) {
       clearTimeout(timeoutId)
       const errorMsg = '生成故事失败了，请稍后重试'
       setError(errorMsg)
       setHasFailed(true)
+      setShowReveal(false)
+      setLoading(false)
       setToastType('error')
       setToastMessage(errorMsg)
       setToastVisible(true)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -126,6 +175,14 @@ export function Questions() {
     setHasFailed(false)
     setError('')
     handleFinalSubmit()
+  }
+
+  // Handle story reveal completion
+  const handleReveal = () => {
+    setLoading(false)
+    setShowReveal(false)
+    setStoryReady(false)
+    navigate('/story')
   }
 
   if (!currentQuestion) {
@@ -156,51 +213,13 @@ export function Questions() {
 
   return (
     <div className={styles.page}>
-      {isGeneratingStory && (
-        <div className={styles.loadingOverlay} role="status" aria-live="polite" aria-label="正在编织你的梦境，请稍候">
-          <div className={styles.loadingContent}>
-            {/* Moon with quill animation */}
-            <div className={styles.loadingMoon}>
-              <svg viewBox="0 0 100 100" fill="none">
-                {/* Moon crescent */}
-                <path
-                  d="M70 50c0 16.57-10.17 30.62-24.43 36.35-3.17 1.27-6.77 1.95-10.57 1.95-14.36 0-26-11.64-26-26s11.64-26 26-26c3.8 0 7.4.68 10.57 1.95C59.83 19.38 70 33.43 70 50z"
-                  fill="url(#moonGradient)"
-                  className={styles.moonPath}
-                />
-                <defs>
-                  <linearGradient id="moonGradient" x1="30" y1="20" x2="70" y2="80">
-                    <stop offset="0%" stopColor="#F4D35E" />
-                    <stop offset="100%" stopColor="#E8C547" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              {/* Quill pen */}
-              <svg className={styles.quill} viewBox="0 0 40 60" fill="none">
-                <path d="M20 0 C25 15 35 25 40 35 L35 38 C30 30 22 22 20 15 Z" fill="url(#quillGradient)" />
-                <path d="M35 38 L30 60 L25 60 L32 40 Z" fill="#8B9DC3" />
-                <defs>
-                  <linearGradient id="quillGradient" x1="20" y1="0" x2="40" y2="40">
-                    <stop offset="0%" stopColor="#E8E8E8" />
-                    <stop offset="100%" stopColor="#B8B8B8" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            {/* Stars */}
-            <div className={styles.loadingStars}>
-              <span className={styles.star} style={{ animationDelay: '0s' }} />
-              <span className={styles.star} style={{ animationDelay: '0.3s' }} />
-              <span className={styles.star} style={{ animationDelay: '0.6s' }} />
-              <span className={styles.star} style={{ animationDelay: '0.9s' }} />
-              <span className={styles.star} style={{ animationDelay: '1.2s' }} />
-            </div>
-            <p className={styles.loadingText}>
-              <TypewriterText text="正在编织你的梦境" speed={80} delay={300} />
-            </p>
-            <p className={styles.loadingSubtext}>请稍候...</p>
-          </div>
-        </div>
+      {/* Story reveal ceremony screen */}
+      {showReveal && (
+        <RevealScreen
+          storyTitle={currentSession.storyTitle || '你的梦境'}
+          storyReady={storyReady}
+          onReveal={handleReveal}
+        />
       )}
 
       <div className={styles.container}>
@@ -340,9 +359,9 @@ export function Questions() {
               </Button>
             )}
             <Button
-              onClick={handleNext}
+              onClick={isLastQuestion ? handleFinalSubmit : handleNext}
               loading={loading && !isLastQuestion}
-              disabled={!currentAnswer.trim() || isGeneratingStory}
+              disabled={isGeneratingStory || (!isLastQuestion && !currentAnswer.trim())}
               size="lg"
             >
               {isLastQuestion ? '生成故事' : '下一题'}

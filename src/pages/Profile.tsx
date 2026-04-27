@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
@@ -6,7 +7,15 @@ import { Statistics } from '../components/Statistics'
 import { AmbientPlayer } from '../components/AmbientPlayer'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
+import { shareApi, UserStats } from '../services/api'
 import styles from './Profile.module.css'
+
+// Medal definitions (mirrors server-side MEDALS)
+const MEDALS = [
+  { id: 'moonlight', name: '月光勋章', icon: '🌙', description: '朋友圈首次分享' },
+  { id: 'newmoon', name: '新月勋章', icon: '🌑', description: '邀请好友成功' },
+  { id: 'meteor', name: '流星成就', icon: '☄️', description: '连续分享7天' }
+]
 
 const FONT_SIZE_OPTIONS = [
   { value: 'small' as const, label: '小', size: '12px' },
@@ -21,13 +30,55 @@ const THEME_OPTIONS = [
 ]
 
 export function Profile() {
-  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme } = useDreamStore()
+  const navigate = useNavigate()
+  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, points, medals, consecutiveShares, setShareStats, currentSession, logout, user } = useDreamStore()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [shareStats, setShareStatsLocal] = useState<UserStats | null>(null)
 
   const totalDreams = history.length
   const totalWords = history.reduce((acc, item) => acc + item.story.length, 0)
+
+  // Fetch share stats on mount
+  useEffect(() => {
+    const openid = currentSession.openid
+    if (!openid) return
+
+    const fetchStats = async () => {
+      try {
+        const stats = await shareApi.getStats(openid)
+        setShareStatsLocal(stats)
+        setShareStats({
+          points: stats.points,
+          medals: stats.medals,
+          consecutiveShares: stats.consecutiveShares,
+          lastShareDate: stats.lastShareDate
+        })
+      } catch (err) {
+        console.error('Failed to fetch share stats:', err)
+      }
+    }
+    fetchStats()
+  }, [currentSession.openid])
+
+  const handleCreateInvite = async () => {
+    const openid = currentSession.openid
+    if (!openid) return
+
+    try {
+      const result = await shareApi.createInvite(openid)
+      if (result.success) {
+        await navigator.clipboard.writeText(result.inviteUrl)
+        setToastMessage('邀请链接已复制到剪贴板')
+        setToastVisible(true)
+      }
+    } catch (err) {
+      setToastMessage('创建邀请失败')
+      setToastVisible(true)
+    }
+  }
 
   const handleClearHistory = () => {
     clearHistory()
@@ -60,6 +111,58 @@ export function Profile() {
           <div className={styles.statCard}>
             <span className={styles.statValue}>{totalWords.toLocaleString()}</span>
             <span className={styles.statLabel}>累计文字</span>
+          </div>
+        </div>
+
+        {/* Share Stats */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>分享积分</h2>
+          <div className={styles.shareStats}>
+            <div className={styles.pointsCard}>
+              <span className={styles.pointsValue}>{points}</span>
+              <span className={styles.pointsLabel}>梦境积分</span>
+            </div>
+            <div className={styles.shareInfo}>
+              <div className={styles.streakInfo}>
+                <span className={styles.streakIcon}>🔥</span>
+                <span>连续分享 <strong>{consecutiveShares}</strong> 天</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Medals */}
+          <div className={styles.medalsGrid}>
+            {MEDALS.map((medal) => {
+              const isUnlocked = medals.includes(medal.id)
+              return (
+                <div
+                  key={medal.id}
+                  className={`${styles.medalCard} ${isUnlocked ? styles.medalUnlocked : ''}`}
+                >
+                  <span className={styles.medalIcon}>{medal.icon}</span>
+                  <div className={styles.medalInfo}>
+                    <span className={styles.medalName}>{medal.name}</span>
+                    <span className={styles.medalDesc}>{medal.description}</span>
+                  </div>
+                  {isUnlocked && (
+                    <svg className={styles.medalCheck} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Invite */}
+          <div className={styles.inviteSection}>
+            <div className={styles.inviteInfo}>
+              <span className={styles.inviteLabel}>邀请好友</span>
+              <span className={styles.inviteDesc}>邀请码: {shareStats?.inviteCode || '----'}</span>
+            </div>
+            <Button onClick={handleCreateInvite} size="sm">
+              邀请
+            </Button>
           </div>
         </div>
 
@@ -169,6 +272,21 @@ export function Profile() {
                 清除
               </Button>
             </div>
+            {user && (
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>退出登录</span>
+                  <span className={styles.settingDesc}>切换账号或退出当前账号</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowLogoutConfirm(true)}
+                >
+                  退出
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -191,6 +309,19 @@ export function Profile() {
         onConfirm={handleClearHistory}
         onCancel={() => setShowClearConfirm(false)}
         danger
+      />
+
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        title="退出登录"
+        message="确定要退出当前登录吗？"
+        confirmText="退出"
+        cancelText="取消"
+        onConfirm={() => {
+          logout()
+          navigate('/login')
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
       />
 
       <Toast

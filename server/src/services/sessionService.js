@@ -104,19 +104,36 @@ export const sessionService = {
     return { sessionId, title, content }
   },
 
-  async getUserHistory(openid) {
-    const sessions = await prisma.session.findMany({
-      where: { openid, status: 'COMPLETED' },
-      orderBy: { completedAt: 'desc' },
-      include: { story: true }
-    })
+  async getUserHistory(openid, page = 1, limit = 20) {
+    const skip = (page - 1) * limit
 
-    return sessions.map(s => ({
-      id: s.id,
-      date: s.completedAt?.toISOString() || s.updatedAt.toISOString(),
-      dreamFragment: s.dreamFragment,
-      storyTitle: s.story?.title || '',
-      story: s.story?.content || ''
-    }))
+    const [sessions, total] = await Promise.all([
+      prisma.session.findMany({
+        where: { openid, status: 'COMPLETED' },
+        orderBy: { completedAt: 'desc' },
+        skip,
+        take: limit,
+        include: { story: true }
+      }),
+      prisma.session.count({
+        where: { openid, status: 'COMPLETED' }
+      })
+    ])
+
+    return {
+      sessions: sessions.map(s => ({
+        id: s.id,
+        date: s.completedAt?.toISOString() || s.updatedAt.toISOString(),
+        dreamFragment: s.dreamFragment,
+        storyTitle: s.story?.title || '',
+        story: s.story?.content || ''
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        hasMore: skip + sessions.length < total
+      }
+    }
   }
 }

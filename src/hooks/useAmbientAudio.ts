@@ -13,6 +13,8 @@ export function useAmbientAudio() {
     masterGain: GainNode | null
     filter: BiquadFilterNode | null
     noiseSource: AudioBufferSourceNode | null
+    shimmerLfo: OscillatorNode | null
+    shimmerLfoGain: GainNode | null
   }>({
     oscillators: [],
     gains: [],
@@ -20,14 +22,16 @@ export function useAmbientAudio() {
     lfoGain: null,
     masterGain: null,
     filter: null,
-    noiseSource: null
+    noiseSource: null,
+    shimmerLfo: null,
+    shimmerLfoGain: null
   })
 
   const { ambientSound, ambientVolume, setAmbientSound, setAmbientVolume } = useDreamStore()
 
   // Initialize AudioContext
   const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
       audioContextRef.current = new AudioContext()
     }
     return audioContextRef.current
@@ -74,6 +78,17 @@ export function useAmbientAudio() {
     if (nodes.masterGain) {
       try { nodes.masterGain.disconnect() } catch (e) { /* ignore */ }
       nodes.masterGain = null
+    }
+
+    // Stop shimmer LFO
+    if (nodes.shimmerLfo) {
+      try { nodes.shimmerLfo.stop() } catch (e) { /* ignore */ }
+      nodes.shimmerLfo = null
+    }
+
+    if (nodes.shimmerLfoGain) {
+      try { nodes.shimmerLfoGain.disconnect() } catch (e) { /* ignore */ }
+      nodes.shimmerLfoGain = null
     }
   }, [])
 
@@ -156,8 +171,8 @@ export function useAmbientAudio() {
 
     nodes.oscillators.push(shimmerOsc)
     nodes.gains.push(shimmerGain)
-    nodes.lfo = shimmerLfo
-    nodes.lfoGain = shimmerLfoGain
+    nodes.shimmerLfo = shimmerLfo
+    nodes.shimmerLfoGain = shimmerLfoGain
 
     return true
   }, [])

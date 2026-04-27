@@ -1,0 +1,45 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Night sky gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D1B2A"/>
+      <stop offset="50%" stop-color="#1A3A5C"/>
+      <stop offset="100%" stop-color="#0D1B2A"/>
+    </linearGradient>
+    <!-- Moon glow -->
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F4D35E" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#F4D35E" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bg)"/>
+
+  <!-- Moon glow -->
+  <circle cx="280" cy="220" r="120" fill="url(#moonGlow)"/>
+
+  <!-- Window lattice frame (棂) -->
+  <g stroke="#F4D35E" stroke-width="8" stroke-linecap="round">
+    <!-- Outer frame -->
+    <rect x="128" y="128" width="256" height="256" rx="20" fill="none"/>
+    <!-- Vertical bars -->
+    <line x1="213" y1="128" x2="213" y2="384"/>
+    <line x1="299" y1="128" x2="299" y2="384"/>
+    <!-- Horizontal bars -->
+    <line x1="128" y1="213" x2="384" y2="213"/>
+    <line x1="128" y1="299" x2="384" y2="299"/>
+  </g>
+
+  <!-- Crescent moon in center pane -->
+  <circle cx="256" cy="256" r="50" fill="#F4D35E"/>
+  <circle cx="280" cy="246" r="45" fill="#0D1B2A"/>
+
+  <!-- Small stars -->
+  <circle cx="170" cy="170" r="4" fill="#F4D35E"/>
+  <circle cx="342" cy="170" r="3" fill="#F4D35E"/>
+  <circle cx="170" cy="342" r="3" fill="#F4D35E"/>
+  <circle cx="342" cy="342" r="4" fill="#F4D35E"/>
+  <circle cx="256" cy="150" r="2" fill="#F4D35E"/>
+  <circle cx="256" cy="362" r="2" fill="#F4D35E"/>
+</svg>

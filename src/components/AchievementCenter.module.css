@@ -1,0 +1,325 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 27, 42, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background: linear-gradient(180deg, var(--color-night-surface) 0%, var(--color-night-deep) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.3s var(--ease-dream);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin: 0;
+}
+
+.titleIcon {
+  width: 28px;
+  height: 28px;
+  color: var(--color-golden);
+}
+
+.closeBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-silver-dim);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-moonlight);
+}
+
+.closeBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  background: rgba(244, 211, 94, 0.05);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.statValue {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--color-golden);
+}
+
+.statLabel {
+  font-size: var(--text-xs);
+  color: var(--color-silver-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statDivider {
+  width: 1px;
+  height: 40px;
+  background: var(--color-border);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+}
+
+.tab {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-silver-dim);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  border-color: var(--color-silver);
+  color: var(--color-moonlight);
+}
+
+.tabActive {
+  background: rgba(244, 211, 94, 0.1);
+  border-color: var(--color-golden);
+  color: var(--color-golden);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.achievementCard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: rgba(26, 58, 92, 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s;
+}
+
+.achievementCard:hover {
+  border-color: var(--color-border-hover);
+  background: rgba(26, 58, 92, 0.5);
+}
+
+.achievementCard.unlocked {
+  border-color: rgba(244, 211, 94, 0.3);
+}
+
+.achievementIcon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 211, 94, 0.1);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.iconEmoji {
+  font-size: 32px;
+}
+
+.iconLock {
+  width: 24px;
+  height: 24px;
+  color: var(--color-silver-dim);
+}
+
+.achievementInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.achievementName {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin-bottom: var(--space-1);
+}
+
+.achievementDesc {
+  font-size: var(--text-sm);
+  color: var(--color-silver-dim);
+  line-height: 1.4;
+}
+
+.progressBar {
+  height: 4px;
+  background: var(--color-night-deep);
+  border-radius: var(--radius-full);
+  margin-top: var(--space-3);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: var(--text-xs);
+  color: var(--color-silver);
+  margin-top: var(--space-2);
+}
+
+.unlockedBadge {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(100, 216, 203, 0.2);
+  border-radius: 50%;
+  color: var(--color-teal);
+  flex-shrink: 0;
+}
+
+.unlockedBadge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.unlockedActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.shareBtn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-silver-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shareBtn:hover {
+  border-color: var(--color-golden);
+  color: var(--color-golden);
+  background: rgba(244, 211, 94, 0.1);
+}
+
+.shareBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: var(--space-3);
+}
+
+.emptyState p {
+  color: var(--color-silver-dim);
+  margin: 0;
+}
+
+.footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.footerText {
+  color: var(--color-silver-dim);
+  font-size: var(--text-sm);
+  margin: 0;
+}

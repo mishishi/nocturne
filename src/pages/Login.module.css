@@ -1,0 +1,556 @@
+/* ============================================
+   Login Page - Celestial Observatory Theme
+   ============================================ */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-night-deep);
+}
+
+/* Animated Star Field */
+.starfield {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  background: var(--color-moonlight);
+  border-radius: 50%;
+  animation: twinkle var(--duration) ease-in-out infinite;
+  opacity: 0.6;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Nebula Glow Effects */
+.nebula {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(ellipse at center,
+    rgba(244, 211, 94, 0.08) 0%,
+    rgba(244, 211, 94, 0.03) 40%,
+    transparent 70%
+  );
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: nebulaPulse 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.nebulaSecondary {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(ellipse at center,
+    rgba(168, 181, 201, 0.06) 0%,
+    transparent 60%
+  );
+  top: 30%;
+  left: 60%;
+  animation: nebulaFloat 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes nebulaPulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@keyframes nebulaFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, 20px); }
+}
+
+/* Portal Container */
+.portalContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.portalRing {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: 50%;
+  animation: portalRotate 30s linear infinite;
+}
+
+.portalRing::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--color-golden);
+  border-radius: 50%;
+  box-shadow: 0 0 20px var(--color-golden);
+}
+
+.portalRingSecondary {
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  border: 1px dashed rgba(168, 181, 201, 0.15);
+  border-radius: 50%;
+  animation: portalRotate 20s linear infinite reverse;
+}
+
+@keyframes portalRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.portalCore {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: corePulse 4s ease-in-out infinite;
+}
+
+.portalIcon {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 30px rgba(244, 211, 94, 0.5));
+}
+
+@keyframes corePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+/* Content Container */
+.content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-8);
+  padding-top: 200px;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: var(--space-10);
+  animation: fadeInDown 0.8s var(--ease-dream);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.titleMain {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--color-moonlight);
+  text-shadow: 0 0 40px rgba(244, 211, 94, 0.3);
+}
+
+.titleSub {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-silver-dim);
+  margin-top: var(--space-1);
+}
+
+.tagline {
+  font-size: var(--text-base);
+  color: var(--color-silver);
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+/* Card */
+.card {
+  width: 100%;
+  padding: var(--space-8);
+  background: rgba(26, 58, 92, 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(20px);
+  animation: fadeInUp 0.8s var(--ease-dream) 0.2s both;
+}
+
+/* WeChat Mode */
+.wechatMode {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.wechatButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4) var(--space-6);
+  background: linear-gradient(135deg, #07C160 0%, #06AD56 100%);
+  border: none;
+  border-radius: var(--radius-lg);
+  color: white;
+  font-size: var(--text-lg);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+  box-shadow: 0 4px 20px rgba(7, 193, 96, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.wechatButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.wechatButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(7, 193, 96, 0.4);
+}
+
+.wechatButton:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.wechatButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.wechatButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.wechatIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.wechatIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--color-silver-dim);
+  font-size: var(--text-sm);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.phoneToggle {
+  padding: var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-silver);
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+}
+
+.phoneToggle:hover {
+  border-color: var(--color-golden);
+  color: var(--color-moonlight);
+}
+
+.loginHint {
+  font-size: var(--text-xs);
+  color: var(--color-silver-dim);
+  text-align: center;
+  margin: 0;
+  line-height: 1.8;
+}
+
+.link {
+  color: var(--color-golden);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.link:hover {
+  color: var(--color-golden-bright);
+}
+
+/* Phone Mode */
+.phoneMode {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  color: var(--color-silver-dim);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: color 0.2s;
+  align-self: flex-start;
+}
+
+.backButton:hover {
+  color: var(--color-moonlight);
+}
+
+.backButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.phoneForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: var(--space-4);
+  width: 20px;
+  height: 20px;
+  color: var(--color-silver-dim);
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-4) var(--space-4) var(--space-4) calc(var(--space-4) + 28px);
+  background: rgba(13, 27, 42, 0.6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-moonlight);
+  font-size: var(--text-base);
+  transition: all 0.3s var(--ease-dream);
+}
+
+.input::placeholder {
+  color: var(--color-silver-dim);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-golden);
+  box-shadow: 0 0 0 3px rgba(244, 211, 94, 0.1);
+}
+
+.error {
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--color-error-bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-error-border);
+}
+
+.submitButton {
+  width: 100%;
+  padding: var(--space-4);
+  background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-night-deep);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+  position: relative;
+  overflow: hidden;
+}
+
+.submitButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.submitButton:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loadingSpinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top-color: var(--color-night-deep);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.formFooter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.separator {
+  color: var(--color-silver-dim);
+}
+
+/* Celestial Decorations */
+.celestialRing {
+  position: absolute;
+  bottom: -150px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 300px;
+  border: 1px solid rgba(244, 211, 94, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.moonGlow {
+  position: absolute;
+  top: 10%;
+  right: 10%;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(ellipse at center,
+    rgba(244, 211, 94, 0.15) 0%,
+    transparent 60%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  animation: moonFloat 6s ease-in-out infinite;
+}
+
+@keyframes moonFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-10px, 10px); }
+}
+
+/* Animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .content {
+    margin-top: 240px;
+    padding: var(--space-6);
+  }
+
+  .titleMain {
+    font-size: 2.8rem;
+  }
+
+  .card {
+    padding: var(--space-6);
+  }
+
+  .portalContainer {
+    width: 220px;
+    height: 220px;
+  }
+
+  .portalCore {
+    width: 100px;
+    height: 100px;
+  }
+}

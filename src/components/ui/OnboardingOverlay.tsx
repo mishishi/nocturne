@@ -1,145 +1,219 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from './Button'
 import styles from './OnboardingOverlay.module.css'
 
 const ONBOARDING_KEY = 'yeelin_onboarding_shown'
 
-const TIPS = [
+// Emotion tags preview for onboarding
+const EMOTION_TAGS = [
+  { icon: '😌', label: '平静', color: '#64D8CB' },
+  { icon: '⚔️', label: '冒险', color: '#F4A261' },
+  { icon: '🔮', label: '神秘', color: '#9B7EBD' },
+  { icon: '😱', label: '噩梦', color: '#E76F51' },
+  { icon: '😊', label: '欢乐', color: '#F4D35E' },
+  { icon: '✨', label: '奇幻', color: '#A8DADC' }
+]
+
+// Value proposition screens
+const VALUE_SCREENS = [
   {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-      </svg>
-    ),
-    title: '捕捉梦境碎片',
-    description: '醒来后第一时间记录，能记住更多细节'
+    quote: '记录梦，比记住更重要',
+    subtext: '醒来后第一时间记录，能记住更多细节'
   },
   {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-      </svg>
-    ),
-    title: '细节越多越好',
-    description: '场景、人物、颜色、声音、情绪都是线索'
+    quote: 'AI 帮你把碎片拼成故事',
+    subtext: '每一个梦境都藏着专属的奇幻世界'
   },
   {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-      </svg>
-    ),
-    title: '探索你的故事',
-    description: 'AI 会根据你的梦境生成独特的故事'
+    quote: '每一个梦，都是礼物',
+    subtext: '探索无意识的智慧与创造力'
   }
 ]
 
-const EXAMPLE_DREAM = `我站在一片很大的稻田里，天是深蓝色的，星星很亮。有个小孩跑过我身边，笑得很开心，但我看不清他的脸。我想叫住他，但发不出声音。风从远处吹来，带着一股熟悉的味道……然后我就醒了。`
+type OnboardingPhase = 'intro' | 'values' | 'cta'
 
 interface OnboardingOverlayProps {
   onComplete: () => void
 }
 
 export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
-  const [visible, setVisible] = useState(false)
-  const [currentTip, setCurrentTip] = useState(0)
+  const navigate = useNavigate()
+  const [phase, setPhase] = useState<OnboardingPhase>('intro')
+  const [showContent, setShowContent] = useState(false)
+  const [moonPhase, setMoonPhase] = useState<' exhale' | 'inhale'>(' exhale')
+  const [isVisible, setIsVisible] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isTransitioningRef = useRef(false)
 
+  // Breathing moon animation
   useEffect(() => {
-    // Check if onboarding has been shown before
+    if (phase !== 'intro') return
+
+    const breathInterval = setInterval(() => {
+      setMoonPhase(prev => prev === ' exhale' ? 'inhale' : ' exhale')
+    }, 2000)
+    return () => clearInterval(breathInterval)
+  }, [phase])
+
+  // Handle values phase auto-advance
+  useEffect(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+
+    if (phase !== 'values') return
+
+    // Auto-advance to CTA after showing all cards
+    timerRef.current = setTimeout(() => {
+      setPhase('cta')
+    }, 5000) // 5 seconds for displaying 3 cards
+  }, [phase])
+
+  // Initial mount
+  useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY)
     if (!hasSeenOnboarding) {
-      // Small delay for page to load
-      const timer = setTimeout(() => setVisible(true), 500)
+      setIsVisible(true)
+      const timer = setTimeout(() => {
+        setShowContent(true)
+      }, 100)
       return () => clearTimeout(timer)
     }
   }, [])
 
-  const handleDismiss = () => {
+  const handleDismiss = useCallback(() => {
     localStorage.setItem(ONBOARDING_KEY, 'true')
-    setVisible(false)
+    setIsVisible(false)
     onComplete()
-  }
+  }, [onComplete])
 
-  const handleNext = () => {
-    if (currentTip < TIPS.length - 1) {
-      setCurrentTip(currentTip + 1)
-    } else {
-      handleDismiss()
+  const handleExplore = () => {
+    if (isTransitioningRef.current) return
+    isTransitioningRef.current = true
+
+    // Haptic on click
+    if (navigator.vibrate) {
+      navigator.vibrate(5)
     }
+    setPhase('values')
+
+    // Reset guard after a short delay
+    setTimeout(() => {
+      isTransitioningRef.current = false
+    }, 1000)
   }
 
-  const handleSkip = () => {
+  const handleStartRecording = () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(10)
+    }
     handleDismiss()
+    navigate('/dream')
   }
 
-  if (!visible) return null
+  // Don't render if already seen
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY)
+    if (hasSeenOnboarding) {
+      setIsVisible(false)
+      onComplete()
+    }
+  }, [onComplete])
+
+  // Don't render if not visible
+  if (!isVisible) {
+    return null
+  }
 
   return (
     <div className={styles.overlay}>
       <div className={styles.backdrop} />
 
-      <div className={styles.card}>
-        {/* Header */}
-        <div className={styles.header}>
-          <span className={styles.logo}>夜棂</span>
-          <p className={styles.welcome}>欢迎来到你的梦境世界</p>
-        </div>
+      {/* Ambient glow */}
+      <div className={styles.ambientGlow} />
 
-        {/* Tips carousel */}
-        <div className={styles.tipsSection}>
-          <div className={styles.tipContent}>
-            <div className={styles.tipIcon}>
-              {TIPS[currentTip].icon}
-            </div>
-            <h3 className={styles.tipTitle}>{TIPS[currentTip].title}</h3>
-            <p className={styles.tipDesc}>{TIPS[currentTip].description}</p>
+      {/* Phase: Intro - Brand Impact */}
+      {phase === 'intro' && (
+        <div className={`${styles.introPhase} ${showContent ? styles.visible : ''}`}>
+          {/* Breathing Moon */}
+          <div className={`${styles.moon} ${moonPhase === ' exhale' ? styles.exhale : styles.inhale}`}>
+            <div className={styles.moonGlow} />
+            <div className={styles.moonCore} />
           </div>
 
-          {/* Dots */}
-          <div className={styles.dots}>
-            {TIPS.map((_, idx) => (
+          {/* Brand */}
+          <div className={styles.brand}>
+            <span className={styles.logo}>夜棂</span>
+            <p className={styles.tagline}>你昨晚做了什么梦？</p>
+          </div>
+
+          {/* CTA */}
+          <Button onClick={handleExplore} size="lg" className={styles.exploreBtn}>
+            开始探索
+          </Button>
+
+          {/* Skip hint */}
+          <button className={styles.skipHint} onClick={handleDismiss}>
+            跳过
+          </button>
+        </div>
+      )}
+
+      {/* Phase: Values - Static Display */}
+      {phase === 'values' && (
+        <div className={styles.valuesPhase}>
+          {VALUE_SCREENS.map((screen, idx) => (
+            <div className={styles.valueCard} key={idx}>
+              <div className={styles.valueQuote}>
+                <span className={styles.quoteMark}>"</span>
+                {screen.quote}
+              </div>
+              <p className={styles.valueSubtext}>
+                {screen.subtext}
+              </p>
+            </div>
+          ))}
+
+          {/* Skip hint */}
+          <button className={styles.skipHint} onClick={handleDismiss}>
+            跳过
+          </button>
+        </div>
+      )}
+
+      {/* Phase: CTA */}
+      {phase === 'cta' && (
+        <div className={styles.ctaPhase}>
+          <div className={styles.ctaIcon}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+          </div>
+
+          <p className={styles.ctaText}>用一个梦开始</p>
+
+          <Button onClick={handleStartRecording} size="lg" className={styles.ctaBtn}>
+            记录你的第一个梦
+          </Button>
+
+          {/* Emotion preview */}
+          <div className={styles.emotionPreview}>
+            {EMOTION_TAGS.map((tag, i) => (
               <span
-                key={idx}
-                className={`${styles.dot} ${idx === currentTip ? styles.active : ''}`}
-              />
+                key={tag.label}
+                className={styles.emotionTag}
+                style={{
+                  animationDelay: `${0.1 + i * 0.06}s`,
+                  '--tag-color': tag.color
+                } as React.CSSProperties}
+              >
+                {tag.icon}
+              </span>
             ))}
           </div>
         </div>
-
-        {/* Example dream */}
-        <div className={styles.exampleSection}>
-          <p className={styles.exampleLabel}>比如这样的梦境：</p>
-          <blockquote className={styles.exampleDream}>
-            {EXAMPLE_DREAM}
-          </blockquote>
-        </div>
-
-        {/* Actions */}
-        <div className={styles.actions}>
-          <button className={styles.skipBtn} onClick={handleSkip}>
-            跳过
-          </button>
-          <Button onClick={handleNext} size="lg" className={styles.nextBtn}>
-            {currentTip < TIPS.length - 1 ? '下一步' : '开始记录'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Decorative elements */}
-      <div className={styles.decorStars}>
-        {[...Array(20)].map((_, i) => (
-          <span
-            key={i}
-            className={styles.star}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
+      )}
     </div>
   )
 }

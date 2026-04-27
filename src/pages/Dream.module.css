@@ -1,153 +1,425 @@
 .page {
   min-height: 100vh;
-  padding-top: calc(100px + env(safe-area-inset-top));
+  padding-top: calc(80px + env(safe-area-inset-top));
   padding-bottom: var(--space-16);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
-}
-
-.backBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin-bottom: var(--space-4);
-  background: var(--color-surface-light);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-silver);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.backBtn:hover {
-  background: var(--color-surface-medium);
-  color: var(--color-moonlight);
-  border-color: var(--color-border-hover);
-}
-
-.backBtn svg {
-  width: 18px;
-  height: 18px;
+  position: relative;
+  overflow: hidden;
 }
 
 .container {
-  max-width: 720px;
+  max-width: 560px;
   margin: 0 auto;
   padding: 0 var(--space-6);
   position: relative;
+  z-index: 1;
 }
 
-.header {
-  text-align: center;
+/* ============================================
+   Step Indicator
+   ============================================ */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
   margin-bottom: var(--space-10);
-  animation: fadeInUp 0.6s var(--ease-dream) forwards;
+  animation: fadeIn 0.4s ease-out;
 }
 
-.step {
-  display: inline-block;
+.stepDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface-light);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+  color: var(--color-silver);
+  transition: all 0.3s var(--ease-dream);
+}
+
+.stepDot.active {
+  background: var(--color-golden);
+  border-color: var(--color-golden);
+  color: var(--color-night-deep);
+  box-shadow: 0 0 20px rgba(244, 211, 94, 0.4);
+}
+
+.stepDot.completed {
+  background: rgba(244, 211, 94, 0.2);
+  border-color: var(--color-golden);
   color: var(--color-golden);
-  padding: var(--space-2) var(--space-4);
-  background: rgba(244, 211, 94, 0.1);
-  border-radius: var(--radius-full);
-  margin-bottom: var(--space-4);
+}
+
+.stepLine {
+  width: 48px;
+  height: 2px;
+  background: var(--color-border);
+  transition: background 0.3s var(--ease-dream);
+}
+
+.stepLine.completed {
+  background: var(--color-golden);
+}
+
+/* ============================================
+   Step Content
+   ============================================ */
+.stepContent {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.stepHeader {
+  text-align: center;
+  margin-bottom: var(--space-8);
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 600;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 500;
   color: var(--color-moonlight);
-  margin-bottom: var(--space-3);
+  margin: 0 0 var(--space-3) 0;
 }
 
 .subtitle {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: var(--color-silver);
   margin: 0;
-}
-
-.form {
-  animation: fadeInUp 0.6s var(--ease-dream) 0.1s forwards;
-  opacity: 0;
-}
-
-.loadingOverlay {
-  position: relative;
-  background: var(--color-night-deep);
-  border-radius: var(--radius-xl);
-  padding: var(--space-8);
-  min-height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.textarea {
-  margin-bottom: var(--space-6);
-}
-
-.tips {
-  background: rgba(26, 58, 92, 0.3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  margin-bottom: var(--space-8);
-}
-
-.tipsTitle {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-silver);
-  margin-bottom: var(--space-3);
-}
-
-.tipsList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tipsList li {
-  font-size: 0.875rem;
-  color: var(--color-silver);
-  padding: var(--space-2) 0;
-  padding-left: var(--space-5);
-  position: relative;
   opacity: 0.8;
 }
 
-.tipsList li::before {
-  content: '·';
-  position: absolute;
-  left: 0;
+/* ============================================
+   Emotion Selection
+   ============================================ */
+.emotionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+.emotionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-3);
+  background: rgba(26, 58, 92, 0.3);
+  border: 2px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.25s var(--ease-dream);
+  opacity: 0;
+  animation: cardPop 0.4s ease-out forwards;
+}
+
+@keyframes cardPop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.emotionCard:hover {
+  background: rgba(26, 58, 92, 0.5);
+  border-color: var(--tag-color, var(--color-border));
+  transform: translateY(-2px);
+}
+
+.emotionCard.selected {
+  background: rgba(244, 211, 94, 0.1);
+  border-color: var(--tag-color, var(--color-golden));
+  box-shadow: 0 0 20px rgba(244, 211, 94, 0.15);
+}
+
+.emotionIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.emotionLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-moonlight);
+}
+
+/* ============================================
+   Voice Input
+   ============================================ */
+.voiceSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.voiceBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.15), rgba(244, 211, 94, 0.05));
+  border: 2px solid rgba(244, 211, 94, 0.3);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-dream);
+}
+
+.voiceBtn:hover {
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.2), rgba(244, 211, 94, 0.1));
+  border-color: rgba(244, 211, 94, 0.5);
+  transform: scale(1.02);
+}
+
+.voiceBtn.recording {
+  background: linear-gradient(135deg, rgba(231, 111, 81, 0.3), rgba(231, 111, 81, 0.15));
+  border-color: rgba(231, 111, 81, 0.6);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(231, 111, 81, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(231, 111, 81, 0);
+  }
+}
+
+.voiceIcon {
+  width: 24px;
+  height: 24px;
   color: var(--color-golden);
 }
 
-.submitBtn {
+.voiceIcon svg {
   width: 100%;
+  height: 100%;
 }
 
-.decorMoon {
-  position: fixed;
-  bottom: env(safe-area-inset-bottom, -50px);
-  right: env(safe-area-inset-right, -50px);
-  width: 200px;
-  height: 200px;
-  opacity: 0.1;
-  pointer-events: none;
-  animation: float 10s ease-in-out infinite;
-  will-change: transform;
+.voiceText {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-golden);
+}
+
+.voiceHint {
+  font-size: 0.75rem;
+  color: var(--color-silver);
+  opacity: 0.6;
+}
+
+/* ============================================
+   Text Input
+   ============================================ */
+.textSection {
+  margin-bottom: var(--space-6);
+}
+
+.textarea {
+  min-height: 200px;
+}
+
+/* ============================================
+   Quick Elements
+   ============================================ */
+.elementsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+}
+
+.elementCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  background: rgba(26, 58, 92, 0.3);
+  border: 2px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-dream);
+  opacity: 0;
+  animation: cardPop 0.3s ease-out forwards;
+}
+
+.elementCard:hover {
+  background: rgba(26, 58, 92, 0.5);
+  border-color: var(--color-border-hover);
+  transform: scale(1.05);
+}
+
+.elementCard.selected {
+  background: rgba(244, 211, 94, 0.15);
+  border-color: var(--color-golden);
+}
+
+.elementIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.elementLabel {
+  font-size: 0.625rem;
+  color: var(--color-silver);
+  text-align: center;
+}
+
+.elementCard.selected .elementLabel {
+  color: var(--color-golden);
+}
+
+/* ============================================
+   Step Actions
+   ============================================ */
+.stepActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.backBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-silver);
+  font-size: 0.875rem;
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: color 0.2s;
+  opacity: 0.8;
+}
+
+.backBtn:hover {
+  color: var(--color-moonlight);
+  opacity: 1;
+}
+
+.nextBtn {
+  flex: 1;
+  max-width: 280px;
+}
+
+.skipBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-silver);
+  font-size: 0.875rem;
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: color 0.2s;
+  opacity: 0.6;
+}
+
+.skipBtn:hover {
+  color: var(--color-golden);
+  opacity: 1;
+}
+
+/* ============================================
+   Submitting State
+   ============================================ */
+.submittingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: var(--space-8);
+  animation: fadeIn 0.4s ease-out;
+}
+
+.submittingMoon {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.moonGlow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle,
+    rgba(244, 211, 94, 0.25) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.moonCore {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 35% 35%,
+    rgba(255, 248, 220, 0.95) 0%,
+    rgba(244, 211, 94, 0.9) 40%,
+    rgba(200, 170, 100, 0.8) 100%
+  );
+  border-radius: 50%;
+  box-shadow:
+    0 0 60px rgba(244, 211, 94, 0.4),
+    inset -8px -8px 25px rgba(180, 140, 60, 0.3);
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(5deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.submittingText {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  color: var(--color-silver);
+  margin: 0;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+/* ============================================
+   Decorative Stars
+   ============================================ */
+.decorStars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--color-golden);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeInUp {
@@ -161,56 +433,84 @@
   }
 }
 
-@media (max-width: 768px) {
-  .container {
-    padding: 0 var(--space-5);
-  }
-
-  .header {
-    margin-bottom: var(--space-8);
-  }
-
-  .title {
-    font-size: clamp(1.5rem, 5vw, 2rem);
-  }
-}
-
-@media (max-width: 640px) {
-  .page {
-    padding-top: 80px;
-    padding-bottom: var(--space-12);
-  }
-
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 480px) {
   .container {
     padding: 0 var(--space-4);
   }
 
-  .decorMoon {
-    width: 120px;
-    height: 120px;
-    bottom: -30px;
-    right: -30px;
+  .stepIndicator {
+    margin-bottom: var(--space-8);
   }
 
-  .tips {
-    padding: var(--space-4);
+  .stepLine {
+    width: 32px;
+  }
+
+  .stepDot {
+    width: 28px;
+    height: 28px;
+    font-size: 0.6875rem;
+  }
+
+  .title {
+    font-size: 1.375rem;
+  }
+
+  .emotionGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+  }
+
+  .emotionCard {
+    padding: var(--space-4) var(--space-2);
+  }
+
+  .emotionIcon {
+    font-size: 1.75rem;
+  }
+
+  .emotionLabel {
+    font-size: 0.75rem;
+  }
+
+  .elementsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .elementCard {
+    padding: var(--space-3);
+  }
+
+  .elementIcon {
+    font-size: 1.125rem;
+  }
+
+  .elementLabel {
+    font-size: 0.5625rem;
   }
 }
 
-@media (max-width: 480px) {
-  .page {
-    padding-top: 70px;
+/* ============================================
+   Reduced Motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .stepContent,
+  .submittingState,
+  .emotionCard,
+  .elementCard,
+  .decorStars .star,
+  .submittingMoon {
+    animation: none;
   }
 
-  .decorMoon {
-    width: 100px;
-    height: 100px;
-    bottom: -20px;
-    right: -20px;
+  .submittingMoon {
+    transform: none;
   }
 
-  .step {
-    font-size: 0.6875rem;
-    padding: var(--space-1) var(--space-3);
+  .voiceBtn.recording {
+    animation: none;
   }
 }

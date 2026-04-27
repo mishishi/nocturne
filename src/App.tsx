@@ -1,20 +1,29 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
+import { BottomNav } from './components/BottomNav'
 import { PageTransition } from './components/PageTransition'
 import { AchievementUnlockModal } from './components/ui/AchievementUnlockModal'
 import { AtmosphereEffects } from './components/effects/AtmosphereEffects'
 import { SkipLink } from './components/SkipLink'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import { useDreamStore, ACHIEVEMENTS } from './hooks/useDreamStore'
+import { useAchievementSound } from './hooks/useAchievementSound'
 import { Home } from './pages/Home'
 import { Dream } from './pages/Dream'
 import { Questions } from './pages/Questions'
 import { Story } from './pages/Story'
 import { History } from './pages/History'
 import { Profile } from './pages/Profile'
+import { Login } from './pages/Login'
+import { Register } from './pages/Register'
+import { Friends } from './pages/Friends'
+import { DreamWall } from './pages/DreamWall'
 
 function App() {
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme } = useDreamStore()
+  const { playSound } = useAchievementSound()
+  const lastPlayedRef = useRef<string | null>(null)
 
   // Sync fontSize and theme to documentElement for CSS selectors
   useEffect(() => {
@@ -24,6 +33,14 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  // Play achievement sound when achievement is unlocked
+  useEffect(() => {
+    if (recentlyUnlocked.length > 0 && recentlyUnlocked[0] !== lastPlayedRef.current) {
+      lastPlayedRef.current = recentlyUnlocked[0]
+      playSound('unlock')
+    }
+  }, [recentlyUnlocked, playSound])
 
   // Get the first recently unlocked achievement to show
   const currentAchievement = recentlyUnlocked.length > 0
@@ -50,10 +67,20 @@ function App() {
             <Route path="/questions" element={<Questions />} />
             <Route path="/story" element={<Story />} />
             <Route path="/history" element={<History />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/wall" element={<DreamWall />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={
+              <ProtectedRoute><Profile /></ProtectedRoute>
+            } />
+            <Route path="/friends" element={
+              <ProtectedRoute><Friends /></ProtectedRoute>
+            } />
           </Routes>
         </main>
       </PageTransition>
+
+      <BottomNav />
 
       <AchievementUnlockModal
         achievement={currentAchievement}

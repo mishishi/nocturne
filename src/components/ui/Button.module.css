@@ -70,8 +70,13 @@
 
 .primary:hover:not(:disabled) {
   background: var(--color-golden-bright);
-  box-shadow: 0 8px 24px rgba(244, 211, 94, 0.35);
+  box-shadow: 0 8px 24px rgba(244, 211, 94, 0.35), 0 0 20px rgba(244, 211, 94, 0.15);
   transform: translateY(0);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(244, 211, 94, 0.25);
 }
 
 .secondary {
@@ -81,8 +86,9 @@
 }
 
 .secondary:hover:not(:disabled) {
-  background: var(--color-surface-light);
-  border-color: var(--color-moonlight);
+  background: rgba(139, 157, 195, 0.15);
+  border-color: rgba(244, 211, 94, 0.4);
+  box-shadow: 0 0 16px rgba(244, 211, 94, 0.1);
 }
 
 .ghost {
@@ -93,7 +99,7 @@
 
 .ghost:hover:not(:disabled) {
   color: var(--color-moonlight);
-  background: var(--color-surface-light);
+  background: rgba(139, 157, 195, 0.15);
 }
 
 /* Sizes */
