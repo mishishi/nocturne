@@ -2,7 +2,65 @@ import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 
 export default async function authRoutes(fastify) {
-  // POST /api/auth/wechat - 微信登录
+  // GET /api/auth/wechat/authorize - 生成微信授权链接并跳转
+  fastify.get('/auth/wechat/authorize', async (req, res) => {
+    const { redirect_uri } = req.query
+
+    if (!redirect_uri) {
+      return res.status(400).send({ error: 'redirect_uri is required' })
+    }
+
+    // 回调地址是后端的 callback 接口
+    const callbackUrl = `${process.env.BASE_URL || 'http://localhost:4000'}/api/auth/wechat/callback`
+    // 传给 callback 的原始跳转地址，用于最终重定向
+    const state = Buffer.from(JSON.stringify({ redirect_uri })).toString('base64')
+
+    const authUrl = authService.getWeChatAuthUrl(callbackUrl, state)
+    return res.redirect(authUrl)
+  })
+
+  // GET /api/auth/wechat/callback - 微信回调，处理 code 换 openid
+  fastify.get('/auth/wechat/callback', async (req, res) => {
+    const { code, state } = req.query
+
+    if (!code) {
+      return res.status(400).send({ error: 'code is required' })
+    }
+
+    try {
+      // 用 code 换 openid
+      const { openid } = await authService.exchangeCodeForOpenid(code)
+
+      // 登录或创建用户
+      const { user, token } = await authService.wechatLogin(openid)
+
+      // 解析原始 redirect_uri
+      let redirectUri = '/'
+      try {
+        if (state) {
+          const decoded = JSON.parse(Buffer.from(state, 'base64').toString())
+          redirectUri = decoded.redirect_uri || '/'
+        }
+      } catch {
+        // ignore parse errors
+      }
+
+      // 拼接 token 到 URL 参数
+      const finalUrl = new URL(redirectUri, process.env.FRONTEND_URL || 'http://localhost:4001')
+      finalUrl.searchParams.set('wechat_token', token)
+      finalUrl.searchParams.set('wechat_user', JSON.stringify(user))
+
+      return res.redirect(finalUrl.toString())
+    } catch (error) {
+      console.error('WeChat callback error:', error)
+      // 出错也重定向到前端，让前端展示错误
+      const errorUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:4001')
+      errorUrl.searchParams.set('wechat_error', '1')
+      return res.redirect(errorUrl.toString())
+    }
+  })
+
+  // POST /api/auth/wechat - 微信登录（旧接口，保留用于直接 openid 登录）
   fastify.post('/auth/wechat', async (req, res) => {
     const { openid } = req.body
 

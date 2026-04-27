@@ -32,33 +32,15 @@ export function Login() {
     setIsLoading(true)
     setError('')
 
-    // Simulate WeChat OAuth - in production, this would redirect to WeChat OAuth
-    // For demo, we generate a mock openid based on timestamp
-    const mockOpenid = `wx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
     try {
-      const result = await authApi.wechatLogin(mockOpenid)
-      if (result.success) {
-        // Store token first so migrateSession can use it
-        if (result.token) {
-          localStorage.setItem('yeelin_token', result.token)
-        }
+      // 跳转到后端授权接口，后端会重定向到微信授权页面
+      const callbackUrl = `${window.location.origin}/auth/wechat/callback`
+      const authorizeUrl = `/api/auth/wechat/authorize?redirect_uri=${encodeURIComponent(callbackUrl)}`
 
-        // Migrate guest sessions if exists
-        const guestOpenid = localStorage.getItem('yeelin_openid')
-        if (guestOpenid && guestOpenid !== result.user.openid) {
-          await api.migrateSession(guestOpenid, result.user.openid)
-        }
-
-        setUser(result.user, result.token)
-        localStorage.setItem('yeelin_openid', result.user.openid)
-        navigate(from, { replace: true })
-      } else {
-        setError('微信登录失败，请重试')
-      }
+      // 跳转到后端生成授权链接
+      window.location.href = authorizeUrl
     } catch (err) {
       setError('网络错误，请检查网络连接')
-    } finally {
       setIsLoading(false)
     }
   }

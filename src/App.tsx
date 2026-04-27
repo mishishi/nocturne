@@ -19,6 +19,7 @@ import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { Friends } from './pages/Friends'
 import { DreamWall } from './pages/DreamWall'
+import { WeChatCallback } from './pages/WeChatCallback'
 
 function App() {
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion } = useDreamStore()
@@ -80,6 +81,7 @@ function App() {
             <Route path="/friends" element={
               <ProtectedRoute><Friends /></ProtectedRoute>
             } />
+            <Route path="/auth/wechat/callback" element={<WeChatCallback />} />
           </Routes>
         </main>
       </PageTransition>

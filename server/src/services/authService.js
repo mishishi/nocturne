@@ -3,6 +3,10 @@ import bcrypt from 'bcrypt'
 
 const SALT_ROUNDS = 10
 
+// WeChat config
+const WECHAT_APPID = process.env.WECHAT_APPID || ''
+const WECHAT_APPSECRET = process.env.WECHAT_APPSECRET || ''
+
 // Simple JWT-like token (for demo - use real JWT in production)
 function generateToken(userId) {
   const payload = Buffer.from(JSON.stringify({ userId, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })).toString('base64')
@@ -156,5 +160,56 @@ export const authService = {
   sanitizeUser(user) {
     const { passwordHash, ...safeUser } = user
     return safeUser
+  },
+
+  /**
+   * Generate WeChat OAuth authorization URL
+   */
+  getWeChatAuthUrl(redirectUri, state = '') {
+    const scope = 'snsapi_base' // Only need openid, no user profile
+    const authUrl = new URL('https://open.weixin.qq.com/connect/oauth2/authorize')
+    authUrl.searchParams.set('appid', WECHAT_APPID)
+    authUrl.searchParams.set('redirect_uri', redirectUri)
+    authUrl.searchParams.set('response_type', 'code')
+    authUrl.searchParams.set('scope', scope)
+    authUrl.searchParams.set('state', state)
+    return authUrl.toString() + '#wechat_redirect'
+  },
+
+  /**
+   * Exchange authorization code for openid
+   */
+  async exchangeCodeForOpenid(code) {
+    if (!WECHAT_APPID || !WECHAT_APPSECRET) {
+      throw new Error('WeChat appid or appsecret not configured')
+    }
+
+    const url = 'https://api.weixin.qq.com/sns/oauth2/access_token'
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      appid: WECHAT_APPID,
+      secret: WECHAT_APPSECRET,
+      code
+    })
+
+    const response = await fetch(`${url}?${params.toString()}`, {
+      method: 'GET'
+    })
+
+    if (!response.ok) {
+      throw new Error(`WeChat API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (data.errcode) {
+      throw new Error(`WeChat error: ${data.errmsg}`)
+    }
+
+    return {
+      openid: data.openid,
+      accessToken: data.access_token,
+      expiresIn: data.expires_in
+    }
   }
 }
