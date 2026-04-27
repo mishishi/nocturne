@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
+import { ExportDataModal } from '../components/ExportDataModal'
 import { Statistics } from '../components/Statistics'
 import { AmbientPlayer } from '../components/AmbientPlayer'
 import { Breadcrumb } from '../components/Breadcrumb'
@@ -34,6 +35,7 @@ export function Profile() {
   const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user } = useDreamStore()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [shareStats, setShareStatsLocal] = useState<UserStats | null>(null)
@@ -306,6 +308,15 @@ export function Profile() {
                 清除
               </Button>
             </div>
+            <button
+              className={styles.settingItem}
+              onClick={() => setShowExportModal(true)}
+            >
+              <span>导出我的数据</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.chevron}>
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
             {user && (
               <div className={styles.settingItem}>
                 <div className={styles.settingInfo}>
@@ -362,6 +373,11 @@ export function Profile() {
         message={toastMessage}
         visible={toastVisible}
         onClose={() => setToastVisible(false)}
+      />
+
+      <ExportDataModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
       />
     </div>
   )
