@@ -356,6 +356,12 @@
   justify-content: center;
 }
 
+/* TTS Button Active State */
+.ttsButtonActive {
+  background: var(--color-moonlight) !important;
+  color: var(--color-night) !important;
+}
+
 /* Share Menu */
 .shareWrapper {
   position: relative;

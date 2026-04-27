@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { useAchievementSound } from '../hooks/useAchievementSound'
+import { useTextToSpeech } from '../hooks/useTextToSpeech'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { SharePoster } from '../components/SharePoster'
@@ -30,6 +31,7 @@ export function Story() {
   const [isGeneratingImage] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [isPublished, setIsPublished] = useState(false)
+  const { speak, stop, isSpeaking, isSupported: isTtsSupported } = useTextToSpeech()
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const shareMenuRef = useRef<HTMLDivElement>(null)
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -221,6 +223,23 @@ export function Story() {
     // Just scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  const handleSpeakStory = () => {
+    if (!story) return
+
+    if (isSpeaking) {
+      stop()
+    } else {
+      speak(story)
+    }
+  }
+
+  // Cleanup TTS on unmount
+  useEffect(() => {
+    return () => {
+      stop()
+    }
+  }, [stop])
 
   const handleInterpret = async () => {
     const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
@@ -477,6 +496,31 @@ export function Story() {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 已发布
+              </Button>
+            )}
+            {isTtsSupported && (
+              <Button
+                variant="secondary"
+                onClick={handleSpeakStory}
+                className={isSpeaking ? styles.ttsButtonActive : ''}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                  {isSpeaking ? (
+                    // Pause icon when speaking
+                    <>
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </>
+                  ) : (
+                    // Speaker icon when not speaking
+                    <>
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </>
+                  )}
+                </svg>
+                {isSpeaking ? '停止' : '听故事'}
               </Button>
             )}
             <Button variant="secondary" onClick={handleInterpret} disabled={isInterpreting}>

@@ -79,8 +79,10 @@ export function Dream() {
   const [error, setError] = useState('')
   const [draftRestored, setDraftRestored] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
+  const [isSrSupported, setIsSrSupported] = useState(false)
   const lastSavedRef = useRef<string>(currentSession.dreamText)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
+  const finalTranscriptRef = useRef<string>('')
 
   // Restore draft on mount
   useEffect(() => {
@@ -124,21 +126,46 @@ export function Dream() {
   useEffect(() => {
     const SRConstructor = window.SpeechRecognition || (window as unknown as { webkitSpeechRecognition: new () => ISpeechRecognition }).webkitSpeechRecognition
     if (SRConstructor) {
+      setIsSrSupported(true)
+
       const recognition = new SRConstructor()
       recognition.lang = 'zh-CN'
       recognition.continuous = true
       recognition.interimResults = true
 
       recognition.onresult = (event) => {
-        let transcript = ''
+        // Only use final results to avoid duplicates from interim results
+        let finalTranscript = ''
+        let interimTranscript = ''
+
         for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript
+          const result = event.results[i]
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript
+          } else {
+            interimTranscript += result[0].transcript
+          }
         }
-        setDreamText(transcript)
+
+        // Update final transcript ref and state
+        if (finalTranscript) {
+          finalTranscriptRef.current += finalTranscript
+          setDreamText(finalTranscriptRef.current)
+        } else if (interimTranscript) {
+          // Show interim results but don't update final until confirmed
+          setDreamText(finalTranscriptRef.current + interimTranscript)
+        }
       }
 
-      recognition.onerror = () => {
+      recognition.onerror = (event) => {
         setIsRecording(false)
+        // Show error feedback
+        const errorEvent = event as unknown as { error?: string }
+        if (errorEvent.error === 'not-allowed') {
+          setError('请允许麦克风权限以使用语音输入')
+        } else if (errorEvent.error === 'no-speech') {
+          setError('未检测到语音，请重试')
+        }
       }
 
       recognition.onend = () => {
@@ -156,8 +183,14 @@ export function Dream() {
 
   const handleStartRecording = () => {
     if (recognitionRef.current && !isRecording) {
-      recognitionRef.current.start()
-      setIsRecording(true)
+      finalTranscriptRef.current = currentSession.dreamText // Preserve existing text
+      try {
+        recognitionRef.current.start()
+        setIsRecording(true)
+        setError('') // Clear any previous errors
+      } catch {
+        setError('无法启动语音识别，请刷新页面重试')
+      }
     }
   }
 
@@ -312,33 +345,33 @@ export function Dream() {
             </div>
 
             {/* Voice Input */}
-            <div className={styles.voiceSection}>
-              <button
-                className={`${styles.voiceBtn} ${isRecording ? styles.recording : ''}`}
-                onMouseDown={handleStartRecording}
-                onMouseUp={handleStopRecording}
-                onMouseLeave={handleStopRecording}
-                onTouchStart={handleStartRecording}
-                onTouchEnd={handleStopRecording}
-              >
-                <span className={styles.voiceIcon}>
-                  {isRecording ? (
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <rect x="6" y="6" width="12" height="12" rx="2" />
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
-                    </svg>
-                  )}
+            {isSrSupported && (
+              <div className={styles.voiceSection}>
+                <button
+                  className={`${styles.voiceBtn} ${isRecording ? styles.recording : ''}`}
+                  onClick={isRecording ? handleStopRecording : handleStartRecording}
+                >
+                  <span className={styles.voiceIcon}>
+                    {isRecording ? (
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12" rx="2" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
+                      </svg>
+                    )}
+                  </span>
+                  <span className={styles.voiceText}>
+                    {isRecording ? '点击停止' : '点击说话'}
+                  </span>
+                </button>
+                <span className={styles.voiceHint}>
+                  {isRecording ? '正在聆听...' : '支持语音转文字'}
                 </span>
-                <span className={styles.voiceText}>
-                  {isRecording ? '松开停止' : '按住说话'}
-                </span>
-              </button>
-              <span className={styles.voiceHint}>支持语音转文字</span>
-            </div>
+              </div>
+            )}
 
             {/* Text Input */}
             <div className={styles.textSection}>
