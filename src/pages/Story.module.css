@@ -362,6 +362,13 @@
   color: var(--color-night) !important;
 }
 
+/* Button icon alignment */
+.actions svg,
+.secondaryActions svg {
+  flex-shrink: 0;
+  align-self: center;
+}
+
 /* TTS Voice Selector */
 .ttsWrapper {
   display: flex;
