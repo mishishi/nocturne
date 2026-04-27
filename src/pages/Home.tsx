@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { OnboardingOverlay } from '../components/ui/OnboardingOverlay'
 import { AchievementCenter } from '../components/AchievementCenter'
-import { useDreamStore } from '../hooks/useDreamStore'
+import { useDreamStore, ACHIEVEMENTS, type DreamSession } from '../hooks/useDreamStore'
 import styles from './Home.module.css'
 
 export function Home() {
@@ -78,10 +78,15 @@ export function Home() {
         <div className={styles.heroCta}>
           <Link to="/dream">
             <Button size="lg">
-              开始记录
+              {isNewUser ? '开始记录' : '继续记录'}
             </Button>
           </Link>
         </div>
+
+        {/* Achievement progress hint - only for returning users */}
+        {!isNewUser && (
+          <AchievementHint history={history} />
+        )}
       </section>
 
       {/* Steps Section */}
@@ -143,6 +148,71 @@ export function Home() {
         isOpen={showAchievementCenter}
         onClose={() => setShowAchievementCenter(false)}
       />
+    </div>
+  )
+}
+
+// Achievement progress hint component
+interface AchievementHintProps {
+  history: DreamSession[]
+}
+
+function AchievementHint({ history }: AchievementHintProps) {
+  const { achievements } = useDreamStore()
+
+  // Find the closest locked achievement to unlock
+  const getProgress = () => {
+    for (const achievement of ACHIEVEMENTS) {
+      if (achievements.includes(achievement.id)) continue
+
+      switch (achievement.id) {
+        case 'week_streak': {
+          // Check consecutive days from history dates
+          if (history.length === 0) return null
+          const dates = history.map(h => h.date).slice(0, 7)
+          if (dates.length < 2) {
+            return {
+              icon: achievement.icon,
+              text: `已连续记录 ${dates.length} 天，再坚持 ${7 - dates.length} 天解锁`,
+              progress: dates.length / 7
+            }
+          }
+          return null // Already unlocked or not in consecutive streak
+        }
+        case 'story_collector': {
+          const count = history.length
+          if (count < 10) {
+            return {
+              icon: achievement.icon,
+              text: `再收藏 ${10 - count} 个故事解锁「${achievement.title}」`,
+              progress: count / 10
+            }
+          }
+          return null
+        }
+        case 'first_dream': {
+          return null // Already handled by new user flow
+        }
+        default:
+          return null
+      }
+    }
+    return null
+  }
+
+  const progress = getProgress()
+  if (!progress) return null
+
+  return (
+    <div className={styles.achievementHint}>
+      <div className={styles.achievementHintIcon}>{progress.icon}</div>
+      <div className={styles.achievementHintText}>{progress.text}</div>
+      <div className={styles.achievementHintBar}>
+        <div
+          className={styles.achievementHintFill}
+          style={{ width: `${progress.progress * 100}%` }}
+        />
+      </div>
     </div>
   )
 }

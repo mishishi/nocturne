@@ -39,6 +39,11 @@ export function Login() {
     try {
       const result = await authApi.wechatLogin(mockOpenid)
       if (result.success) {
+        // Store token first so migrateSession can use it
+        if (result.token) {
+          localStorage.setItem('yeelin_token', result.token)
+        }
+
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
         if (guestOpenid && guestOpenid !== result.user.openid) {
@@ -72,6 +77,11 @@ export function Login() {
     try {
       const result = await authApi.phoneLogin(phone, password)
       if (result.success && result.user) {
+        // Store token first so migrateSession can use it
+        if (result.token) {
+          localStorage.setItem('yeelin_token', result.token)
+        }
+
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
         if (guestOpenid && guestOpenid !== result.user.openid) {

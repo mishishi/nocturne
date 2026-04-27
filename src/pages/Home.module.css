@@ -116,6 +116,48 @@
   opacity: 0;
 }
 
+/* Achievement hint - progress toward next achievement */
+.achievementHint {
+  margin-top: var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: rgba(244, 211, 94, 0.08);
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: var(--radius-full);
+  animation: fadeInUp 0.8s var(--ease-dream) 0.6s forwards;
+  opacity: 0;
+}
+
+.achievementHintIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.achievementHintText {
+  font-size: 0.8125rem;
+  color: var(--color-silver);
+  white-space: nowrap;
+}
+
+.achievementHintBar {
+  flex: 1;
+  min-width: 60px;
+  max-width: 80px;
+  height: 4px;
+  background: rgba(244, 211, 94, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.achievementHintFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-golden), var(--color-golden-bright));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
 /* Steps Section */
 .steps {
   padding: var(--space-16) var(--space-8);

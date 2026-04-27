@@ -493,7 +493,25 @@ export const useDreamStore = create<DreamState>()(
       logout: () => {
         localStorage.removeItem('yeelin_openid')
         localStorage.removeItem('yeelin_token')
-        set({ user: null, token: null, friends: [], pendingRequests: { received: [], sent: [] } })
+        set({
+          user: null,
+          token: null,
+          friends: [],
+          pendingRequests: { received: [], sent: [] },
+          currentSession: {
+            sessionId: '',
+            openid: '',
+            dreamText: '',
+            dreamElements: [],
+            status: 'idle',
+            questions: [],
+            answers: [],
+            currentQuestionIndex: 0,
+            storyTitle: '',
+            story: ''
+          },
+          history: []
+        })
       },
 
       // Friend actions

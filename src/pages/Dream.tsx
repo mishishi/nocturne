@@ -81,6 +81,7 @@ export function Dream() {
   const [draftRestored, setDraftRestored] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [isSrSupported, setIsSrSupported] = useState(false)
+  const [interimTranscript, setInterimTranscript] = useState('')
   const lastSavedRef = useRef<string>(currentSession.dreamText)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const finalTranscriptRef = useRef<string>('')
@@ -153,9 +154,10 @@ export function Dream() {
         if (finalTranscript) {
           finalTranscriptRef.current += finalTranscript
           setDreamText(finalTranscriptRef.current)
+          setInterimTranscript('') // Clear interim when we get final
         } else if (interimTranscript) {
-          // Show interim results but don't update final until confirmed
-          setDreamText(finalTranscriptRef.current + interimTranscript)
+          // Show interim results separately so user can see what's being heard
+          setInterimTranscript(interimTranscript)
         }
       }
 
@@ -172,6 +174,7 @@ export function Dream() {
 
       recognition.onend = () => {
         setIsRecording(false)
+        setInterimTranscript('') // Clear interim when recording ends
       }
 
       recognitionRef.current = recognition
@@ -382,6 +385,16 @@ export function Dream() {
                   width={280}
                   height={60}
                 />
+                {/* Live transcription display */}
+                {isRecording && interimTranscript && (
+                  <div className={styles.liveTranscript}>
+                    <span className={styles.liveTranscriptLabel}>
+                      <span className={styles.liveTranscriptDot} />
+                      实时转写
+                    </span>
+                    <p className={styles.liveTranscriptText}>{interimTranscript}</p>
+                  </div>
+                )}
               </div>
             )}
 
