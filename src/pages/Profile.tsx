@@ -45,7 +45,7 @@ export function Profile() {
 
   // Fetch share stats on mount
   useEffect(() => {
-    const openid = currentSession.openid
+    const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
     if (!openid) return
 
     const fetchStats = async () => {
@@ -63,10 +63,10 @@ export function Profile() {
       }
     }
     fetchStats()
-  }, [currentSession.openid])
+  }, [user?.openid, currentSession.openid])
 
   const handleCreateInvite = async () => {
-    const openid = currentSession.openid
+    const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
     if (!openid) return
 
     try {

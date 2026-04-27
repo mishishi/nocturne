@@ -185,6 +185,7 @@ export default async function dreamWallRoutes(fastify) {
         sessionId: p.sessionId,
         storyTitle: p.storyTitle,
         storySnippet: p.storySnippet,
+        storyFull: p.storyFull,
         isAnonymous: p.isAnonymous,
         likeCount: p.likeCount,
         commentCount: p.commentCount,

@@ -539,6 +539,7 @@
 }
 
 .secondaryActions {
+  position: relative;
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;

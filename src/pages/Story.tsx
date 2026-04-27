@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { useAchievementSound } from '../hooks/useAchievementSound'
@@ -6,6 +6,7 @@ import { useTextToSpeech } from '../hooks/useTextToSpeech'
 import { useDreamWallContext, clearDreamWallContext } from '../hooks/useDreamWallContext'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { SharePoster } from '../components/SharePoster'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamInterpretationModal, DreamInterpretationLoadingModal } from '../components/DreamInterpretationModal'
@@ -46,8 +47,8 @@ export function Story() {
   const [isLoadingDreamWallStory, setIsLoadingDreamWallStory] = useState(
     isFromDreamWall && !wallContext.storyFull
   )
-  // Pending share confirmation state (Web Share API resolves on sheet open, not share complete)
-  const [pendingShareConfirm, setPendingShareConfirm] = useState<{ type: 'friend' | 'moment' | 'poster', openid: string } | null>(null)
+  // Pending share confirmation state
+  const [pendingShareType, setPendingShareType] = useState<'friend' | 'moment' | null>(null)
   const { speak, stop, isSpeaking, isSupported: isTtsSupported, voices, selectedVoice, setVoice } = useTextToSpeech()
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const aiWrapperRef = useRef<HTMLDivElement>(null)
@@ -55,6 +56,11 @@ export function Story() {
   const aiMenuRef = useRef<HTMLDivElement>(null)
   const fabMenuRef = useRef<HTMLDivElement>(null)
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Stable callback for toast close to prevent effect re-runs
+  const handleToastClose = useCallback(() => {
+    setToastVisible(false)
+  }, [])
 
   // Check if we navigated from history with state
   const fromHistory = location.state?.fromHistory
@@ -64,7 +70,10 @@ export function Story() {
   const currentUserOpenid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
   const storyAuthorOpenid = location.state?.authorOpenid
   // 只有在梦墙场景下才需要判断作者身份：当前用户openid与故事作者openid相同才是作者
-  const isAuthor = fromDreamWall && storyAuthorOpenid && currentUserOpenid === storyAuthorOpenid
+  // isAuthor: user is the author if their openid matches the session's openid
+  // For history stories where currentSession.openid is empty, use currentUserOpenid from localStorage
+  const isAuthor = (fromDreamWall && storyAuthorOpenid && currentUserOpenid === storyAuthorOpenid) ||
+    (!fromDreamWall && currentUserOpenid)
 
   // Story reveal animation on mount
   useEffect(() => {
@@ -299,72 +308,94 @@ export function Story() {
     }
   }, [])
 
-  const handleShareToWeChat = async (type: 'friend' | 'moment') => {
-    const shareText = `「${storyTitle}」\n\n${story}`
-    const openid = currentSession.openid
+  const handleShareToWeChat = async (type: 'friend' | 'moment'): Promise<void> => {
+    const openid = currentUserOpenid
     setShowShareMenu(false)
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: '夜棂 - 梦境故事',
-          text: shareText
-        })
-        // Share sheet opened successfully - Web Share API doesn't tell us if share completed
-        // Set pending confirmation state so user can confirm when they actually share
-        if (isAuthor && openid) {
-          setPendingShareConfirm({ type, openid })
-          setToastType('info')
-          setToastMessage('分享完成后请点击"确认分享"领取奖励')
-          setToastVisible(true)
-        } else {
-          setToastType('success')
-          setToastMessage('分享成功')
-          setToastVisible(true)
-        }
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          setToastType('info')
-          setToastMessage('请长按复制内容分享')
-          setToastVisible(true)
-        }
-      }
-    } else {
+    console.log('[DEBUG handleShareToWeChat] isAuthor:', isAuthor, 'openid:', openid, 'fromDreamWall:', fromDreamWall)
+
+    if (!isAuthor || !openid) {
+      // Non-authors just get feedback without reward
       setToastType('info')
       setToastMessage('请长按复制内容分享')
       setToastVisible(true)
+      return
     }
+
+    // Check daily share limit before showing confirm modal
+    try {
+      const stats = await shareApi.getStats(openid)
+      const limit = stats.dailyLimit[type]
+      const todayCount = stats.todayShareCount[type]
+      if (todayCount >= limit) {
+        setToastType('info')
+        setToastMessage('分享次数已达今日上限')
+        setToastVisible(true)
+        return
+      }
+    } catch (err) {
+      console.log('[DEBUG getStats error]:', err)
+      // If stats check fails, proceed anyway - the actual share will be rejected if limit exceeded
+    }
+
+    // Show confirm modal before sharing
+    setPendingShareType(type)
   }
 
   const handleConfirmShare = async () => {
-    if (!pendingShareConfirm) return
-    const { type, openid } = pendingShareConfirm
-    setPendingShareConfirm(null)
+    if (!pendingShareType) return
+    const type = pendingShareType
+    const openid = currentUserOpenid
+    const shareText = `「${storyTitle}」\n\n${story}`
+
+    setPendingShareType(null)
+
+    if (!navigator.share) {
+      setToastType('info')
+      setToastMessage('分享功能不可用，请长按复制内容分享')
+      setToastVisible(true)
+      return
+    }
 
     try {
-      const result = await shareApi.logShare(openid, type)
-      if (result.success) {
-        const parts: string[] = ['分享成功']
-        if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
-        if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
-        setToastType('success')
-        setToastMessage(parts.join(' '))
-        setToastVisible(true)
-      } else if (result.reason) {
-        setToastType('info')
-        setToastMessage(result.reason)
+      await navigator.share({
+        title: '夜棂 - 梦境故事',
+        text: shareText
+      })
+      // Share sheet opened successfully - now record the share
+      try {
+        const result = await shareApi.logShare(openid, type)
+        if (result.success) {
+          const parts: string[] = ['分享成功']
+          if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
+          if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
+          setToastType('success')
+          setToastMessage(parts.join(' '))
+          setToastVisible(true)
+        } else if (result.reason) {
+          setToastType('info')
+          setToastMessage(result.reason)
+          setToastVisible(true)
+        }
+      } catch {
+        setToastType('error')
+        setToastMessage('记录分享失败')
         setToastVisible(true)
       }
-    } catch {
-      setToastType('error')
-      setToastMessage('记录分享失败')
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') {
+        // User cancelled share
+        return
+      }
+      setToastType('info')
+      setToastMessage('分享失败，请长按复制内容分享')
       setToastVisible(true)
     }
   }
 
   const handleCopyLink = async () => {
     const url = window.location.href
-    const openid = currentSession.openid
+    const openid = currentUserOpenid
     setShowShareMenu(false)
 
     navigator.clipboard.writeText(url).then(async () => {
@@ -801,18 +832,16 @@ export function Story() {
                 )}
               </div>
 
-              {/* Pending share confirmation - appears after share sheet closes */}
-              {pendingShareConfirm && (
-                <button
-                  className={styles.shareConfirmBtn}
-                  onClick={handleConfirmShare}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                  确认分享
-                </button>
-              )}
+              {/* Share confirmation modal */}
+              <ConfirmModal
+                isOpen={pendingShareType !== null}
+                title="确认分享"
+                message={`确定要分享到${pendingShareType === 'moment' ? '朋友圈' : '微信好友'}吗？`}
+                confirmText="确认分享"
+                cancelText="取消"
+                onConfirm={handleConfirmShare}
+                onCancel={() => setPendingShareType(null)}
+              />
             </div>
           )}
 
@@ -949,7 +978,7 @@ export function Story() {
       </div>
 
       {/* Toast */}
-      <Toast message={toastMessage} visible={toastVisible} onClose={() => setToastVisible(false)} type={toastType} />
+      <Toast message={toastMessage} visible={toastVisible} onClose={handleToastClose} type={toastType} />
 
       {/* Dream Interpretation Loading Modal */}
       {isInterpreting && (
@@ -972,7 +1001,7 @@ export function Story() {
           date={new Date().toLocaleDateString('zh-CN')}
           onClose={() => setShowPosterModal(false)}
           onShare={async (type) => {
-            const openid = currentSession.openid
+            const openid = currentUserOpenid
             // Show immediate feedback
             setToastType('success')
             setToastMessage('海报已保存')

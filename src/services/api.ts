@@ -225,7 +225,8 @@ export interface UserStats {
   medals: string[]
   consecutiveShares: number
   lastShareDate: string | null
-  todayShareCount: number
+  todayShareCount: { poster: number; moment: number; link: number; friend: number }
+  dailyLimit: { poster: number; moment: number; link: number; friend: number }
   inviteCode: string
 }
 
@@ -501,6 +502,7 @@ export const wallApi = {
       sessionId: string
       storyTitle: string
       storySnippet: string
+      storyFull?: string
       isAnonymous: boolean
       likeCount: number
       commentCount: number

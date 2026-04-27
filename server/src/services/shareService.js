@@ -8,16 +8,16 @@ const POINTS = {
   friend: 10
 }
 
-// 每日分享上限
+// 每日分享上限 (测试环境调大)
 const DAILY_LIMIT = {
-  poster: 3,
-  moment: 1,
-  link: 5,
-  friend: 2
+  poster: 99,
+  moment: 99,
+  link: 99,
+  friend: 99
 }
 
-// 每日积分上限
-const MAX_POINTS_PER_DAY = 30
+// 每日积分上限 (测试环境调大)
+const MAX_POINTS_PER_DAY = 999
 
 // 勋章定义
 export const MEDALS = {
@@ -26,8 +26,8 @@ export const MEDALS = {
   meteor: { id: 'meteor', name: '流星成就', icon: '☄️', description: '连续分享7天' }
 }
 
-// 防刷：同一IP每日最大分享次数
-const IP_DAILY_LIMIT = 50
+// 防刷：同一IP每日最大分享次数 (测试环境调大)
+const IP_DAILY_LIMIT = 999
 
 export const shareService = {
   /**
@@ -37,10 +37,11 @@ export const shareService = {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // 获取用户当日分享统计
+    // 获取用户当日该类型分享统计
     const todayShares = await prisma.shareLog.count({
       where: {
         openid,
+        type,
         createdAt: { gte: today }
       }
     })
@@ -173,24 +174,30 @@ export const shareService = {
         points: 0,
         medals: [],
         consecutiveShares: 0,
+        todayShareCount: { poster: 0, moment: 0, link: 0, friend: 0 },
+        dailyLimit: DAILY_LIMIT,
         inviteCode: this.generateInviteCode(openid)
       }
     }
 
-    // 获取今日分享次数
+    // 获取今日分享次数（按类型统计）
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const todayShareCount = await prisma.shareLog.count({
-      where: { openid, createdAt: { gte: today } }
-    })
+    const [posterCount, momentCount, linkCount, friendCount] = await Promise.all([
+      prisma.shareLog.count({ where: { openid, createdAt: { gte: today }, type: 'poster' } }),
+      prisma.shareLog.count({ where: { openid, createdAt: { gte: today }, type: 'moment' } }),
+      prisma.shareLog.count({ where: { openid, createdAt: { gte: today }, type: 'link' } }),
+      prisma.shareLog.count({ where: { openid, createdAt: { gte: today }, type: 'friend' } })
+    ])
 
     return {
       points: user.points,
       medals: user.medals,
       consecutiveShares: user.consecutiveShares,
       lastShareDate: user.lastShareDate?.toISOString() || null,
-      todayShareCount,
+      todayShareCount: { poster: posterCount, moment: momentCount, link: linkCount, friend: friendCount },
+      dailyLimit: DAILY_LIMIT,
       inviteCode: this.generateInviteCode(openid)
     }
   },

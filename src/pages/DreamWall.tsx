@@ -26,8 +26,9 @@ export function DreamWall() {
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const loadPosts = useCallback(async (tab: TabType, pageNum: number, reset = false) => {
-    if (pageNum === 1) setLoading(true)
-    else setLoadingMore(true)
+    if (pageNum !== 1) {
+      setLoadingMore(true)
+    }
 
     try {
       const result = await wallApi.getPosts({
@@ -59,10 +60,42 @@ export function DreamWall() {
       setToastMessage('加载失败，请重试')
       setToastVisible(true)
     } finally {
-      setLoading(false)
+      if (pageNum === 1) {
+        setLoading(false)
+      }
       setLoadingMore(false)
     }
   }, [])
+
+  const loadMyPosts = useCallback(async (openid: string) => {
+    try {
+      const result = await wallApi.getMyPosts(openid)
+      if (result.success) {
+        // Transform my posts to match DreamWallPost format
+        const transformed: DreamWallPost[] = result.posts.map(p => ({
+          id: p.id,
+          sessionId: p.sessionId || '',
+          storyTitle: p.storyTitle,
+          storySnippet: p.storySnippet,
+          storyFull: p.storyFull,
+          isAnonymous: p.isAnonymous,
+          nickname: p.isAnonymous ? '匿名用户' : user?.nickname,
+          avatar: p.isAnonymous ? undefined : user?.avatar,
+          likeCount: p.likeCount,
+          commentCount: p.commentCount,
+          isFeatured: p.isFeatured,
+          hasLiked: false,
+          createdAt: p.createdAt
+        }))
+        setPosts(transformed)
+        setHasMore(false)
+      }
+    } catch (err) {
+      console.error('Failed to load my posts:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [user?.nickname, user?.avatar])
 
   // Load posts when tab changes
   useEffect(() => {
@@ -71,11 +104,14 @@ export function DreamWall() {
       // Load my posts
       if (user?.openid) {
         loadMyPosts(user.openid)
+      } else {
+        // Not logged in, no loading needed
+        setLoading(false)
       }
     } else {
       loadPosts(activeTab, 1, true)
     }
-  }, [activeTab, user?.openid, loadPosts])
+  }, [activeTab, user?.openid, loadPosts, loadMyPosts])
 
   // Infinite scroll with IntersectionObserver
   useEffect(() => {
@@ -96,38 +132,11 @@ export function DreamWall() {
     return () => observer.disconnect()
   }, [hasMore, loadingMore, activeTab, page, loadPosts])
 
-  const loadMyPosts = async (openid: string) => {
-    setLoading(true)
-    try {
-      const result = await wallApi.getMyPosts(openid)
-      if (result.success) {
-        // Transform my posts to match DreamWallPost format
-        const transformed: DreamWallPost[] = result.posts.map(p => ({
-          id: p.id,
-          sessionId: p.sessionId || '',
-          storyTitle: p.storyTitle,
-          storySnippet: p.storySnippet,
-          isAnonymous: p.isAnonymous,
-          nickname: p.isAnonymous ? '匿名用户' : user?.nickname,
-          avatar: p.isAnonymous ? undefined : user?.avatar,
-          likeCount: p.likeCount,
-          commentCount: p.commentCount,
-          isFeatured: p.isFeatured,
-          hasLiked: false,
-          createdAt: p.createdAt
-        }))
-        setPosts(transformed)
-        setHasMore(false)
-      }
-    } catch (err) {
-      console.error('Failed to load my posts:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleTabChange = (tab: TabType) => {
+    if (tab === activeTab) return // Don't reset if same tab
+    setPage(1)
     setActiveTab(tab)
+    // Don't clear posts immediately - keep old posts visible until new data arrives
   }
 
   const handleLike = async (postId: string) => {
@@ -176,6 +185,12 @@ export function DreamWall() {
   }
 
   const handlePostClick = (post: DreamWallPost) => {
+    console.log('[DreamWall] Post clicked:', {
+      id: post.id,
+      sessionId: post.sessionId,
+      storyTitle: post.storyTitle,
+      hasStoryFull: !!post.storyFull
+    })
     storeDreamWallContext({
       fromDreamWall: true,
       sessionId: post.sessionId,
