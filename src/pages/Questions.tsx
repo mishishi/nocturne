@@ -23,6 +23,7 @@ export function Questions() {
   const [showQuestion, setShowQuestion] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [storyReady, setStoryReady] = useState(false)
+  const [thinkingDots, setThinkingDots] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { questions, answers, currentQuestionIndex, sessionId } = currentSession
@@ -211,6 +212,18 @@ export function Questions() {
     return () => clearTimeout(timer)
   }, [currentQuestionIndex])
 
+  // Animate thinking dots while loading
+  useEffect(() => {
+    if (loading) {
+      const interval = setInterval(() => {
+        setThinkingDots(prev => prev.length >= 3 ? '' : prev + '.')
+      }, 600)
+      return () => clearInterval(interval)
+    } else {
+      setThinkingDots('')
+    }
+  }, [loading])
+
   return (
     <div className={styles.page}>
       {/* Story reveal ceremony screen */}
@@ -364,7 +377,11 @@ export function Questions() {
               disabled={isGeneratingStory || (!isLastQuestion && !currentAnswer.trim())}
               size="lg"
             >
-              {isLastQuestion ? '生成故事' : '下一题'}
+              {loading && !isLastQuestion ? (
+                <span className={styles.thinkingText}>
+                  正在回忆梦境{thinkingDots}
+                </span>
+              ) : isLastQuestion ? '生成故事' : '下一题'}
             </Button>
           </div>
 

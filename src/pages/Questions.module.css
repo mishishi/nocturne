@@ -681,3 +681,17 @@
     height: 48px;
   }
 }
+
+/* Thinking animation */
+.thinkingText {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.9375rem;
+  min-width: 140px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}

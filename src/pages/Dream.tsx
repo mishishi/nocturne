@@ -6,6 +6,7 @@ import { api } from '../services/api'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 import styles from './Dream.module.css'
 
 // Web Speech API types
@@ -84,6 +85,8 @@ export function Dream() {
   const [isRecording, setIsRecording] = useState(false)
   const [isSrSupported, setIsSrSupported] = useState(false)
   const [interimTranscript, setInterimTranscript] = useState('')
+  const [pendingTranscript, setPendingTranscript] = useState('')
+  const [showTranscriptConfirm, setShowTranscriptConfirm] = useState(false)
   const lastSavedRef = useRef<string>(currentSession.dreamText)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const finalTranscriptRef = useRef<string>('')
@@ -172,7 +175,8 @@ export function Dream() {
         // Update final transcript ref and state
         if (finalTranscript) {
           finalTranscriptRef.current += finalTranscript
-          setDreamText(finalTranscriptRef.current)
+          setPendingTranscript(finalTranscript)
+          setShowTranscriptConfirm(true)
           setInterimTranscript('') // Clear interim when we get final
         } else if (interimTranscript) {
           // Show interim results separately so user can see what's being heard
@@ -227,6 +231,19 @@ export function Dream() {
       stopWaveform()
       setIsRecording(false)
     }
+  }
+
+  const handleConfirmTranscript = () => {
+    setDreamText(finalTranscriptRef.current)
+    setPendingTranscript('')
+    setShowTranscriptConfirm(false)
+  }
+
+  const handleCancelTranscript = () => {
+    // Keep existing text, discard pending transcript
+    finalTranscriptRef.current = currentSession.dreamText
+    setPendingTranscript('')
+    setShowTranscriptConfirm(false)
   }
 
   const handleEmotionSelect = (emotionId: string) => {
@@ -562,6 +579,19 @@ export function Dream() {
             />
           ))}
         </div>
+
+        {/* Voice Transcript Confirmation */}
+        <ConfirmModal
+          isOpen={showTranscriptConfirm}
+          title="添加语音内容"
+          message={pendingTranscript.length > 100
+            ? `"${pendingTranscript.slice(0, 100)}..."`
+            : `"${pendingTranscript}"`}
+          confirmText="添加到文本"
+          cancelText="取消"
+          onConfirm={handleConfirmTranscript}
+          onCancel={handleCancelTranscript}
+        />
       </div>
     </div>
   )

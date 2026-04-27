@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { useAchievementSound } from '../hooks/useAchievementSound'
 import { useTextToSpeech } from '../hooks/useTextToSpeech'
+import { useDreamWallContext, clearDreamWallContext } from '../hooks/useDreamWallContext'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { SharePoster } from '../components/SharePoster'
@@ -37,10 +38,13 @@ export function Story() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [isPublished, setIsPublished] = useState(false)
   const [dreamWallStory, setDreamWallStory] = useState<string | null>(null)
-  const isFromDreamWall = !!(location.state?.fromDreamWall && location.state?.sessionId)
-  // Only show loading if coming from Dream Wall AND storyFull is not already in state
+
+  // Unified Dream Wall context - handles location.state vs sessionStorage automatically
+  const wallContext = useDreamWallContext()
+  const isFromDreamWall = wallContext.fromDreamWall
+  // Only show loading if coming from Dream Wall AND storyFull is not already available
   const [isLoadingDreamWallStory, setIsLoadingDreamWallStory] = useState(
-    isFromDreamWall && !location.state?.storyFull
+    isFromDreamWall && !wallContext.storyFull
   )
   const { speak, stop, isSpeaking, isSupported: isTtsSupported, voices, selectedVoice, setVoice } = useTextToSpeech()
   const shareWrapperRef = useRef<HTMLDivElement>(null)
@@ -202,64 +206,96 @@ export function Story() {
 
   // Fetch full story when coming from Dream Wall (only if not already passed in state)
   useEffect(() => {
-    const sessionId = location.state?.sessionId
-    const storyFull = location.state?.storyFull
-    const fromDreamWall = location.state?.fromDreamWall
+    const { sessionId, storyFull, fromDreamWall } = wallContext
 
-    // If storyFull is already in state, use it directly - no need to fetch
-    if (fromDreamWall && sessionId) {
-      if (storyFull) {
-        console.log('[DreamWall] Using storyFull from state directly')
-        setDreamWallStory(storyFull)
-        setIsLoadingDreamWallStory(false)
-        return
-      }
+    // Skip if not from Dream Wall or no sessionId
+    if (!fromDreamWall || !sessionId) {
+      return
+    }
 
-      // Otherwise fetch from API
-      console.log('[DreamWall] Starting fetch for sessionId:', sessionId)
-      setIsLoadingDreamWallStory(true)
-      const fetchFullStory = async () => {
-        try {
-          const result = await api.getStory(sessionId)
-          console.log('[DreamWall] Fetch result:', result)
+    // If storyFull is already available, use it directly - no need to fetch
+    if (storyFull) {
+      console.log('[DreamWall] Using storyFull from state directly')
+      setDreamWallStory(storyFull)
+      setIsLoadingDreamWallStory(false)
+      return
+    }
+
+    // Otherwise fetch from API
+    console.log('[DreamWall] Starting fetch for sessionId:', sessionId)
+    setIsLoadingDreamWallStory(true)
+    let cancelled = false
+
+    const fetchFullStory = async () => {
+      try {
+        const result = await api.getStory(sessionId)
+        console.log('[DreamWall] Fetch result:', result)
+        if (!cancelled) {
           if (result.story) {
             setDreamWallStory(result.story.content)
           }
-        } catch (err) {
-          console.error('[DreamWall] Failed to fetch story:', err)
-        } finally {
+          setIsLoadingDreamWallStory(false)
+        }
+      } catch (err) {
+        console.error('[DreamWall] Failed to fetch story:', err)
+        if (!cancelled) {
           setIsLoadingDreamWallStory(false)
         }
       }
-      fetchFullStory()
     }
-  // Use specific primitives as deps to avoid referential equality issues with location.state object
-  }, [location.state?.sessionId, location.state?.storyFull, location.state?.fromDreamWall])
+    fetchFullStory()
 
-  const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle || location.state?.storyTitle
-  const story = location.state?.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
+    return () => {
+      cancelled = true
+    }
+  // Only re-run when wallContext.sessionId changes to avoid infinite loops
+  }, [wallContext.sessionId, wallContext.storyFull, wallContext.fromDreamWall])
+
+  const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle || wallContext.storyTitle
+  const story = wallContext.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
   const dreamText = fromHistory?.dreamSnippet || currentSession.dreamText
-  const status = fromHistory || location.state?.fromDreamWall ? 'completed' : currentSession.status
+  const status = fromHistory || wallContext.fromDreamWall ? 'completed' : currentSession.status
 
   useEffect(() => {
+    const { fromDreamWall, sessionId } = wallContext
+
     // If coming from Dream Wall, wait for story to load before deciding
-    if (location.state?.fromDreamWall && location.state?.sessionId) {
+    if (fromDreamWall && sessionId) {
       if (isLoadingDreamWallStory) {
         console.log('[Redirect] Still loading, skipping redirect')
         return // Still loading, don't redirect
       }
-      console.log('[Redirect] Loading done, story:', story ? 'exists' : 'null')
-      if (!story) {
+      // Check if we have the story
+      const hasStory = wallContext.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
+      console.log('[Redirect] Loading done, story:', hasStory ? 'exists' : 'null')
+      if (!hasStory) {
         console.log('[Redirect] Navigating to /dream')
         navigate('/dream') // Loading done but no story, redirect
       }
       return
     }
     // Only redirect for normal sessions, not Dream Wall
-    if (!location.state?.fromDreamWall && (status !== 'completed' || !story)) {
+    if (!fromDreamWall && (status !== 'completed' || !story)) {
       navigate('/dream')
     }
-  }, [status, story, navigate, isLoadingDreamWallStory, location.state?.fromDreamWall, location.state?.sessionId])
+  }, [status, story, dreamWallStory, navigate, isLoadingDreamWallStory, wallContext.fromDreamWall, wallContext.sessionId, wallContext.storyFull])
+
+  // Restore DreamWall context from sessionStorage on mount (for page refresh scenarios)
+  useEffect(() => {
+    const savedContext = sessionStorage.getItem('dreamwall_context')
+    if (savedContext) {
+      const context = JSON.parse(savedContext)
+      if (context.scrollPosition) {
+        window.scrollTo(0, context.scrollPosition)
+      }
+    }
+    // Cleanup sessionStorage when leaving Story page via navigation
+    return () => {
+      if (window.location.pathname !== '/story') {
+        clearDreamWallContext()
+      }
+    }
+  }, [])
 
   const handleShareToWeChat = async (type: 'friend' | 'moment') => {
     const shareText = `「${storyTitle}」\n\n${story}`
@@ -607,6 +643,31 @@ export function Story() {
             {dreamText}
           </div>
         </details>
+
+        {/* Next Actions */}
+        <div className={styles.nextActions}>
+          <h3 className={styles.nextActionsTitle}>接下来做什么</h3>
+          <div className={styles.nextActionsGrid}>
+            <Link to="/dream" className={styles.nextActionCard}>
+              <div className={styles.nextActionIcon}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </div>
+              <span className={styles.nextActionLabel}>再记录一个</span>
+            </Link>
+            <Link to="/wall" className={styles.nextActionCard}>
+              <div className={styles.nextActionIcon}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 2a7 7 0 0 1 0 14 7 7 0 0 1 0-14" />
+                  <circle cx="12" cy="9" r="3" />
+                </svg>
+              </div>
+              <span className={styles.nextActionLabel}>随便逛逛</span>
+            </Link>
+          </div>
+        </div>
 
         {/* Actions */}
         <div className={styles.actions}>

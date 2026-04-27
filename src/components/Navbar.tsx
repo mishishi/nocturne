@@ -30,13 +30,18 @@ export function Navbar() {
             </Link>
           </li>
           <li>
+            <Link to="/wall" aria-current={isActive('/wall') ? 'page' : undefined} className={`${styles.link} ${isActive('/wall') ? styles.active : ''}`}>
+              梦墙
+            </Link>
+          </li>
+          <li>
             <Link to="/history" aria-current={isActive('/history') ? 'page' : undefined} className={`${styles.link} ${isActive('/history') ? styles.active : ''}`}>
               历史
             </Link>
           </li>
           <li>
             <Link to="/profile" aria-current={isActive('/profile') ? 'page' : undefined} className={`${styles.link} ${isActive('/profile') ? styles.active : ''}`}>
-              个人
+              我的
             </Link>
           </li>
         </ul>

@@ -8,15 +8,51 @@ import { useDreamStore, ACHIEVEMENTS, type DreamSession } from '../hooks/useDrea
 import styles from './Home.module.css'
 
 export function Home() {
-  const { achievements, history } = useDreamStore()
+  const { achievements, history, user } = useDreamStore()
   const [showAchievementCenter, setShowAchievementCenter] = useState(false)
   const handleOnboardingComplete = useCallback(() => {}, [])
 
   const isNewUser = history.length === 0
   const lastDreamDate = history.length > 0 ? history[0].date : null
 
+  // Sample stories for new users
+  const sampleStories = [
+    {
+      title: '坠落的孩子',
+      excerpt: '我站在一座没有尽头的楼梯上，每走一步，台阶就在脚下消失。我听见身后有脚步声追来，却不敢回头……',
+      mood: '悬疑'
+    },
+    {
+      title: '童年的教室',
+      excerpt: '阳光透过绿色窗帘洒进来，黑板上写满了看不懂的符号。窗外是无尽的麦田，风吹过，金色的波浪此起彼伏……',
+      mood: '治愈'
+    },
+    {
+      title: '最后的告别',
+      excerpt: '火车站台挤满了人，蒸汽机车轰鸣着。我拼命挤向即将关闭的车门，手里攥着一封永远没能寄出的信……',
+      mood: '温情'
+    }
+  ]
+
   return (
     <div className={styles.page}>
+      {/* Header Actions */}
+      <div className={styles.headerActions}>
+        {user ? (
+          <Link to="/profile" className={styles.headerProfile}>
+            <span className={styles.headerAvatar}>
+              {user.nickname?.charAt(0) || '我'}
+            </span>
+            <span className={styles.headerNickname}>{user.nickname || '我的'}</span>
+          </Link>
+        ) : (
+          <>
+            <Link to="/login" className={styles.headerLogin}>登录</Link>
+            <Link to="/register" className={styles.headerRegister}>注册</Link>
+          </>
+        )}
+      </div>
+
       {/* Achievement Badge */}
       {achievements.length > 0 && (
         <button
@@ -88,6 +124,23 @@ export function Home() {
           <AchievementHint history={history} />
         )}
       </section>
+
+      {/* Sample Stories - only for new users */}
+      {isNewUser && (
+        <section className={styles.sampleSection}>
+          <h2 className={styles.sampleTitle}>别人的梦境</h2>
+          <p className={styles.sampleSubtitle}>每一次记录，都是一场独特的冒险</p>
+          <div className={styles.sampleGrid}>
+            {sampleStories.map((story, index) => (
+              <div key={index} className={styles.sampleCard}>
+                <div className={styles.sampleMood}>{story.mood}</div>
+                <h3 className={styles.sampleCardTitle}>{story.title}</h3>
+                <p className={styles.sampleCardExcerpt}>{story.excerpt}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Steps Section */}
       <section className={styles.steps}>

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { wallApi, DreamWallPost } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
+import { storeDreamWallContext } from '../hooks/useDreamWallContext'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
@@ -175,14 +176,20 @@ export function DreamWall() {
   }
 
   const handlePostClick = (post: DreamWallPost) => {
-    console.log('[DreamWall] Navigating with:', { fromDreamWall: true, sessionId: post.sessionId, storyTitle: post.storyTitle, hasStoryFull: !!post.storyFull })
+    storeDreamWallContext({
+      fromDreamWall: true,
+      sessionId: post.sessionId,
+      storyTitle: post.storyTitle,
+      storyFull: post.storyFull || null,
+      authorOpenid: post.openid,
+    })
+
     navigate('/story', {
       state: {
         fromDreamWall: true,
         sessionId: post.sessionId,
         storyTitle: post.storyTitle,
-        storyFull: post.storyFull || null,
-        authorOpenid: post.openid // 作者 openid，用于权限判断
+        storyFull: post.storyFull || null
       }
     })
   }

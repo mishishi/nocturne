@@ -57,30 +57,46 @@ export function History() {
         if (!isMounted) return
 
         if (sessions && sessions.length > 0) {
-          // Convert backend session format to DreamSession format
-          const backendHistory: DreamSession[] = sessions.map((s: any) => {
-            const dateObj = new Date(s.date)
-            const dateStr = dateObj.toLocaleDateString('zh-CN')
+          // Build backend map for merging
+          const backendMap = new Map(sessions.map((s: any) => [s.id, s]))
 
+          // Merge: use backend data but preserve local-only fields (tags, privateNote, isFavorite, answers)
+          // Use getState() to avoid stale closure
+          const currentHistory = useDreamStore.getState().history
+          const merged = currentHistory.map(item => {
+            const backend = backendMap.get(item.id)
+            if (!backend) return item // Local-only item (e.g., draft), keep it
             return {
-              id: s.id,
-              sessionId: s.sessionId || '',
-              date: dateStr,
-              dreamSnippet: s.dreamFragment?.slice(0, 100) + (s.dreamFragment?.length > 100 ? '...' : '') || '',
-              storyTitle: s.storyTitle,
-              story: s.story,
-              questions: [],
-              answers: [],
-              tags: []
+              ...item,
+              // Preserve local edits
+              // Use backend for authoritative fields
+              storyTitle: backend.storyTitle,
+              story: backend.story,
+              dreamSnippet: backend.dreamFragment?.slice(0, 100) + (backend.dreamFragment?.length > 100 ? '...' : '') || '',
+              sessionId: backend.sessionId || item.sessionId,
             }
           })
 
-          // Dedup by id (in case backend returns dupes)
-          const dedupedMap = new Map()
-          backendHistory.forEach(item => dedupedMap.set(item.id, item))
-          const finalHistory = Array.from(dedupedMap.values())
+          // Add new items from backend that don't exist locally
+          sessions.forEach((s: any) => {
+            if (!merged.find(item => item.id === s.id)) {
+              const dateObj = new Date(s.date)
+              const dateStr = dateObj.toLocaleDateString('zh-CN')
+              merged.push({
+                id: s.id,
+                sessionId: s.sessionId || '',
+                date: dateStr,
+                dreamSnippet: s.dreamFragment?.slice(0, 100) + (s.dreamFragment?.length > 100 ? '...' : '') || '',
+                storyTitle: s.storyTitle,
+                story: s.story,
+                questions: [],
+                answers: [],
+                tags: []
+              })
+            }
+          })
 
-          setHistory(finalHistory)
+          setHistory(merged)
         }
       } catch (err) {
         console.error('Failed to sync history from backend:', err)

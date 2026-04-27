@@ -50,6 +50,86 @@
   padding-right: var(--space-1);
 }
 
+/* Header Actions */
+.headerActions {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-6);
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  animation: fadeIn 0.6s var(--ease-dream);
+}
+
+.headerLogin {
+  font-size: 0.875rem;
+  color: var(--color-silver);
+  text-decoration: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.headerLogin:hover {
+  color: var(--color-moonlight);
+  background: rgba(139, 157, 195, 0.1);
+}
+
+.headerRegister {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-moonlight);
+  text-decoration: none;
+  padding: var(--space-2) var(--space-4);
+  background: rgba(244, 211, 94, 0.15);
+  border: 1px solid rgba(244, 211, 94, 0.3);
+  border-radius: var(--radius-full);
+  transition: all 0.2s ease;
+}
+
+.headerRegister:hover {
+  background: rgba(244, 211, 94, 0.25);
+  border-color: rgba(244, 211, 94, 0.5);
+}
+
+.headerProfile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  padding: var(--space-2);
+  border-radius: var(--radius-full);
+  transition: all 0.2s ease;
+}
+
+.headerProfile:hover {
+  background: rgba(139, 157, 195, 0.1);
+}
+
+.headerAvatar {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.3), rgba(244, 211, 94, 0.1));
+  border: 1px solid rgba(244, 211, 94, 0.3);
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-golden);
+}
+
+.headerNickname {
+  font-size: 0.875rem;
+  color: var(--color-moonlight);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Hero Section */
 .hero {
   min-height: calc(100vh - 80px);
@@ -114,6 +194,97 @@
 .heroCta {
   animation: fadeInUp 0.8s var(--ease-dream) 0.4s forwards;
   opacity: 0;
+}
+
+/* Sample Stories Section */
+.sampleSection {
+  padding: var(--space-12) var(--space-8);
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.sampleTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin-bottom: var(--space-3);
+  animation: fadeInUp 0.6s var(--ease-dream) forwards;
+}
+
+.sampleSubtitle {
+  font-size: 1rem;
+  color: var(--color-silver);
+  margin-bottom: var(--space-10);
+  opacity: 0.7;
+  animation: fadeInUp 0.6s var(--ease-dream) 0.1s forwards;
+  opacity: 0;
+}
+
+.sampleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+}
+
+.sampleCard {
+  background: linear-gradient(
+    145deg,
+    rgba(26, 58, 92, 0.4) 0%,
+    rgba(20, 45, 72, 0.3) 100%
+  );
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  text-align: left;
+  transition: all 0.3s var(--ease-dream);
+  animation: fadeInUp 0.6s var(--ease-dream) forwards;
+  opacity: 0;
+}
+
+.sampleCard:nth-child(1) { animation-delay: 0.2s; }
+.sampleCard:nth-child(2) { animation-delay: 0.3s; }
+.sampleCard:nth-child(3) { animation-delay: 0.4s; }
+
+.sampleCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(244, 211, 94, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.sampleMood {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-golden);
+  padding: var(--space-1) var(--space-3);
+  background: rgba(244, 211, 94, 0.1);
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-4);
+}
+
+.sampleCardTitle {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-moonlight);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.sampleCardExcerpt {
+  font-size: 0.875rem;
+  color: var(--color-silver);
+  line-height: 1.7;
+  margin: 0;
+  opacity: 0.8;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Achievement hint - progress toward next achievement */
