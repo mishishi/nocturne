@@ -1,4 +1,4 @@
-import { TextareaHTMLAttributes, forwardRef, useState, useEffect, useRef } from 'react'
+import { TextareaHTMLAttributes, forwardRef, useState, useEffect, useRef, useId } from 'react'
 import styles from './Textarea.module.css'
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -12,7 +12,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const [charCount, setCharCount] = useState(0)
     const [showError, setShowError] = useState(false)
     const prevErrorRef = useRef(error)
-    const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`
+    const generatedId = useId()
+    const textareaId = id || `textarea-${generatedId}`
     const errorId = `${textareaId}-error`
 
     useEffect(() => {

@@ -198,15 +198,16 @@ export function Story() {
         setIsPublished(true)
       }
     }
-  }, [location.state])
+  }, [location.state?.fromHistory?.sessionId, location.state?.fromHistory?.id, location.state?.sessionId])
 
   // Fetch full story when coming from Dream Wall (only if not already passed in state)
   useEffect(() => {
     const sessionId = location.state?.sessionId
     const storyFull = location.state?.storyFull
+    const fromDreamWall = location.state?.fromDreamWall
 
     // If storyFull is already in state, use it directly - no need to fetch
-    if (location.state?.fromDreamWall && sessionId) {
+    if (fromDreamWall && sessionId) {
       if (storyFull) {
         console.log('[DreamWall] Using storyFull from state directly')
         setDreamWallStory(storyFull)
@@ -232,7 +233,8 @@ export function Story() {
       }
       fetchFullStory()
     }
-  }, [location.state])
+  // Use specific primitives as deps to avoid referential equality issues with location.state object
+  }, [location.state?.sessionId, location.state?.storyFull, location.state?.fromDreamWall])
 
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle || location.state?.storyTitle
   const story = location.state?.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
@@ -257,7 +259,7 @@ export function Story() {
     if (!location.state?.fromDreamWall && (status !== 'completed' || !story)) {
       navigate('/dream')
     }
-  }, [status, story, navigate, isLoadingDreamWallStory, location.state])
+  }, [status, story, navigate, isLoadingDreamWallStory, location.state?.fromDreamWall, location.state?.sessionId])
 
   const handleShareToWeChat = async (type: 'friend' | 'moment') => {
     const shareText = `「${storyTitle}」\n\n${story}`

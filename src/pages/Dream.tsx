@@ -407,6 +407,8 @@ export function Dream() {
                 <button
                   className={`${styles.voiceBtn} ${isRecording ? styles.recording : ''}`}
                   onClick={isRecording ? handleStopRecording : handleStartRecording}
+                  aria-label={isRecording ? '停止语音输入' : '开始语音输入'}
+                  aria-pressed={isRecording}
                 >
                   <span className={styles.voiceIcon}>
                     {isRecording ? (
@@ -434,6 +436,7 @@ export function Dream() {
                   className={`${styles.waveformCanvas} ${isRecording ? styles.active : ''}`}
                   width={280}
                   height={60}
+                  aria-hidden="true"
                 />
                 {/* Live transcription display */}
                 {isRecording && interimTranscript && (
