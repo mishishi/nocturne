@@ -447,7 +447,15 @@ export function Story() {
       <div className={styles.revealGlow} />
 
       {/* Reading Progress */}
-      <div className={styles.readProgress} style={{ width: `${readProgress}%` }} role="progressbar" aria-valuenow={readProgress} aria-valuemin={0} aria-valuemax={100} aria-label="阅读进度" />
+      <div className={styles.progressWrapper}>
+        <div className={styles.readProgress} style={{ width: `${readProgress}%` }} role="progressbar" aria-valuenow={readProgress} aria-valuemin={0} aria-valuemax={100} aria-label="阅读进度" />
+        <div className={styles.progressInfo}>
+          <span className={styles.progressPercent}>{Math.round(readProgress)}%</span>
+          {readProgress > 0 && readProgress < 100 && (
+            <span className={styles.readingTime}>约{Math.ceil(story.split(/[\s\n]+/).length / 200)}分钟</span>
+          )}
+        </div>
+      </div>
       <div className={styles.container}>
         {/* Breadcrumb */}
         <Breadcrumb

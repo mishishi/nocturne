@@ -458,12 +458,13 @@ p {
 }
 
 /* Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce), (data-reduce-motion: true) {
   /* Disable decorative/long animations but keep essential state feedback */
   .animate-float,
   .animate-glow,
   .twinkle,
-  .floatUp {
+  .floatUp,
+  .particle {
     animation: none !important;
   }
 
@@ -475,5 +476,17 @@ p {
   /* Disable scroll-behavior smooth */
   html {
     scroll-behavior: auto !important;
+  }
+}
+
+/* Manual reduce motion via user setting */
+[data-reduce-motion="true"] {
+  /* Additional reductions for manual toggle */
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-scale-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

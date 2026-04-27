@@ -67,6 +67,8 @@ export interface Achievement {
   description: string
   icon: string
   unlockedAt?: string
+  // 解锁条件提示（未解锁时显示）
+  hint?: string
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -74,19 +76,22 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'first_dream',
     title: '初入梦境',
     description: '记录你的第一个梦境',
-    icon: '🌙'
+    icon: '🌙',
+    hint: '记录你的第一个梦境即可解锁'
   },
   {
     id: 'week_streak',
     title: '连续7天',
     description: '连续7天记录梦境',
-    icon: '⭐'
+    icon: '⭐',
+    hint: '坚持每天记录梦境'
   },
   {
     id: 'story_collector',
     title: '故事收藏家',
     description: '保存10个故事',
-    icon: '📚'
+    icon: '📚',
+    hint: '收藏更多故事以解锁'
   }
 ]
 
@@ -129,6 +134,7 @@ interface DreamState {
   // Settings
   fontSize: 'small' | 'medium' | 'large'
   theme: 'starry' | 'aurora' | 'highcontrast'
+  reduceMotion: boolean
   ambientSound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain'
   ambientVolume: number
 
@@ -159,6 +165,7 @@ interface DreamState {
   setShareStats: (stats: { points: number; medals: string[]; consecutiveShares: number; lastShareDate: string | null }) => void
   setFontSize: (size: 'small' | 'medium' | 'large') => void
   setTheme: (theme: 'starry' | 'aurora' | 'highcontrast') => void
+  setReduceMotion: (reduce: boolean) => void
   setAmbientSound: (sound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain') => void
   setAmbientVolume: (volume: number) => void
   reset: () => void
@@ -226,6 +233,7 @@ const initialState = {
   pendingRequests: { received: [] as PendingRequest[], sent: [] as PendingRequest[] },
   fontSize: 'medium' as const,
   theme: 'starry' as const,
+  reduceMotion: false,
   ambientSound: 'none' as const,
   ambientVolume: 0.5
 }
@@ -461,6 +469,9 @@ export const useDreamStore = create<DreamState>()(
 
       setTheme: (theme) =>
         set({ theme }),
+
+      setReduceMotion: (reduce) =>
+        set({ reduceMotion: reduce }),
 
       setAmbientSound: (sound) =>
         set({ ambientSound: sound }),

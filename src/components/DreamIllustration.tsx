@@ -57,7 +57,7 @@ export function DreamIllustration({ story: _story, storyTitle: _storyTitle, onGe
 
       {/* Watermark */}
       <div className={styles.watermark}>
-        <svg className={styles.watermarkIcon} viewBox="0 0 24 24" fill="currentColor">
+        <svg className={styles.watermarkIcon} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
         </svg>
         <span className={styles.watermarkText}>夜棂</span>

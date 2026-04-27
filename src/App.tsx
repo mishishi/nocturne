@@ -21,7 +21,7 @@ import { Friends } from './pages/Friends'
 import { DreamWall } from './pages/DreamWall'
 
 function App() {
-  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme } = useDreamStore()
+  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion } = useDreamStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
 
@@ -33,6 +33,10 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-reduce-motion', String(reduceMotion))
+  }, [reduceMotion])
 
   // Play achievement sound when achievement is unlocked
   useEffect(() => {

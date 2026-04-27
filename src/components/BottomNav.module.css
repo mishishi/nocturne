@@ -48,8 +48,23 @@
   opacity: 1;
 }
 
+.tab.active .icon {
+  transform: scale(1.1);
+}
+
 .tab.active .icon svg {
   filter: drop-shadow(0 0 8px rgba(244, 211, 94, 0.5));
+}
+
+.tab.active::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  width: 24px;
+  height: 3px;
+  background: var(--color-golden);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(244, 211, 94, 0.5);
 }
 
 .icon {
@@ -58,6 +73,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.25s var(--ease-dream);
 }
 
 .icon svg {

@@ -31,7 +31,7 @@ const THEME_OPTIONS = [
 
 export function Profile() {
   const navigate = useNavigate()
-  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, points, medals, consecutiveShares, setShareStats, currentSession, logout, user } = useDreamStore()
+  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user } = useDreamStore()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
@@ -186,15 +186,32 @@ export function Profile() {
           <div className={styles.achievementsGrid}>
             {ACHIEVEMENTS.map((achievement) => {
               const isUnlocked = achievements.includes(achievement.id)
+              // 计算动态提示
+              const getDynamicHint = () => {
+                if (achievement.id === 'first_dream') {
+                  return history.length === 0 ? '记录你的第一个梦境即可解锁' : null
+                }
+                if (achievement.id === 'story_collector') {
+                  const remaining = 10 - history.length
+                  return remaining > 0 ? `再收藏 ${remaining} 个故事` : null
+                }
+                return null
+              }
+              const dynamicHint = !isUnlocked ? getDynamicHint() : null
+              const hintText = dynamicHint || achievement.hint
+
               return (
                 <div
                   key={achievement.id}
-                  className={`${styles.achievementCard} ${isUnlocked ? styles.unlocked : ''}`}
+                  className={`${styles.achievementCard} ${isUnlocked ? styles.unlocked : ''} ${!isUnlocked && hintText ? styles.locked : ''}`}
                 >
                   <span className={styles.achievementIcon}>{achievement.icon}</span>
                   <div className={styles.achievementInfo}>
                     <span className={styles.achievementTitle}>{achievement.title}</span>
                     <span className={styles.achievementDesc}>{achievement.description}</span>
+                    {!isUnlocked && hintText && (
+                      <span className={styles.achievementHint}>{hintText}</span>
+                    )}
                   </div>
                   {isUnlocked && (
                     <svg className={styles.achievementCheck} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -250,6 +267,21 @@ export function Profile() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <span className={styles.settingLabel}>减少动画</span>
+                <span className={styles.settingDesc}>降低界面动画效果</span>
+              </div>
+              <button
+                className={`${styles.toggle} ${reduceMotion ? styles.toggleActive : ''}`}
+                onClick={() => setReduceMotion(!reduceMotion)}
+                role="switch"
+                aria-checked={reduceMotion}
+              >
+                <span className={styles.toggleThumb} />
+              </button>
             </div>
           </div>
         </div>

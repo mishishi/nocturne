@@ -221,6 +221,49 @@
   font-weight: 500;
 }
 
+/* Toggle Switch */
+.toggle {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: var(--color-surface-medium);
+  border: 1px solid var(--color-border-light);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-dream);
+  flex-shrink: 0;
+}
+
+.toggle:hover {
+  border-color: var(--color-border-hover);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--color-golden);
+  outline-offset: 2px;
+}
+
+.toggle.toggleActive {
+  background: rgba(244, 211, 94, 0.2);
+  border-color: rgba(244, 211, 94, 0.4);
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: var(--color-silver);
+  border-radius: 50%;
+  transition: all 0.2s var(--ease-dream);
+}
+
+.toggle.toggleActive .toggleThumb {
+  left: 23px;
+  background: var(--color-golden);
+}
+
 .aboutText {
   text-align: center;
   color: var(--color-silver);
@@ -296,6 +339,18 @@
 .achievementDesc {
   font-size: 0.8125rem;
   color: var(--color-silver);
+}
+
+.achievementCard.locked {
+  opacity: 0.7;
+  filter: grayscale(0.5);
+}
+
+.achievementHint {
+  font-size: 0.75rem;
+  color: var(--color-golden);
+  opacity: 0.8;
+  margin-top: var(--space-1);
 }
 
 .achievementCheck {
