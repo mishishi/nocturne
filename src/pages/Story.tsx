@@ -12,6 +12,8 @@ import { DreamIllustration } from '../components/DreamIllustration'
 import { shareApi, api, wallApi } from '../services/api'
 import styles from './Story.module.css'
 
+const PUBLISHED_SESSIONS_KEY = 'yeelin_published_sessions'
+
 export function Story() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -116,6 +118,17 @@ export function Story() {
       }
     }
   }, [])
+
+  // Check if this session was already published
+  useEffect(() => {
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || currentSession.sessionId
+    if (sessionId) {
+      const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
+      if (publishedSessions.includes(sessionId)) {
+        setIsPublished(true)
+      }
+    }
+  }, [location.state, currentSession.sessionId])
 
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle
   const story = fromHistory?.story || currentSession.story
@@ -319,6 +332,12 @@ export function Story() {
 
       if (result.success) {
         setIsPublished(true)
+        // Save to localStorage to persist across page refreshes
+        const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
+        if (!publishedSessions.includes(sessionId)) {
+          publishedSessions.push(sessionId)
+          localStorage.setItem(PUBLISHED_SESSIONS_KEY, JSON.stringify(publishedSessions))
+        }
         setToastType('success')
         setToastMessage('发布成功！')
         setToastVisible(true)
