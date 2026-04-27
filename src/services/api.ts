@@ -303,6 +303,39 @@ export const authApi = {
     })
     if (!res.ok) throw new Error(`验证Token失败: ${res.status}`)
     return res.json()
+  },
+
+  // Export user data
+  async exportData(): Promise<void> {
+    const token = getAuthToken()
+    if (!token) throw new Error('Not authenticated')
+
+    const res = await fetchWithTimeout(`${API_BASE}/auth/export-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.error || '导出失败')
+    }
+
+    const contentDisposition = res.headers.get('Content-Disposition') || ''
+    const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+    const filename = filenameMatch ? filenameMatch[1] : `yeelin_data_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.json`
+
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 }
 
