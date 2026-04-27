@@ -3,6 +3,7 @@
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 const FETCH_TIMEOUT = 15000
+const LONG_FETCH_TIMEOUT = 60000 // For AI generation endpoints (questions, story, interpretation)
 
 // Get auth token from localStorage
 function getAuthToken(): string | null {
@@ -13,6 +14,18 @@ function getAuthToken(): string | null {
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal })
+    return res
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+// Fetch with longer timeout for AI endpoints
+async function fetchWithLongTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), LONG_FETCH_TIMEOUT)
   try {
     const res = await fetch(url, { ...options, signal: controller.signal })
     return res
@@ -75,7 +88,7 @@ export const api = {
 
   // Submit dream and get all questions
   async submitDream(sessionId: string, content: string): Promise<{ success: boolean; questions: string[]; questionIndex: number }> {
-    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/dream`, {
+    const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/dream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content })
@@ -91,7 +104,7 @@ export const api = {
     nextIndex?: number
     story?: { title: string; content: string }
   }> {
-    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/answer`, {
+    const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/answer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answer })
@@ -129,7 +142,7 @@ export const api = {
     alreadyExists?: boolean
     reason?: string
   }> {
-    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/interpret`, {
+    const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/interpret`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ openid })
