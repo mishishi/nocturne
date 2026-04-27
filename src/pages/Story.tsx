@@ -362,9 +362,9 @@ export function Story() {
         }
       }
     } catch (err) {
-      // Check if it's the "already published" error from backend
+      // Check if it's the "already published" error from backend (409 Conflict)
       const error = err as { message?: string }
-      if (error.message?.includes('已在') || error.message?.includes('已经')) {
+      if (error.message?.includes('已在') || error.message?.includes('已经') || error.message?.includes('409')) {
         setIsPublished(true)
         const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
         if (!publishedSessions.includes(sessionId)) {
