@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { wallApi, DreamWallPost } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
@@ -22,6 +22,7 @@ export function DreamWall() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [likingId, setLikingId] = useState<string | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const loadPosts = useCallback(async (tab: TabType, pageNum: number, reset = false) => {
     if (pageNum === 1) setLoading(true)
@@ -75,6 +76,25 @@ export function DreamWall() {
     }
   }, [activeTab, user?.openid, loadPosts])
 
+  // Infinite scroll with IntersectionObserver
+  useEffect(() => {
+    if (!loadMoreRef.current) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && activeTab !== 'my') {
+          const nextPage = page + 1
+          setPage(nextPage)
+          loadPosts(activeTab, nextPage)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [hasMore, loadingMore, activeTab, page, loadPosts])
+
   const loadMyPosts = async (openid: string) => {
     setLoading(true)
     try {
@@ -120,32 +140,38 @@ export function DreamWall() {
     if (likingId) return
     setLikingId(postId)
 
+    // Optimistic update - immediately update UI
+    const previousPosts = posts
+    setPosts(prev => prev.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          likeCount: post.hasLiked ? post.likeCount - 1 : post.likeCount + 1,
+          hasLiked: !post.hasLiked
+        }
+      }
+      return post
+    }))
+
     try {
       const result = await wallApi.toggleLike(postId, user.openid)
-      if (result.success) {
-        setPosts(prev => prev.map(post => {
-          if (post.id === postId) {
-            return {
-              ...post,
-              likeCount: result.liked ? post.likeCount + 1 : post.likeCount - 1,
-              hasLiked: result.liked
-            }
-          }
-          return post
-        }))
+      if (!result.success) {
+        // Revert on failure
+        setPosts(previousPosts)
+        setToastType('error')
+        setToastMessage('点赞失败，请重试')
+        setToastVisible(true)
       }
     } catch (err) {
+      // Revert on error
+      setPosts(previousPosts)
       console.error('Failed to toggle like:', err)
+      setToastType('error')
+      setToastMessage('点赞失败，请重试')
+      setToastVisible(true)
     } finally {
       setLikingId(null)
     }
-  }
-
-  const handleLoadMore = () => {
-    if (loadingMore || !hasMore) return
-    const nextPage = page + 1
-    setPage(nextPage)
-    loadPosts(activeTab, nextPage)
   }
 
   const handlePostClick = (post: DreamWallPost) => {
@@ -377,16 +403,20 @@ export function DreamWall() {
                 </article>
               ))}
 
-              {/* Load More */}
-              {hasMore && (
-                <div className={styles.loadMore}>
-                  <Button
-                    variant="secondary"
-                    onClick={handleLoadMore}
-                    disabled={loadingMore}
-                  >
-                    {loadingMore ? '加载中...' : '加载更多'}
-                  </Button>
+              {/* Infinite scroll sentinel */}
+              {hasMore && activeTab !== 'my' && (
+                <div
+                  ref={loadMoreRef}
+                  className={styles.loadMore}
+                  aria-hidden="true"
+                >
+                  {loadingMore && (
+                    <div className={styles.loadingDots}>
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

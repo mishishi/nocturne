@@ -84,6 +84,15 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
     navigate('/dream')
   }
 
+  const handleBack = () => {
+    if (isTransitioningRef.current) return
+    isTransitioningRef.current = true
+    setPhase('intro')
+    setTimeout(() => {
+      isTransitioningRef.current = false
+    }, 1000)
+  }
+
   // Don't render if already seen
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY)
@@ -104,6 +113,12 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
       {/* Ambient glow */}
       <div className={styles.ambientGlow} />
+
+      {/* Progress Dots */}
+      <div className={styles.progressDots} aria-hidden="true">
+        <div className={`${styles.progressDot} ${phase === 'intro' ? styles.active : ''}`} />
+        <div className={`${styles.progressDot} ${phase === 'cta' ? styles.active : ''}`} />
+      </div>
 
       {/* Phase: Intro - Brand Impact */}
       {phase === 'intro' && (
@@ -126,7 +141,11 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
           </Button>
 
           {/* Skip hint */}
-          <button className={styles.skipHint} onClick={handleDismiss}>
+          <button className={styles.skipHint} onClick={() => {
+            if (window.confirm('确定要跳过介绍吗？')) {
+              handleDismiss()
+            }
+          }}>
             跳过
           </button>
         </div>
@@ -163,6 +182,14 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
               </span>
             ))}
           </div>
+
+          {/* Back button */}
+          <button className={styles.backBtn} onClick={handleBack} aria-label="返回">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            返回
+          </button>
         </div>
       )}
     </div>

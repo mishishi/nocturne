@@ -49,6 +49,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           value={value}
           aria-describedby={error ? errorId : undefined}
           aria-invalid={error ? 'true' : undefined}
+          onFocus={() => {
+            // Scroll textarea into view when keyboard appears
+            setTimeout(() => {
+              const textarea = document.getElementById(textareaId)
+              if (textarea) {
+                textarea.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              }
+            }, 300)
+          }}
           {...props}
         />
         {showCount && (

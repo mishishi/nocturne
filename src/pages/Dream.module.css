@@ -224,6 +224,22 @@
   color: var(--color-sunset);
 }
 
+.stopIndicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--color-sunset);
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: stopBlink 1s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+@keyframes stopBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
 .voiceHint {
   font-size: 0.75rem;
   color: var(--color-silver);

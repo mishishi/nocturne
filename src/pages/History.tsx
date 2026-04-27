@@ -9,7 +9,7 @@ import { DreamWeather } from '../components/DreamWeather'
 import { api } from '../services/api'
 import styles from './History.module.css'
 
-const SWIPE_THRESHOLD = 80
+const SWIPE_THRESHOLD = 100
 const UNDO_TIMEOUT = 5000
 
 export function History() {

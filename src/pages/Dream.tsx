@@ -119,15 +119,15 @@ export function Dream() {
     }
   }, [draftRestored, setDreamText])
 
-  // Auto-save draft
+  // Auto-save draft (debounced: save 2s after user stops typing)
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    const timeoutId = setTimeout(() => {
       const currentText = useDreamStore.getState().currentSession.dreamText
       if (currentText && currentText !== lastSavedRef.current) {
         localStorage.setItem(DRAFT_KEY, currentText)
         lastSavedRef.current = currentText
       }
-    }, 30000)
+    }, 2000)
 
     const saveOnUnmount = () => {
       const currentText = useDreamStore.getState().currentSession.dreamText
@@ -138,11 +138,11 @@ export function Dream() {
 
     window.addEventListener('beforeunload', saveOnUnmount)
     return () => {
-      clearInterval(intervalId)
+      clearTimeout(timeoutId)
       window.removeEventListener('beforeunload', saveOnUnmount)
       saveOnUnmount()
     }
-  }, [])
+  }, [currentSession.dreamText])
 
   // Speech recognition setup
   useEffect(() => {
@@ -317,7 +317,14 @@ export function Dream() {
         />
 
         {/* Step Indicator */}
-        <div className={styles.stepIndicator}>
+        <div
+          className={styles.stepIndicator}
+          role="progressbar"
+          aria-valuenow={step === 'emotion' || step === 'emotionTransition' ? 1 : step === 'describe' ? 2 : step === 'elements' || step === 'submitting' ? 3 : 1}
+          aria-valuemin={1}
+          aria-valuemax={3}
+          aria-label={`步骤 ${step === 'emotion' || step === 'emotionTransition' ? 1 : step === 'describe' ? 2 : step === 'elements' || step === 'submitting' ? 3 : 1}，共3步`}
+        >
           <div className={`${styles.stepDot} ${step === 'emotion' || step === 'emotionTransition' ? styles.active : ''} ${['describe', 'elements', 'submitting'].includes(step) ? styles.completed : ''}`}>
             {['describe', 'elements', 'submitting'].includes(step) ? '✓' : '1'}
           </div>
@@ -414,7 +421,9 @@ export function Dream() {
                     )}
                   </span>
                   <span className={styles.voiceText}>
-                    {isRecording ? '点击停止' : '点击说话'}
+                    {isRecording ? (
+                      <><span className={styles.stopIndicator} />点击停止</>
+                    ) : '点击说话'}
                   </span>
                 </button>
                 <span className={`${styles.voiceHint} ${isRecording ? styles.recording : ''}`}>
