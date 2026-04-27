@@ -7,6 +7,7 @@ import { AchievementToast } from './components/AchievementToast'
 import { AtmosphereEffects } from './components/effects/AtmosphereEffects'
 import { SkipLink } from './components/SkipLink'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary'
 import { useDreamStore, ACHIEVEMENTS } from './hooks/useDreamStore'
 import { useAchievementSound } from './hooks/useAchievementSound'
 import { Home } from './pages/Home'
@@ -66,7 +67,8 @@ function App() {
       <Navbar />
       <PageTransition>
         <main id="main-content" role="main" aria-label="主内容区域">
-          <Routes>
+          <GlobalErrorBoundary>
+            <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dream" element={<Dream />} />
             <Route path="/questions" element={<Questions />} />
@@ -83,6 +85,7 @@ function App() {
             } />
             <Route path="/auth/wechat/callback" element={<WeChatCallback />} />
           </Routes>
+          </GlobalErrorBoundary>
         </main>
       </PageTransition>
 
