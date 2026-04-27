@@ -380,8 +380,10 @@ export const friendApi = {
 export interface DreamWallPost {
   id: string
   sessionId: string
+  openid: string // 作者 openid，用于权限判断
   storyTitle: string
   storySnippet: string
+  storyFull?: string // Full story content for direct navigation
   isAnonymous: boolean
   nickname?: string
   avatar?: string
@@ -438,6 +440,7 @@ export const wallApi = {
     success: boolean
     posts: Array<{
       id: string
+      sessionId: string
       storyTitle: string
       storySnippet: string
       isAnonymous: boolean

@@ -35,6 +35,12 @@ export function Story() {
   const [isGeneratingImage] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [isPublished, setIsPublished] = useState(false)
+  const [dreamWallStory, setDreamWallStory] = useState<string | null>(null)
+  const isFromDreamWall = !!(location.state?.fromDreamWall && location.state?.sessionId)
+  // Only show loading if coming from Dream Wall AND storyFull is not already in state
+  const [isLoadingDreamWallStory, setIsLoadingDreamWallStory] = useState(
+    isFromDreamWall && !location.state?.storyFull
+  )
   const { speak, stop, isSpeaking, isSupported: isTtsSupported, voices, selectedVoice, setVoice } = useTextToSpeech()
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const aiWrapperRef = useRef<HTMLDivElement>(null)
@@ -44,11 +50,18 @@ export function Story() {
 
   // Check if we navigated from history with state
   const fromHistory = location.state?.fromHistory
+  const fromDreamWall = location.state?.fromDreamWall
+
+  // 从梦墙进入时，判断当前用户是否是作者
+  const currentUserOpenid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
+  const storyAuthorOpenid = location.state?.authorOpenid
+  // 只有在梦墙场景下才需要判断作者身份：当前用户openid与故事作者openid相同才是作者
+  const isAuthor = fromDreamWall && storyAuthorOpenid && currentUserOpenid === storyAuthorOpenid
 
   // Story reveal animation on mount
   useEffect(() => {
-    // When coming from history, data is already available - show immediately
-    if (fromHistory) {
+    // When coming from history or dream wall, data is already available - show immediately
+    if (fromHistory || fromDreamWall) {
       setIsRevealed(true)
       setShowContent(true)
       return
@@ -60,7 +73,22 @@ export function Story() {
       clearTimeout(timer)
       clearTimeout(contentTimer)
     }
-  }, [fromHistory])
+  }, [fromHistory, fromDreamWall])
+
+  // Show loading state while fetching story from Dream Wall
+  if (isLoadingDreamWallStory) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container} style={{ textAlign: 'center', paddingTop: '100px' }}>
+          <div className={styles.revealLoaderMoon} style={{ margin: '0 auto 24px' }}>
+            <div className={styles.revealLoaderMoonCore} />
+            <div className={styles.revealLoaderMoonGlow} />
+          </div>
+          <p style={{ color: 'var(--color-silver)' }}>加载中...</p>
+        </div>
+      </div>
+    )
+  }
 
   // Track reading progress
   useEffect(() => {
@@ -158,7 +186,7 @@ export function Story() {
   // Check if this session was already published
   useEffect(() => {
     // Use sessionId from location state (fromHistory) since currentSession resets on refresh
-    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId
     if (sessionId) {
       const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
       if (publishedSessions.includes(sessionId)) {
@@ -167,16 +195,64 @@ export function Story() {
     }
   }, [location.state])
 
-  const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle
-  const story = fromHistory?.story || currentSession.story
+  // Fetch full story when coming from Dream Wall (only if not already passed in state)
+  useEffect(() => {
+    const sessionId = location.state?.sessionId
+    const storyFull = location.state?.storyFull
+
+    // If storyFull is already in state, use it directly - no need to fetch
+    if (location.state?.fromDreamWall && sessionId) {
+      if (storyFull) {
+        console.log('[DreamWall] Using storyFull from state directly')
+        setDreamWallStory(storyFull)
+        setIsLoadingDreamWallStory(false)
+        return
+      }
+
+      // Otherwise fetch from API
+      console.log('[DreamWall] Starting fetch for sessionId:', sessionId)
+      setIsLoadingDreamWallStory(true)
+      const fetchFullStory = async () => {
+        try {
+          const result = await api.getStory(sessionId)
+          console.log('[DreamWall] Fetch result:', result)
+          if (result.story) {
+            setDreamWallStory(result.story.content)
+          }
+        } catch (err) {
+          console.error('[DreamWall] Failed to fetch story:', err)
+        } finally {
+          setIsLoadingDreamWallStory(false)
+        }
+      }
+      fetchFullStory()
+    }
+  }, [location.state])
+
+  const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle || location.state?.storyTitle
+  const story = location.state?.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
   const dreamText = fromHistory?.dreamSnippet || currentSession.dreamText
-  const status = fromHistory ? 'completed' : currentSession.status
+  const status = fromHistory || location.state?.fromDreamWall ? 'completed' : currentSession.status
 
   useEffect(() => {
-    if (status !== 'completed' || !story) {
+    // If coming from Dream Wall, wait for story to load before deciding
+    if (location.state?.fromDreamWall && location.state?.sessionId) {
+      if (isLoadingDreamWallStory) {
+        console.log('[Redirect] Still loading, skipping redirect')
+        return // Still loading, don't redirect
+      }
+      console.log('[Redirect] Loading done, story:', story ? 'exists' : 'null')
+      if (!story) {
+        console.log('[Redirect] Navigating to /dream')
+        navigate('/dream') // Loading done but no story, redirect
+      }
+      return
+    }
+    // Only redirect for normal sessions, not Dream Wall
+    if (!location.state?.fromDreamWall && (status !== 'completed' || !story)) {
       navigate('/dream')
     }
-  }, [status, story, navigate])
+  }, [status, story, navigate, isLoadingDreamWallStory, location.state])
 
   const handleShareToWeChat = async (type: 'friend' | 'moment') => {
     const shareText = `「${storyTitle}」\n\n${story}`
@@ -194,8 +270,8 @@ export function Story() {
         setToastMessage('分享成功')
         setToastVisible(true)
 
-        // Log share and get rewards
-        if (openid) {
+        // Log share and get rewards - only for author
+        if (isAuthor && openid) {
           try {
             const result = await shareApi.logShare(openid, type)
             if (result.success) {
@@ -237,8 +313,8 @@ export function Story() {
       setToastMessage('链接已复制到剪贴板')
       setToastVisible(true)
 
-      // Log share and show rewards
-      if (openid) {
+      // Log share and show rewards - only for author
+      if (isAuthor && openid) {
         try {
           const result = await shareApi.logShare(openid, 'link')
           if (result.success) {
@@ -298,7 +374,7 @@ export function Story() {
 
   const handleInterpret = async () => {
     const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
-    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || currentSession.sessionId
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId
 
     if (!openid) {
       setToastType('error')
@@ -527,13 +603,14 @@ export function Story() {
 
         {/* Actions */}
         <div className={styles.actions}>
-          {!fromHistory && (
+          {!fromHistory && !fromDreamWall && (
             <Button onClick={handleDone} size="lg" className={styles.doneBtn}>
               保存并返回
             </Button>
           )}
 
-          <div className={styles.secondaryActions}>
+          {!fromDreamWall && (
+            <div className={styles.secondaryActions}>
             <div className={styles.shareWrapper} ref={shareWrapperRef}>
               <Button variant="secondary" onClick={() => setShowShareMenu(!showShareMenu)} aria-expanded={showShareMenu} aria-label="分享">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
@@ -576,7 +653,7 @@ export function Story() {
                 </div>
               )}
             </div>
-            {!isPublished && (
+            {!isPublished && !fromDreamWall && (
               <Button
                 variant="secondary"
                 onClick={handlePublishToWall}
@@ -590,7 +667,7 @@ export function Story() {
                 {isPublishing ? '发布中...' : '发布到梦墙'}
               </Button>
             )}
-            {isPublished && (
+            {isPublished && !fromDreamWall && (
               <span className={styles.publishedText}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
                   <polyline points="20 6 9 17 4 12" />
@@ -598,7 +675,19 @@ export function Story() {
                 已发布到梦墙
               </span>
             )}
-            {/* AI Assistant Dropdown - combines TTS and Interpretation */}
+            <Link to="/dream">
+              <Button variant="primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                记录新梦境
+              </Button>
+            </Link>
+          </div>
+          )}
+
+          {/* AI Assistant Dropdown - for normal flow or authors from Dream Wall */}
+          {(!fromDreamWall || isAuthor) && (
             <div className={styles.aiWrapper} ref={aiWrapperRef}>
               <Button
                 variant="secondary"
@@ -691,15 +780,34 @@ export function Story() {
                 </div>
               )}
             </div>
-            <Link to="/dream">
-              <Button variant="primary">
+          )}
+
+          {/* Standalone TTS button for non-authors viewing from Dream Wall */}
+          {fromDreamWall && !isAuthor && (
+            <div className={styles.aiWrapper} ref={aiWrapperRef}>
+              <Button
+                variant="secondary"
+                onClick={handleSpeakStory}
+                className={isSpeaking ? styles.ttsButtonActive : ''}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                  <path d="M12 5v14M5 12h14" />
+                  {isSpeaking ? (
+                    <>
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </>
+                  ) : (
+                    <>
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </>
+                  )}
                 </svg>
-                记录新梦境
+                {isSpeaking ? '停止朗读' : '听故事朗读'}
               </Button>
-            </Link>
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

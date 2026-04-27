@@ -83,7 +83,7 @@ export function DreamWall() {
         // Transform my posts to match DreamWallPost format
         const transformed: DreamWallPost[] = result.posts.map(p => ({
           id: p.id,
-          sessionId: '',
+          sessionId: p.sessionId || '',
           storyTitle: p.storyTitle,
           storySnippet: p.storySnippet,
           isAnonymous: p.isAnonymous,
@@ -149,14 +149,14 @@ export function DreamWall() {
   }
 
   const handlePostClick = (post: DreamWallPost) => {
+    console.log('[DreamWall] Navigating with:', { fromDreamWall: true, sessionId: post.sessionId, storyTitle: post.storyTitle, hasStoryFull: !!post.storyFull })
     navigate('/story', {
       state: {
-        fromHistory: {
-          id: post.sessionId,
-          storyTitle: post.storyTitle,
-          story: post.storySnippet,
-          dreamSnippet: ''
-        }
+        fromDreamWall: true,
+        sessionId: post.sessionId,
+        storyTitle: post.storyTitle,
+        storyFull: post.storyFull || null,
+        authorOpenid: post.openid // 作者 openid，用于权限判断
       }
     })
   }

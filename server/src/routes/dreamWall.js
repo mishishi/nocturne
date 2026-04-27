@@ -56,8 +56,10 @@ export default async function dreamWallRoutes(fastify) {
     const items = posts.map(post => ({
       id: post.id,
       sessionId: post.sessionId,
+      openid: post.openid, // 作者 openid，用于权限判断
       storyTitle: post.storyTitle,
       storySnippet: post.storySnippet,
+      storyFull: post.storyFull, // Include full story for direct navigation
       isAnonymous: post.isAnonymous,
       nickname: post.isAnonymous ? '匿名用户' : post.nickname,
       avatar: post.isAnonymous ? null : post.avatar,
@@ -180,6 +182,7 @@ export default async function dreamWallRoutes(fastify) {
       success: true,
       posts: posts.map(p => ({
         id: p.id,
+        sessionId: p.sessionId,
         storyTitle: p.storyTitle,
         storySnippet: p.storySnippet,
         isAnonymous: p.isAnonymous,
