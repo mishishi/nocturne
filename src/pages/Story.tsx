@@ -258,6 +258,10 @@ export function Story() {
             setDreamWallStory(result.story.content)
           }
           setIsLoadingDreamWallStory(false)
+          // If no story found after fetch, redirect
+          if (!result.story) {
+            console.log('[Story] No story found for sessionId:', targetSessionId)
+          }
         }
       } catch (err) {
         console.error('[Story] Failed to fetch story:', err)
@@ -297,11 +301,28 @@ export function Story() {
       }
       return
     }
-    // Only redirect for normal sessions, not Dream Wall
+
+    // Direct URL access (e.g., from notifications) - also wait for loading
+    if (urlSessionId) {
+      if (isLoadingDreamWallStory) {
+        console.log('[Redirect] URL access still loading, skipping redirect')
+        return // Still loading, don't redirect
+      }
+      // Loading done, check if we have story
+      const hasStory = dreamWallStory || wallContext.storyFull || currentSession.story
+      console.log('[Redirect] URL access loading done, story:', hasStory ? 'exists' : 'null')
+      if (!hasStory) {
+        console.log('[Redirect] No story found, navigating to /dream')
+        navigate('/dream')
+      }
+      return
+    }
+
+    // Only redirect for normal sessions without URL sessionId
     if (!fromDreamWall && (status !== 'completed' || !story)) {
       navigate('/dream')
     }
-  }, [status, story, dreamWallStory, navigate, isLoadingDreamWallStory, wallContext.fromDreamWall, wallContext.sessionId, wallContext.storyFull])
+  }, [status, story, dreamWallStory, navigate, isLoadingDreamWallStory, wallContext.fromDreamWall, wallContext.sessionId, wallContext.storyFull, urlSessionId])
 
   // Restore DreamWall context from sessionStorage on mount (for page refresh scenarios)
   useEffect(() => {
