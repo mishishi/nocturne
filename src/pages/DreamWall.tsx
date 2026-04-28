@@ -6,6 +6,7 @@ import { storeDreamWallContext } from '../hooks/useDreamWallContext'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { FriendRequestButton } from '../components/FriendRequestButton'
 import styles from './DreamWall.module.css'
 
 type TabType = 'all' | 'featured' | 'my'
@@ -431,6 +432,9 @@ export function DreamWall() {
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </svg>
                     </button>
+                    {user?.openid && post.openid !== user.openid && (
+                      <FriendRequestButton friendOpenid={post.openid} />
+                    )}
                   </div>
                 </article>
               ))}
