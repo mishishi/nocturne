@@ -109,6 +109,50 @@
   line-height: 1;
 }
 
+.notificationBell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--color-moonlight);
+  opacity: 0.7;
+  transition: all 0.2s var(--ease-dream);
+  text-decoration: none;
+}
+
+.notificationBell:hover {
+  opacity: 1;
+}
+
+.notificationBell:focus-visible {
+  outline: 2px solid var(--color-golden);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.notificationBell svg {
+  width: 24px;
+  height: 24px;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  background: #e74c3c;
+  border-radius: 8px;
+  line-height: 16px;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .navbar {
     display: none;

@@ -23,6 +23,7 @@ import { Friends } from './pages/Friends'
 import { FriendProfile } from './pages/FriendProfile'
 import { DreamWall } from './pages/DreamWall'
 import { WeChatCallback } from './pages/WeChatCallback'
+import { Notifications } from './pages/Notifications'
 
 function App() {
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement } = useDreamStore()
@@ -96,6 +97,7 @@ function App() {
               <PageErrorBoundary><ProtectedRoute><FriendProfile /></ProtectedRoute></PageErrorBoundary>
             } />
             <Route path="/auth/wechat/callback" element={<PageErrorBoundary><WeChatCallback /></PageErrorBoundary>} />
+            <Route path="/notifications" element={<PageErrorBoundary><Notifications /></PageErrorBoundary>} />
           </Routes>
           </GlobalErrorBoundary>
         </main>

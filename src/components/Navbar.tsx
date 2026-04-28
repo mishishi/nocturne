@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
-import { friendApi } from '../services/api'
+import { friendApi, notificationApi } from '../services/api'
 import styles from './Navbar.module.css'
 
 export function Navbar() {
   const location = useLocation()
   const { user } = useDreamStore()
   const [pendingCount, setPendingCount] = useState(0)
+  const [notificationCount, setNotificationCount] = useState(0)
 
   useEffect(() => {
     const fetchPendingCount = async () => {
@@ -30,6 +31,24 @@ export function Navbar() {
     const interval = setInterval(fetchPendingCount, 30000)
     return () => clearInterval(interval)
   }, [user?.openid])
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await notificationApi.getUnreadCount()
+        const data = await res.json()
+        if (data.success) {
+          setNotificationCount(data.unreadCount)
+        }
+      } catch (e) {
+        console.error('Failed to fetch notification count', e)
+      }
+    }
+
+    fetchUnreadCount()
+    const interval = setInterval(fetchUnreadCount, 60000) // 60s
+    return () => clearInterval(interval)
+  }, [])
 
   const isActive = (path: string) => location.pathname === path
 
@@ -78,6 +97,14 @@ export function Navbar() {
             </Link>
           </li>
         </ul>
+
+        <Link to="/notifications" className={styles.notificationBell} aria-label="通知">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {notificationCount > 0 && <span className={styles.notificationBadge}>{notificationCount}</span>}
+        </Link>
         </div>
       </nav>
     </header>
