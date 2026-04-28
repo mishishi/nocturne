@@ -1,8 +1,35 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useDreamStore } from '../hooks/useDreamStore'
+import { friendApi } from '../services/api'
 import styles from './Navbar.module.css'
 
 export function Navbar() {
   const location = useLocation()
+  const { user } = useDreamStore()
+  const [pendingCount, setPendingCount] = useState(0)
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      if (!user?.openid) {
+        setPendingCount(0)
+        return
+      }
+      try {
+        const res = await friendApi.getFriendRequests()
+        if (res.success) {
+          setPendingCount(res.requests.length)
+        }
+      } catch (err) {
+        console.error('Failed to fetch pending requests:', err)
+      }
+    }
+
+    fetchPendingCount()
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000)
+    return () => clearInterval(interval)
+  }, [user?.openid])
 
   const isActive = (path: string) => location.pathname === path
 
@@ -32,6 +59,12 @@ export function Navbar() {
           <li>
             <Link to="/wall" aria-current={isActive('/wall') ? 'page' : undefined} className={`${styles.link} ${isActive('/wall') ? styles.active : ''}`}>
               梦墙
+            </Link>
+          </li>
+          <li>
+            <Link to="/friends" aria-current={isActive('/friends') ? 'page' : undefined} className={`${styles.link} ${isActive('/friends') ? styles.active : ''}`}>
+              好友
+              {pendingCount > 0 && <span className={styles.badge}>{pendingCount}</span>}
             </Link>
           </li>
           <li>
