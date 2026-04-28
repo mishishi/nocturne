@@ -238,6 +238,80 @@
 
 ---
 
+### GET /api/auth/wechat/authorize
+
+**功能：** 生成微信授权 URL 并跳转
+
+**需要认证：** 否
+
+**Query 参数：**
+- `redirect_uri`: 授权成功后的跳转地址（前端页面路径）
+
+**响应：** 302 重定向到微信授权页面
+
+**业务逻辑：**
+- 拼接微信授权 URL，state 参数包含 base64 编码的 redirect_uri
+- 授权成功回调到 `/api/auth/wechat/callback`
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/pages/Login.tsx` | `handleWeChatLogin()` | 微信登录时跳转授权 |
+
+---
+
+### GET /api/auth/wechat/callback
+
+**功能：** 微信 OAuth 回调，处理 code 换 openid
+
+**需要认证：** 否
+
+**Query 参数：**
+- `code`: 微信授权码
+- `state`: 原始跳转地址的 base64 编码
+
+**响应：** 302 重定向到前端页面，URL 包含 `wechat_token` 和 `wechat_user` 参数
+
+**业务逻辑：**
+1. 用 code 换取 openid
+2. 调用 `wechatLogin` 创建或登录用户
+3. 生成 7 天有效期 token
+4. 重定向到原始页面并携带 token 和用户信息
+
+**错误处理：**
+- code 无效或授权失败 → 重定向到前端并带上 `wechat_error=1`
+
+---
+
+### POST /api/auth/export-data
+
+**功能：** 导出用户所有数据（GDPR 数据可携带权）
+
+**需要认证：** **是**（需 Bearer Token）
+
+**请求 Body：** 无
+
+**响应：** JSON 文件下载
+
+```json
+{
+  "exportedAt": "2024-01-15T10:30:00.000Z",
+  "appVersion": "1.0.0",
+  "user": { ... },
+  "dreams": [...],
+  "wallPosts": [...],
+  "friends": [...],
+  "shareLogs": [...]
+}
+```
+
+**业务逻辑：**
+1. 获取当前用户的完整数据快照
+2. 包含：用户信息、会话/故事/问答、梦墙帖子及评论、好友列表、分享记录
+
+---
+
 ## 前端存储
 
 登录成功后：

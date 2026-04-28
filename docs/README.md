@@ -11,6 +11,7 @@
 | 分享/积分 | [share.md](./share.md) | 分享奖励、积分系统、邀请好友 |
 | 好友 | [friend.md](./friend.md) | 好友关系、搜索、请求管理 |
 | 梦墙 | [wall.md](./wall.md) | 故事广场、点赞、评论 |
+| 故事反馈 | [storyFeedback.md](./storyFeedback.md) | 故事评分、个性化推荐 |
 
 ---
 
@@ -20,6 +21,7 @@
 |------|---------|
 | 2026-04-27 | 完成 auth.md、session.md、share.md、friend.md 文档 |
 | 2026-04-27 | 完成 wall.md 文档 |
+| 2026-04-28 | 完成 storyFeedback.md 文档 |
 
 ---
 
@@ -81,6 +83,17 @@
 | `/api/wall/:postId/like` | POST | 点赞/取消点赞 | **是** |
 | `/api/wall/:postId/comments` | GET | 获取评论 | 否 |
 | `/api/wall/:postId/comments` | POST | 添加评论 | **是** |
+
+### 故事反馈相关
+
+| 端点 | 方法 | 功能 | 需要认证 |
+|------|------|------|----------|
+| `/api/story-feedback` | POST | 提交故事反馈 | **是** |
+| `/api/story-feedback/:sessionId` | GET | 获取反馈 | 否 |
+| `/api/story-feedback/:sessionId/all` | GET | 获取所有反馈及统计 | 否 |
+| `/api/story-feedback/:sessionId/check` | GET | 检查是否已提交 | 否 |
+| `/api/story-feedback/analytics` | GET | AI 质量分析 | 否 |
+| `/api/story-feedback/recommendations` | GET | 个性化推荐 | **是** |
 
 ---
 
