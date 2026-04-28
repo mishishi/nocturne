@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { friendApi } from '../services/api'
+import { Button } from './ui/Button'
 import styles from './FriendRequestButton.module.css'
 
 interface FriendRequestButtonProps {
@@ -10,13 +11,11 @@ type ButtonState = 'idle' | 'loading' | 'sent' | 'error'
 
 export function FriendRequestButton({ friendOpenid }: FriendRequestButtonProps) {
   const [state, setState] = useState<ButtonState>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
 
   const handleClick = async () => {
     if (state !== 'idle') return
 
     setState('loading')
-    setErrorMessage('')
 
     try {
       const result = await friendApi.sendFriendRequest(friendOpenid)
@@ -24,17 +23,15 @@ export function FriendRequestButton({ friendOpenid }: FriendRequestButtonProps) 
         setState('sent')
       } else {
         setState('error')
-        setErrorMessage(result.message || '发送失败')
       }
     } catch (err) {
       setState('error')
-      setErrorMessage('网络错误')
     }
   }
 
   if (state === 'sent') {
     return (
-      <span className={styles.sentLabel}>
+      <span role="status" className={styles.sentLabel}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={styles.checkIcon}>
           <polyline points="20 6 9 17 4 12" />
         </svg>
@@ -44,22 +41,14 @@ export function FriendRequestButton({ friendOpenid }: FriendRequestButtonProps) 
   }
 
   return (
-    <button
-      className={`${styles.button} ${state === 'error' ? styles.error : ''}`}
+    <Button
+      variant="secondary"
+      loading={state === 'loading'}
+      disabled={state !== 'idle'}
       onClick={handleClick}
-      disabled={state === 'loading'}
-      aria-busy={state === 'loading'}
+      className={state === 'error' ? styles.error : ''}
     >
-      {state === 'loading' ? (
-        <>
-          <span className={styles.spinner}>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="31.4 31.4" />
-            </svg>
-          </span>
-          发送中...
-        </>
-      ) : state === 'error' ? (
+      {state === 'error' ? (
         <>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={styles.icon}>
             <circle cx="12" cy="12" r="10" />
@@ -79,6 +68,6 @@ export function FriendRequestButton({ friendOpenid }: FriendRequestButtonProps) 
           添加好友
         </>
       )}
-    </button>
+    </Button>
   )
 }
