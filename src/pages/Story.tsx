@@ -11,6 +11,7 @@ import { SharePoster } from '../components/SharePoster'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamInterpretationModal, DreamInterpretationLoadingModal } from '../components/DreamInterpretationModal'
 import { DreamIllustration } from '../components/DreamIllustration'
+import { StoryFeedbackForm } from '../components/StoryFeedbackForm'
 import { shareApi, api, wallApi } from '../services/api'
 import styles from './Story.module.css'
 
@@ -65,6 +66,9 @@ export function Story() {
   // Check if we navigated from history with state
   const fromHistory = location.state?.fromHistory
   const fromDreamWall = location.state?.fromDreamWall
+
+  // sessionId for feedback form
+  const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId
 
   // 从梦墙进入时，判断当前用户是否是作者
   const currentUserOpenid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
@@ -976,6 +980,9 @@ export function Story() {
           )}
         </div>
       </div>
+
+      {/* Story Feedback Form */}
+      <StoryFeedbackForm sessionId={sessionId} />
 
       {/* Toast */}
       <Toast message={toastMessage} visible={toastVisible} onClose={handleToastClose} type={toastType} />
