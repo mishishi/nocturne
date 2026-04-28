@@ -196,6 +196,96 @@ export default async function storyFeedbackRoutes(fastify) {
       return res.status(500).send({ success: false, reason: '服务器错误' })
     }
   })
+
+  // GET /api/story-feedback/analytics - AI质量分析 (需管理员)
+  fastify.get('/story-feedback/analytics', async (req, res) => {
+    try {
+      const feedbacks = await prisma.storyFeedback.findMany({
+        orderBy: { createdAt: 'desc' }
+      })
+
+      const count = feedbacks.length
+      if (count === 0) {
+        return {
+          success: true,
+          analytics: {
+            totalFeedbacks: 0,
+            overallAvg: 0,
+            dimensionAvgs: {
+              character: null,
+              location: null,
+              object: null,
+              emotion: null,
+              plot: null
+            },
+            ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            suggestions: ['暂无反馈数据']
+          }
+        }
+      }
+
+      // Overall average
+      const overallSum = feedbacks.reduce((sum, f) => sum + f.overallRating, 0)
+      const overallAvg = parseFloat((overallSum / count).toFixed(1))
+
+      // Dimension averages
+      const dimensionAvgs = {
+        character: calculateAvg(feedbacks, 'characterRating'),
+        location: calculateAvg(feedbacks, 'locationRating'),
+        object: calculateAvg(feedbacks, 'objectRating'),
+        emotion: calculateAvg(feedbacks, 'emotionRating'),
+        plot: calculateAvg(feedbacks, 'plotRating')
+      }
+
+      // Rating distribution
+      const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      feedbacks.forEach(f => {
+        if (f.overallRating >= 1 && f.overallRating <= 5) {
+          ratingDistribution[f.overallRating]++
+        }
+      })
+
+      // Find weakest dimension
+      const validDimensions = Object.entries(dimensionAvgs)
+        .filter(([_, v]) => v !== null)
+        .sort((a, b) => a[1] - b[1])
+
+      const weakestDimension = validDimensions[0]?.[0] || null
+      const weakestValue = validDimensions[0]?.[1] || null
+
+      // Generate suggestions
+      const suggestions = []
+      if (overallAvg < 3.5) {
+        suggestions.push('整体评分偏低，建议审视故事生成的整体质量')
+      }
+      if (weakestDimension && weakestValue < 3.5) {
+        const dimNames = { character: '角色塑造', location: '场景描写', object: '物品细节', emotion: '情感表达', plot: '情节设计' }
+        suggestions.push(`${dimNames[weakestDimension]}评分最低(${weakestValue}分)，建议加强该维度的prompt`)
+      }
+      if (ratingDistribution[1] + ratingDistribution[2] > count * 0.3) {
+        suggestions.push('存在较多低分反馈(1-2分)，建议排查生成异常')
+      }
+      if (suggestions.length === 0) {
+        suggestions.push('AI生成质量良好，继续保持当前prompt策略')
+      }
+
+      return {
+        success: true,
+        analytics: {
+          totalFeedbacks: count,
+          overallAvg,
+          dimensionAvgs,
+          ratingDistribution,
+          weakestDimension,
+          weakestValue,
+          suggestions
+        }
+      }
+    } catch (err) {
+      console.error('Failed to generate analytics:', err)
+      return res.status(500).send({ success: false, reason: '服务器错误' })
+    }
+  })
 }
 
 function calculateAvg(feedbacks, field) {

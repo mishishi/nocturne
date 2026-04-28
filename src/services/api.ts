@@ -617,5 +617,29 @@ export const storyFeedbackApi = {
     const res = await fetchWithTimeout(`${API_BASE}/story-feedback/${sessionId}/all`)
     if (!res.ok) throw new Error(`获取反馈失败: ${res.status}`)
     return res.json()
+  },
+
+  // Get AI quality analytics
+  async getAnalytics(): Promise<{
+    success: boolean
+    analytics: {
+      totalFeedbacks: number
+      overallAvg: number
+      dimensionAvgs: {
+        character: number | null
+        location: number | null
+        object: number | null
+        emotion: number | null
+        plot: number | null
+      }
+      ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number }
+      weakestDimension: string | null
+      weakestValue: number | null
+      suggestions: string[]
+    }
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/story-feedback/analytics`)
+    if (!res.ok) throw new Error(`获取分析失败: ${res.status}`)
+    return res.json()
   }
 }
