@@ -286,6 +286,157 @@ export default async function storyFeedbackRoutes(fastify) {
       return res.status(500).send({ success: false, reason: '服务器错误' })
     }
   })
+
+  // GET /api/story-feedback/recommendations - 个性化推荐 (需登录)
+  fastify.get('/story-feedback/recommendations', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { openid } = req.query
+
+    if (!openid) {
+      return res.status(400).send({ success: false, reason: '缺少 openid' })
+    }
+
+    try {
+      // Get user's historical feedbacks to build preference profile
+      const userFeedbacks = await prisma.storyFeedback.findMany({
+        where: { openid }
+      })
+
+      // Calculate user's dimension preferences
+      const preference = { character: 0, location: 0, object: 0, emotion: 0, plot: 0 }
+      let count = 0
+
+      userFeedbacks.forEach(f => {
+        if (f.characterRating) preference.character += f.characterRating
+        if (f.locationRating) preference.location += f.locationRating
+        if (f.objectRating) preference.object += f.objectRating
+        if (f.emotionRating) preference.emotion += f.emotionRating
+        if (f.plotRating) preference.plot += f.plotRating
+        count++
+      })
+
+      if (count > 0) {
+        Object.keys(preference).forEach(k => {
+          preference[k] = preference[k] / count
+        })
+      }
+
+      // If no feedback history, return popular stories
+      if (count === 0) {
+        const popularStories = await prisma.dreamWall.findMany({
+          where: { status: 'approved', visibility: 'public' },
+          orderBy: [
+            { likeCount: 'desc' },
+            { commentCount: 'desc' }
+          ],
+          take: 10,
+          include: {
+            likes: { take: 1, select: { openid: true } }
+          }
+        })
+
+        return {
+          success: true,
+          recommendations: popularStories.map(p => ({
+            id: p.id,
+            sessionId: p.sessionId,
+            storyTitle: p.storyTitle,
+            storySnippet: p.storySnippet,
+            nickname: p.isAnonymous ? '匿名用户' : p.nickname,
+            likeCount: p.likeCount,
+            commentCount: p.commentCount,
+            createdAt: p.createdAt,
+            score: p.likeCount + p.commentCount * 2,
+            reason: '热门推荐'
+          })),
+          hasPreferences: false
+        }
+      }
+
+      // Find stories with similar dimension strengths
+      const allStories = await prisma.dreamWall.findMany({
+        where: { status: 'approved', visibility: 'public' },
+        include: {
+          session: {
+            include: {
+              storyFeedback: true
+            }
+          },
+          likes: { take: 1, select: { openid: true } }
+        }
+      })
+
+      // Score each story based on preference match
+      const scoredStories = allStories
+        .map(story => {
+          // Get average dimension ratings for this story
+          const feedbacks = story.session?.storyFeedback || []
+          if (feedbacks.length === 0) return null
+
+          const storyDimAvg = {
+            character: calculateAvg(feedbacks, 'characterRating'),
+            location: calculateAvg(feedbacks, 'locationRating'),
+            object: calculateAvg(feedbacks, 'objectRating'),
+            emotion: calculateAvg(feedbacks, 'emotionRating'),
+            plot: calculateAvg(feedbacks, 'plotRating')
+          }
+
+          // Calculate match score (cosine similarity)
+          let dotProduct = 0
+          let prefMagnitude = 0
+          let storyMagnitude = 0
+
+          Object.keys(preference).forEach(k => {
+            const prefVal = preference[k as keyof typeof preference]
+            const storyVal = storyDimAvg[k as keyof typeof storyDimAvg] || 0
+            if (prefVal > 0 && storyVal > 0) {
+              dotProduct += prefVal * storyVal
+              prefMagnitude += prefVal * prefVal
+              storyMagnitude += storyVal * storyVal
+            }
+          })
+
+          const magnitude = Math.sqrt(prefMagnitude) * Math.sqrt(storyMagnitude)
+          const similarity = magnitude > 0 ? dotProduct / magnitude : 0
+
+          // Find strongest dimension of this story
+          const storyDims = Object.entries(storyDimAvg)
+            .filter(([_, v]) => v !== null)
+            .sort((a, b) => (b[1] as number) - (a[1] as number))
+
+          const topDim = storyDims[0]?.[0] || null
+          const dimNames = { character: '角色塑造', location: '场景描写', object: '物品细节', emotion: '情感表达', plot: '情节设计' }
+
+          return {
+            id: story.id,
+            sessionId: story.sessionId,
+            storyTitle: story.storyTitle,
+            storySnippet: story.storySnippet,
+            nickname: story.isAnonymous ? '匿名用户' : story.nickname,
+            likeCount: story.likeCount,
+            commentCount: story.commentCount,
+            createdAt: story.createdAt,
+            score: similarity,
+            reason: topDim ? `匹配你的${dimNames[topDim as keyof typeof dimNames]}偏好` : '猜你喜欢'
+          }
+        })
+        .filter(s => s !== null && s.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+
+      return {
+        success: true,
+        recommendations: scoredStories,
+        hasPreferences: true
+      }
+    } catch (err) {
+      console.error('Failed to generate recommendations:', err)
+      return res.status(500).send({ success: false, reason: '服务器错误' })
+    }
+  })
 }
 
 function calculateAvg(feedbacks, field) {

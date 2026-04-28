@@ -641,5 +641,29 @@ export const storyFeedbackApi = {
     const res = await fetchWithTimeout(`${API_BASE}/story-feedback/analytics`)
     if (!res.ok) throw new Error(`获取分析失败: ${res.status}`)
     return res.json()
+  },
+
+  // Get personalized recommendations
+  async getRecommendations(openid: string): Promise<{
+    success: boolean
+    recommendations: Array<{
+      id: string
+      sessionId: string
+      storyTitle: string
+      storySnippet: string
+      nickname: string
+      likeCount: number
+      commentCount: number
+      createdAt: string
+      score: number
+      reason: string
+    }>
+    hasPreferences: boolean
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/story-feedback/recommendations?openid=${openid}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取推荐失败: ${res.status}`)
+    return res.json()
   }
 }
