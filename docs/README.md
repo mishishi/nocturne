@@ -12,6 +12,7 @@
 | 好友 | [friend.md](./friend.md) | 好友关系、搜索、请求管理 |
 | 梦墙 | [wall.md](./wall.md) | 故事广场、点赞、评论 |
 | 故事反馈 | [storyFeedback.md](./storyFeedback.md) | 故事评分、个性化推荐 |
+| 通知 | [notifications.md](./notifications.md) | 通知中心、点赞、评论、好友请求 |
 
 ---
 
@@ -22,6 +23,7 @@
 | 2026-04-27 | 完成 auth.md、session.md、share.md、friend.md 文档 |
 | 2026-04-27 | 完成 wall.md 文档 |
 | 2026-04-28 | 完成 storyFeedback.md 文档 |
+| 2026-04-28 | 完成 notifications.md 文档 |
 
 ---
 
@@ -94,6 +96,15 @@
 | `/api/story-feedback/:sessionId/check` | GET | 检查是否已提交 | 否 |
 | `/api/story-feedback/analytics` | GET | AI 质量分析 | 否 |
 | `/api/story-feedback/recommendations` | GET | 个性化推荐 | **是** |
+
+### 通知相关
+
+| 端点 | 方法 | 功能 | 需要认证 |
+|------|------|------|----------|
+| `/api/notifications` | GET | 获取通知列表 | **是** |
+| `/api/notifications/unread-count` | GET | 获取未读数 | **是** |
+| `/api/notifications/mark-read` | POST | 全部已读 | **是** |
+| `/api/notifications/:notificationId/read` | POST | 单条已读 | **是** |
 
 ---
 
