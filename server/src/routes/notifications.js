@@ -43,12 +43,20 @@ export default async function notificationRoutes(fastify) {
         }
       })
 
-      // Calculate unreadCount (createdAt > lastViewedNotificationsAt)
+      // Get user's lastViewedNotificationsAt
+      const user = await prisma.user.findUnique({
+        where: { openid: tokenUser.openid },
+        select: { lastViewedNotificationsAt: true }
+      })
+
+      // Count notifications where createdAt > lastViewedNotificationsAt
       const unreadCount = await prisma.notification.count({
         where: {
           openid: tokenUser.openid,
-          isRead: false,
-          createdAt: { gte: thirtyDaysAgo }
+          createdAt: {
+            gte: thirtyDaysAgo,
+            ...(user.lastViewedNotificationsAt ? { gt: user.lastViewedNotificationsAt } : {})
+          }
         }
       })
 
@@ -95,12 +103,20 @@ export default async function notificationRoutes(fastify) {
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-      // Count unread notifications
+      // Get user's lastViewedNotificationsAt
+      const user = await prisma.user.findUnique({
+        where: { openid: tokenUser.openid },
+        select: { lastViewedNotificationsAt: true }
+      })
+
+      // Count notifications where createdAt > lastViewedNotificationsAt
       const unreadCount = await prisma.notification.count({
         where: {
           openid: tokenUser.openid,
-          isRead: false,
-          createdAt: { gte: thirtyDaysAgo }
+          createdAt: {
+            gte: thirtyDaysAgo,
+            ...(user.lastViewedNotificationsAt ? { gt: user.lastViewedNotificationsAt } : {})
+          }
         }
       })
 
