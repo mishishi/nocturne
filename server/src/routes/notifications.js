@@ -2,6 +2,8 @@ import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+
 export default async function notificationRoutes(fastify) {
   // GET /api/notifications - 获取通知列表 (需登录)
   fastify.get('/notifications', {
@@ -21,44 +23,43 @@ export default async function notificationRoutes(fastify) {
       }
 
       // Calculate date 30 days ago
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS)
 
-      // Query notifications where openid = current user AND createdAt > 30 days ago
       const skip = (pageNum - 1) * limitNum
-      const notifications = await prisma.notification.findMany({
-        where: {
-          openid: tokenUser.openid,
-          createdAt: { gte: thirtyDaysAgo }
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limitNum
-      })
 
-      const total = await prisma.notification.count({
-        where: {
-          openid: tokenUser.openid,
-          createdAt: { gte: thirtyDaysAgo }
-        }
-      })
-
-      // Get user's lastViewedNotificationsAt
+      // Get user's lastViewedNotificationsAt first (needed for unreadCount)
       const user = await prisma.user.findUnique({
         where: { openid: tokenUser.openid },
         select: { lastViewedNotificationsAt: true }
       })
 
-      // Count notifications where createdAt > lastViewedNotificationsAt
-      const unreadCount = await prisma.notification.count({
-        where: {
-          openid: tokenUser.openid,
-          createdAt: {
-            gte: thirtyDaysAgo,
-            ...(user.lastViewedNotificationsAt ? { gt: user.lastViewedNotificationsAt } : {})
+      // Execute remaining queries in parallel
+      const [notifications, total, unreadCount] = await Promise.all([
+        prisma.notification.findMany({
+          where: {
+            openid: tokenUser.openid,
+            createdAt: { gte: thirtyDaysAgo }
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limitNum
+        }),
+        prisma.notification.count({
+          where: {
+            openid: tokenUser.openid,
+            createdAt: { gte: thirtyDaysAgo }
           }
-        }
-      })
+        }),
+        prisma.notification.count({
+          where: {
+            openid: tokenUser.openid,
+            createdAt: {
+              gte: thirtyDaysAgo,
+              ...(user?.lastViewedNotificationsAt ? { gt: user.lastViewedNotificationsAt } : {})
+            }
+          }
+        })
+      ])
 
       return res.status(200).send({
         success: true,
@@ -100,8 +101,7 @@ export default async function notificationRoutes(fastify) {
       }
 
       // Calculate date 30 days ago
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS)
 
       // Get user's lastViewedNotificationsAt
       const user = await prisma.user.findUnique({
