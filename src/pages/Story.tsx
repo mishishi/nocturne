@@ -12,7 +12,6 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamInterpretationModal, DreamInterpretationLoadingModal } from '../components/DreamInterpretationModal'
 import { DreamIllustration } from '../components/DreamIllustration'
 import { StoryFeedbackForm } from '../components/StoryFeedbackForm'
-import { StoryCommentList } from '../components/StoryCommentList'
 import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
 import { CommentThread } from '../components/CommentThread'
 import { shareApi, api, wallApi } from '../services/api'
@@ -698,11 +697,6 @@ export function Story() {
             {dreamText}
           </div>
         </details>
-
-        {/* Comments - visible to all users from Dream Wall or History */}
-        {(fromDreamWall || fromHistory) && (
-          <StoryCommentList sessionId={sessionId} />
-        )}
 
         {/* Nested Comment Thread - for Dream Wall posts */}
         {fromDreamWall && wallContext.postId && (
