@@ -204,7 +204,8 @@ export function DreamWall() {
         fromDreamWall: true,
         sessionId: post.sessionId,
         storyTitle: post.storyTitle,
-        storyFull: post.storyFull || null
+        storyFull: post.storyFull || null,
+        authorOpenid: post.openid
       }
     })
   }
