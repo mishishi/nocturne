@@ -378,7 +378,7 @@ export default async function dreamWallRoutes(fastify) {
     }
   }, async (req, res) => {
     const { postId } = req.params
-    const { openid, content, isAnonymous = true } = req.body
+    const { openid, content, isAnonymous = true, parentId } = req.body
 
     if (!openid || !content) {
       return res.status(400).send({ success: false, reason: '缺少必要参数' })
@@ -402,6 +402,26 @@ export default async function dreamWallRoutes(fastify) {
       return res.status(404).send({ success: false, reason: '帖子不存在' })
     }
 
+    // If parentId is provided, validate it
+    if (parentId) {
+      const parentComment = await prisma.dreamWallComment.findUnique({
+        where: { id: parentId }
+      })
+
+      if (!parentComment) {
+        return res.status(404).send({ success: false, reason: '父评论不存在' })
+      }
+
+      if (parentComment.wallId !== postId) {
+        return res.status(400).send({ success: false, reason: '父评论不属于该帖子' })
+      }
+
+      // Max 2 levels: parent must not be a reply itself
+      if (parentComment.parentId !== null) {
+        return res.status(400).send({ success: false, reason: '不能回复二级评论' })
+      }
+    }
+
     // Get user info
     const user = await prisma.user.findUnique({
       where: { openid }
@@ -415,7 +435,8 @@ export default async function dreamWallRoutes(fastify) {
           nickname: user?.nickname || '匿名用户',
           avatar: user?.avatar,
           content,
-          isAnonymous
+          isAnonymous,
+          parentId: parentId || null
         }
       }),
       prisma.dreamWall.update({
@@ -432,7 +453,9 @@ export default async function dreamWallRoutes(fastify) {
         isAnonymous: comment.isAnonymous,
         nickname: comment.isAnonymous ? '匿名用户' : comment.nickname,
         avatar: comment.isAnonymous ? null : comment.avatar,
-        createdAt: comment.createdAt
+        parentId: comment.parentId,
+        createdAt: comment.createdAt,
+        replies: []
       }
     }
   })
