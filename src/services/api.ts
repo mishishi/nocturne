@@ -759,3 +759,59 @@ export const storyFeedbackApi = {
     return res.json()
   }
 }
+
+// Notification API
+export const notificationApi = {
+  // Get notification list
+  async getNotifications(page = 1, limit = 20): Promise<{
+    success: boolean
+    notifications: Array<{
+      id: string
+      type: string
+      title: string
+      content: string
+      data?: Record<string, unknown>
+      isRead: boolean
+      createdAt: string
+    }>
+    unreadCount: number
+    pagination: { page: number; limit: number; total: number; hasMore: boolean }
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/notifications?page=${page}&limit=${limit}`, {
+      method: 'GET',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取通知列表失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get unread count
+  async getUnreadCount(): Promise<{ success: boolean; unreadCount: number }> {
+    const res = await fetchWithTimeout(`${API_BASE}/notifications/unread-count`, {
+      method: 'GET',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取未读数失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Mark all as read
+  async markAllRead(): Promise<{ success: boolean }> {
+    const res = await fetchWithTimeout(`${API_BASE}/notifications/mark-read`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`标记已读失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Mark single notification as read
+  async markOneRead(notificationId: string): Promise<{ success: boolean }> {
+    const res = await fetchWithTimeout(`${API_BASE}/notifications/${notificationId}/read`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`标记已读失败: ${res.status}`)
+    return res.json()
+  }
+}
