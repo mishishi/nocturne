@@ -100,21 +100,6 @@ export function Story() {
     }
   }, [fromHistory, fromDreamWall])
 
-  // Show loading state while fetching story from Dream Wall
-  if (isLoadingDreamWallStory) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.container} style={{ textAlign: 'center', paddingTop: '100px' }}>
-          <div className={styles.revealLoaderMoon} style={{ margin: '0 auto 24px' }}>
-            <div className={styles.revealLoaderMoonCore} />
-            <div className={styles.revealLoaderMoonGlow} />
-          </div>
-          <p style={{ color: 'var(--color-silver)' }}>加载中...</p>
-        </div>
-      </div>
-    )
-  }
-
   // Track reading progress
   useEffect(() => {
     const handleScroll = () => {
@@ -237,7 +222,6 @@ export function Story() {
 
     // If storyFull is already available in wallContext, use it directly - no need to fetch
     if (fromDreamWall && storyFull) {
-      console.log('[DreamWall] Using storyFull from state directly')
       setDreamWallStory(storyFull)
       setIsLoadingDreamWallStory(false)
       return
@@ -245,23 +229,17 @@ export function Story() {
 
     // If from Dream Wall but no storyFull yet, or coming from notifications (direct URL):
     // fetch from API using targetSessionId
-    console.log('[Story] Fetching story for sessionId:', targetSessionId, 'fromDreamWall:', fromDreamWall)
     setIsLoadingDreamWallStory(true)
     let cancelled = false
 
     const fetchFullStory = async () => {
       try {
         const result = await api.getStory(targetSessionId)
-        console.log('[Story] Fetch result:', result)
         if (!cancelled) {
           if (result.story) {
             setDreamWallStory(result.story.content)
           }
           setIsLoadingDreamWallStory(false)
-          // If no story found after fetch, redirect
-          if (!result.story) {
-            console.log('[Story] No story found for sessionId:', targetSessionId)
-          }
         }
       } catch (err) {
         console.error('[Story] Failed to fetch story:', err)
@@ -289,14 +267,11 @@ export function Story() {
     // If coming from Dream Wall, wait for story to load before deciding
     if (fromDreamWall && sessionId) {
       if (isLoadingDreamWallStory) {
-        console.log('[Redirect] Still loading, skipping redirect')
         return // Still loading, don't redirect
       }
       // Check if we have the story
       const hasStory = wallContext.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
-      console.log('[Redirect] Loading done, story:', hasStory ? 'exists' : 'null')
       if (!hasStory) {
-        console.log('[Redirect] Navigating to /dream')
         navigate('/dream') // Loading done but no story, redirect
       }
       return
@@ -305,14 +280,11 @@ export function Story() {
     // Direct URL access (e.g., from notifications) - also wait for loading
     if (urlSessionId) {
       if (isLoadingDreamWallStory) {
-        console.log('[Redirect] URL access still loading, skipping redirect')
         return // Still loading, don't redirect
       }
       // Loading done, check if we have story
       const hasStory = dreamWallStory || wallContext.storyFull || currentSession.story
-      console.log('[Redirect] URL access loading done, story:', hasStory ? 'exists' : 'null')
       if (!hasStory) {
-        console.log('[Redirect] No story found, navigating to /dream')
         navigate('/dream')
       }
       return
@@ -345,8 +317,6 @@ export function Story() {
     const openid = currentUserOpenid
     setShowShareMenu(false)
 
-    console.log('[DEBUG handleShareToWeChat] isAuthor:', isAuthor, 'openid:', openid, 'fromDreamWall:', fromDreamWall)
-
     if (!isAuthor || !openid) {
       // Non-authors just get feedback without reward
       setToastType('info')
@@ -367,7 +337,6 @@ export function Story() {
         return
       }
     } catch (err) {
-      console.log('[DEBUG getStats error]:', err)
       // If stats check fails, proceed anyway - the actual share will be rejected if limit exceeded
     }
 
@@ -630,7 +599,7 @@ export function Story() {
     }
   }
 
-  if (!story) {
+  if (!story && !isLoadingDreamWallStory) {
     return (
       <div className={styles.page}>
         <div className={styles.container}>

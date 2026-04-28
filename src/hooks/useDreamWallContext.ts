@@ -33,7 +33,9 @@ export function useDreamWallContext(): DreamWallContext {
     if (typeof window !== 'undefined') {
       try {
         const raw = sessionStorage.getItem(CONTEXT_KEY)
-        if (raw) return JSON.parse(raw)
+        if (raw) {
+          return JSON.parse(raw)
+        }
       } catch { /* ignore */ }
     }
 
