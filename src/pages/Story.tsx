@@ -982,7 +982,7 @@ export function Story() {
       </div>
 
       {/* Story Feedback Form */}
-      <StoryFeedbackForm sessionId={sessionId} />
+      <StoryFeedbackForm sessionId={sessionId} isAuthor={isAuthor} />
 
       {/* Toast */}
       <Toast message={toastMessage} visible={toastVisible} onClose={handleToastClose} type={toastType} />

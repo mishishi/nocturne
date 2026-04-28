@@ -7,7 +7,7 @@ import styles from './StoryFeedbackForm.module.css'
 
 interface StoryFeedbackFormProps {
   sessionId: string
-  openid?: string
+  isAuthor?: boolean
 }
 
 interface ElementRatings {
@@ -73,7 +73,7 @@ function StarRating({ value, onChange, hoverValue, onHover, readOnly = false }: 
   )
 }
 
-export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps) {
+export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedbackFormProps) {
   const { user } = useDreamStore()
   const isLoggedIn = !!user?.openid
 
@@ -246,7 +246,7 @@ export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps)
   const isNearLimit = charCount >= 160
   const isAtLimit = charCount >= 200
 
-  if (!hasCheckedStorage || !isLoggedIn) {
+  if (!hasCheckedStorage || !isLoggedIn || !isAuthor) {
     return null
   }
 
