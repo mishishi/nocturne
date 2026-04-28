@@ -1,9 +1,26 @@
 import { prisma } from '../config/database.js'
+import { authService } from '../services/authService.js'
+import { authMiddleware } from '../middleware/auth.js'
 
 export default async function storyFeedbackRoutes(fastify) {
-  // POST /api/story-feedback - 提交故事反馈
-  fastify.post('/story-feedback', async (req, res) => {
+  // POST /api/story-feedback - 提交故事反馈 (需登录)
+  fastify.post('/story-feedback', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
     const { sessionId, openid, overallRating, elementRatings, comment } = req.body
+
+    // Get authenticated user
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
+    }
+
+    // If openid is provided, verify it matches the authenticated user
+    if (openid && openid !== tokenUser.openid) {
+      return res.status(403).send({ success: false, reason: '无权为他人提交反馈' })
+    }
 
     // Validate required fields
     if (!sessionId) {
@@ -56,8 +73,8 @@ export default async function storyFeedbackRoutes(fastify) {
       return res.status(409).send({ success: false, reason: '该故事已提交过反馈' })
     }
 
-    // Determine openid: use provided openid or fall back to session's openid
-    const feedbackOpenid = openid || session.openid
+    // Use authenticated user's openid (already verified above)
+    const feedbackOpenid = tokenUser.openid
 
     // Create feedback
     const feedback = await prisma.storyFeedback.create({
