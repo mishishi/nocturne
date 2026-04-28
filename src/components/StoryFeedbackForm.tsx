@@ -146,7 +146,7 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
       if (user?.openid) {
         try {
           const result = await storyFeedbackApi.check(sessionId, user.openid)
-          if (result.hasSubmitted) {
+          if (result.hasSubmitted && result.feedback) {
             // Update localStorage with server state
             setSessionFeedback(sessionId, {
               status: 'submitted',
@@ -222,7 +222,7 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
           try {
             const result = await storyFeedbackApi.check(sessionId, user.openid)
             if (cancelled) return
-            if (result.hasSubmitted) {
+            if (result.hasSubmitted && result.feedback) {
               setSessionFeedback(sessionId, {
                 status: 'submitted',
                 timestamp: new Date(result.feedback.createdAt).getTime()
@@ -264,6 +264,13 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
     if (overallRating === 0) {
       setToastMessage('请选择总体评分')
       setToastVisible(true)
+      return
+    }
+
+    if (!user?.openid) {
+      setToastMessage('请先登录')
+      setToastVisible(true)
+      setIsSubmitting(false)
       return
     }
 

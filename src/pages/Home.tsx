@@ -237,7 +237,7 @@ function AchievementHint({ history }: AchievementHintProps) {
           if (count < 10) {
             return {
               icon: achievement.icon,
-              text: `再收藏 ${10 - count} 个故事解锁「${achievement.title}」`,
+              text: `再保存 ${10 - count} 个故事解锁「${achievement.title}」`,
               progress: count / 10
             }
           }

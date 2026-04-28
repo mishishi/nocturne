@@ -41,7 +41,7 @@ export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
       case 'story_collector': {
         const count = history.length
         if (count < 10) {
-          return { current: count, target: 10, text: `已收藏 ${count}/10 个故事` }
+          return { current: count, target: 10, text: `已保存 ${count}/10 个故事` }
         }
         return null
       }

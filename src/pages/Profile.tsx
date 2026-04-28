@@ -233,7 +233,7 @@ export function Profile() {
                 }
                 if (achievement.id === 'story_collector') {
                   const remaining = 10 - history.length
-                  return remaining > 0 ? `再收藏 ${remaining} 个故事` : null
+                  return remaining > 0 ? `再保存 ${remaining} 个故事` : null
                 }
                 return null
               }

@@ -22,10 +22,20 @@ export function FriendRequestButton({ friendOpenid }: FriendRequestButtonProps) 
       if (result.success) {
         setState('sent')
       } else {
+        // 处理已存在的好友请求（后端返回"好友请求已存在"）
+        if (result.reason === '好友请求已存在' || result.reason === '已经是好友') {
+          setState('sent') // 显示为已发送状态
+        } else {
+          setState('error')
+        }
+      }
+    } catch (err: any) {
+      // 处理已存在的好友请求（网络错误中包含此信息）
+      if (err?.message?.includes('好友请求已存在') || err?.message?.includes('已经是好友')) {
+        setState('sent')
+      } else {
         setState('error')
       }
-    } catch (err) {
-      setState('error')
     }
   }
 

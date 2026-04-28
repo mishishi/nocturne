@@ -89,10 +89,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'story_collector',
-    title: '故事收藏家',
+    title: '故事鉴赏家',
     description: '保存10个故事',
     icon: '📚',
-    hint: '收藏更多故事以解锁'
+    hint: '保存更多故事以解锁'
   }
 ]
 

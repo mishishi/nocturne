@@ -673,8 +673,8 @@ export function History() {
                         <button
                           className={`${styles.actionBtn} ${item.isFavorite ? styles.favoriteActive : ''}`}
                           onClick={() => handleToggleFavorite(item.id!)}
-                          aria-label={item.isFavorite ? '取消收藏' : '收藏'}
-                          title={item.isFavorite ? '取消收藏' : '收藏'}
+                          aria-label={item.isFavorite ? '取消保存' : '保存'}
+                          title={item.isFavorite ? '取消保存' : '保存'}
                         >
                           <svg viewBox="0 0 24 24" fill={item.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />

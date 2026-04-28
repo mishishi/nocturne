@@ -29,7 +29,7 @@ export function PersonalizedRecommendations() {
 
     async function load() {
       try {
-        const result = await storyFeedbackApi.getRecommendations(openid)
+        const result = await storyFeedbackApi.getRecommendations(openid!)
         if (result.success) {
           setRecommendations(result.recommendations)
         }

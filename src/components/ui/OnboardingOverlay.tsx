@@ -27,7 +27,6 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   const [showContent, setShowContent] = useState(false)
   const [moonPhase, setMoonPhase] = useState<' exhale' | 'inhale'>(' exhale')
   const [isVisible, setIsVisible] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isTransitioningRef = useRef(false)
 
   // Breathing moon animation

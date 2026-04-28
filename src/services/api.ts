@@ -488,6 +488,8 @@ export interface DreamWallPost {
   commentCount: number
   isFeatured: boolean
   hasLiked?: boolean
+  isFavorite?: boolean
+  isFriend?: boolean
   createdAt: string
   // Featured algorithm fields (only populated when tab=featured)
   engagementScore?: number
@@ -509,13 +511,15 @@ export const wallApi = {
     page?: number
     limit?: number
     keyword?: string
+    openid?: string
   }): Promise<{
     posts: DreamWallPost[]
     pagination: { page: number; limit: number; total: number; hasMore: boolean }
   }> {
-    const { tab = 'all', page = 1, limit = 20, keyword } = params
+    const { tab = 'all', page = 1, limit = 20, keyword, openid } = params
     const queryParams = new URLSearchParams({ tab, page: String(page), limit: String(limit) })
     if (keyword) queryParams.set('keyword', keyword)
+    if (openid) queryParams.set('openid', openid)
     const res = await fetchWithTimeout(`${API_BASE}/wall?${queryParams}`)
     if (!res.ok) throw new Error(`获取梦墙失败: ${res.status}`)
     return res.json()
@@ -585,6 +589,33 @@ export const wallApi = {
       body: JSON.stringify({ openid })
     })
     if (!res.ok) throw new Error(`点赞失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Toggle favorite (需登录)
+  async toggleFavorite(postId: string, openid: string): Promise<{ success: boolean; favorited: boolean }> {
+    const res = await fetchWithTimeout(`${API_BASE}/wall/${postId}/favorite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ openid })
+    })
+    if (!res.ok) throw new Error(`收藏失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get favorites (需登录)
+  async getFavorites(params: {
+    page?: number
+    limit?: number
+  }): Promise<{
+    posts: DreamWallPost[]
+    pagination: { page: number; limit: number; total: number; hasMore: boolean }
+  }> {
+    const { page = 1, limit = 20 } = params
+    const res = await fetchWithTimeout(`${API_BASE}/wall/favorites?page=${page}&limit=${limit}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取收藏列表失败: ${res.status}`)
     return res.json()
   },
 

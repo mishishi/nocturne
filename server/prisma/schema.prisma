@@ -35,6 +35,7 @@ model User {
   dreamWallPosts   DreamWall[] @relation("WallPosts")
   dreamWallLikes   DreamWallLike[]
   dreamWallComments DreamWallComment[]
+  dreamWallFavorites DreamWallFavorite[]
   notificationsFrom Notification[] @relation("NotificationFrom")
   checkIns      CheckIn[]
 }
@@ -146,6 +147,7 @@ model DreamWall {
   session      Session?  @relation(fields: [sessionId], references: [id])
   likes        DreamWallLike[]
   comments     DreamWallComment[]
+  favorites    DreamWallFavorite[]
 
   @@index([openid])
   @@index([status, visibility])
@@ -184,6 +186,19 @@ model DreamWallComment {
 
   @@index([wallId])
   @@index([parentId])
+}
+
+model DreamWallFavorite {
+  id        String   @id @default(cuid())
+  wallId    String
+  openid    String
+  createdAt DateTime @default(now())
+
+  wall      DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [openid], references: [openid])
+
+  @@unique([wallId, openid])
+  @@index([wallId])
 }
 
 model StoryFeedback {
@@ -226,7 +241,7 @@ model Notification {
   @@index([expiresAt])
 }
 
-model Message {
+model PrivateMessage {
   id          String   @id @default(cuid())
   fromOpenid  String
   toOpenid    String

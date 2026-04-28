@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { messageApi, Conversation, Message, friendApi, FriendListItem } from '../services/api'
 import { ChatBubble } from '../components/ChatBubble'
-import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { Toast } from '../components/ui/Toast'
 import styles from './Chat.module.css'
 
 export function Chat() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialFriendOpenid = searchParams.get('openid')
 
@@ -23,6 +24,7 @@ export function Chat() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
+  const [mobileChatOpen, setMobileChatOpen] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -80,13 +82,13 @@ export function Chat() {
       await Promise.all([loadConversations(), loadFriends()])
 
       if (initialFriendOpenid) {
-        // Find friend info from conversations or friends list
         const friend = conversations.find(c => c.friendOpenid === initialFriendOpenid)?.friendNickname
           || friends.find(f => f.openid === initialFriendOpenid)?.nickname
         if (friend) {
           setSelectedFriend({ nickname: friend })
         }
         await loadMessages(initialFriendOpenid)
+        setMobileChatOpen(true)
       }
 
       setLoading(false)
@@ -100,8 +102,8 @@ export function Chat() {
       const conv = conversations.find(c => c.friendOpenid === selectedFriendOpenid)
       if (conv) {
         setSelectedFriend({
-          nickname: conv.friendNickname,
-          avatar: conv.friendAvatar
+          nickname: conv.friendNickname ?? undefined,
+          avatar: conv.friendAvatar ?? undefined
         })
       }
     }
@@ -117,17 +119,14 @@ export function Chat() {
   // Mark messages as read when viewing
   useEffect(() => {
     if (selectedFriendOpenid && messages.length > 0) {
-      // Mark unread messages from this friend as read
       messages
         .filter(m => !m.isMine && !m.isRead)
         .forEach(m => {
           messageApi.markRead(m.id).catch(console.error)
         })
-      // Update local state
       setMessages(prev =>
         prev.map(m => (m.fromOpenid === selectedFriendOpenid ? { ...m, isRead: true } : m))
       )
-      // Update conversation unread count
       setConversations(prev =>
         prev.map(c =>
           c.friendOpenid === selectedFriendOpenid ? { ...c, unreadCount: 0 } : c
@@ -142,6 +141,13 @@ export function Chat() {
     setPage(1)
     setMessages([])
     loadMessages(friendOpenid, 1)
+    setMobileChatOpen(true)
+  }
+
+  const handleBackToList = () => {
+    setMobileChatOpen(false)
+    setSelectedFriendOpenid(null)
+    setSearchParams({})
   }
 
   const handleSend = async () => {
@@ -154,7 +160,6 @@ export function Chat() {
         setMessages(prev => [...prev, result.message])
         setInputText('')
         inputRef.current?.focus()
-        // Refresh conversations to update last message
         loadConversations()
       }
     } catch (err) {
@@ -211,13 +216,28 @@ export function Chat() {
     }
   })
 
+  const breadcrumbItems = selectedFriend
+    ? [
+        { label: '首页', href: '/' },
+        { label: '消息', href: '/chat' },
+        { label: selectedFriend.nickname || '匿名旅人' }
+      ]
+    : [
+        { label: '首页', href: '/' },
+        { label: '消息' }
+      ]
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        {/* Conversation List (Left Column) */}
-        <aside className={styles.sidebar}>
+        <Breadcrumb items={breadcrumbItems} />
+
+        {/* Chat Container - Two Column Layout */}
+        <div className={styles.chatContainer}>
+          {/* Conversation List (Left Column) */}
+          <aside className={`${styles.sidebar} ${mobileChatOpen ? styles.hiddenOnMobile : ''}`}>
           <header className={styles.sidebarHeader}>
-            <h1 className={styles.title}>消息</h1>
+            <h1 className={styles.sidebarTitle}>消息</h1>
           </header>
 
           <div className={styles.contactList}>
@@ -229,6 +249,7 @@ export function Chat() {
             ) : allContacts.length === 0 ? (
               <div className={styles.empty}>
                 <p>暂无消息</p>
+                <p style={{ fontSize: '12px', marginTop: '8px' }}>去添加好友开始聊天吧</p>
               </div>
             ) : (
               allContacts.map(contact => (
@@ -277,14 +298,40 @@ export function Chat() {
         </aside>
 
         {/* Chat Window (Right Column) */}
-        <main className={styles.chatWindow}>
+        <main className={`${styles.chatWindow} ${mobileChatOpen ? styles.mobileOpen : ''}`}>
           {selectedFriendOpenid ? (
             <>
               {/* Chat Header */}
               <header className={styles.chatHeader}>
-                <span className={styles.chatTitle}>
-                  {selectedFriend?.nickname || '匿名旅人'}
-                </span>
+                <button className={styles.backButton} onClick={handleBackToList}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <div className={styles.chatHeaderAvatar}>
+                  {selectedFriend?.avatar ? (
+                    <img src={selectedFriend.avatar} alt={selectedFriend.nickname || ''} />
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  )}
+                </div>
+                <div className={styles.chatHeaderInfo}>
+                  <span className={styles.chatTitle}>
+                    {selectedFriend?.nickname || '匿名旅人'}
+                  </span>
+                </div>
+                <button
+                  className={styles.chatHeaderAction}
+                  onClick={() => navigate(`/friend/${selectedFriendOpenid}`)}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </button>
               </header>
 
               {/* Messages */}
@@ -343,6 +390,7 @@ export function Chat() {
             </div>
           )}
         </main>
+        </div>
       </div>
 
       <Toast

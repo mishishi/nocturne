@@ -37,8 +37,6 @@ describe('useDreamStore - History Deduplication', () => {
 
   describe('addToHistory', () => {
     it('should add a new session to history', () => {
-      const store = useDreamStore.getState()
-
       // Set up current session
       useDreamStore.setState({
         currentSession: {
@@ -130,8 +128,6 @@ describe('useDreamStore - History Deduplication', () => {
     })
 
     it('should generate unique local IDs for new sessions', () => {
-      const store = useDreamStore.getState()
-
       useDreamStore.setState({
         currentSession: {
           sessionId: 'session_001',

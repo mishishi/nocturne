@@ -308,7 +308,7 @@ export function Dream() {
     } catch (err) {
       setStep('elements')
       const error = err as { response?: { data?: { error?: string } }; message?: string }
-      const isNetError = error.message?.includes('network') || error.message?.includes('fetch')
+      const isNetError = !!(error.message?.includes('network') || error.message?.includes('fetch'))
       setIsNetworkError(isNetError)
       if (error.response?.data?.error) {
         setError(error.response.data.error)

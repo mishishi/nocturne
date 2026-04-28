@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { useDreamWallContext, storeDreamWallContext, clearDreamWallContext } from './useDreamWallContext'
-import React from 'react'
 
 // Mock useLocation
 const mockLocation = {
@@ -37,7 +36,7 @@ describe('useDreamWallContext', () => {
       storeDreamWallContext(ctx)
       const stored = sessionStorage.getItem('dreamwall_context')
       expect(stored).toBeTruthy()
-      expect(JSON.parse(stored)).toEqual(ctx)
+      expect(JSON.parse(stored!)).toEqual(ctx)
     })
   })
 

@@ -183,7 +183,7 @@ export function Questions() {
     setLoading(false)
     setShowReveal(false)
     setStoryReady(false)
-    navigate('/story')
+    navigate(`/story/${sessionId}`)
   }
 
   if (!currentQuestion) {

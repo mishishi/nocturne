@@ -47,7 +47,7 @@ export default async function messageRoutes(fastify) {
       const conversations = await Promise.all(
         friendships.map(async (f) => {
           // Get latest message with this friend
-          const latestMessage = await prisma.message.findFirst({
+          const latestMessage = await prisma.privateMessage.findFirst({
             where: {
               OR: [
                 { fromOpenid: tokenUser.openid, toOpenid: f.friend.openid },
@@ -58,7 +58,7 @@ export default async function messageRoutes(fastify) {
           })
 
           // Count unread messages from this friend
-          const unreadCount = await prisma.message.count({
+          const unreadCount = await prisma.privateMessage.count({
             where: {
               fromOpenid: f.friend.openid,
               toOpenid: tokenUser.openid,
@@ -132,7 +132,7 @@ export default async function messageRoutes(fastify) {
       const skip = (parseInt(page) - 1) * parseInt(limit)
 
       // Get messages between the two users, ordered by createdAt desc (newest first for loading)
-      const messages = await prisma.message.findMany({
+      const messages = await prisma.privateMessage.findMany({
         where: {
           OR: [
             { fromOpenid: tokenUser.openid, toOpenid: friendOpenid },
@@ -147,7 +147,7 @@ export default async function messageRoutes(fastify) {
       // Reverse to show oldest first in UI
       messages.reverse()
 
-      const total = await prisma.message.count({
+      const total = await prisma.privateMessage.count({
         where: {
           OR: [
             { fromOpenid: tokenUser.openid, toOpenid: friendOpenid },
@@ -223,7 +223,7 @@ export default async function messageRoutes(fastify) {
       }
 
       // Create message
-      const message = await prisma.message.create({
+      const message = await prisma.privateMessage.create({
         data: {
           fromOpenid: tokenUser.openid,
           toOpenid,
@@ -264,7 +264,7 @@ export default async function messageRoutes(fastify) {
       }
 
       // Find the message
-      const message = await prisma.message.findUnique({
+      const message = await prisma.privateMessage.findUnique({
         where: { id: messageId }
       })
 
@@ -278,7 +278,7 @@ export default async function messageRoutes(fastify) {
       }
 
       // Mark as read
-      await prisma.message.update({
+      await prisma.privateMessage.update({
         where: { id: messageId },
         data: { isRead: true }
       })

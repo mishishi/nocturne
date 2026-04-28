@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock fetch
 const mockFetch = vi.fn()
-global.fetch = mockFetch
+globalThis.fetch = mockFetch
 
 // Mock localStorage  
 const localStorageMock = {
@@ -329,8 +329,8 @@ describe('api', () => {
       // Mock URL.createObjectURL and document.createElement
       const mockUrl = { revokeObjectURL: vi.fn() }
       const mockLink = { click: vi.fn(), href: '', download: '' }
-      global.URL.createObjectURL = vi.fn(() => 'blob:test')
-      global.URL.revokeObjectURL = mockUrl.revokeObjectURL
+      globalThis.URL.createObjectURL = vi.fn(() => 'blob:test')
+      globalThis.URL.revokeObjectURL = mockUrl.revokeObjectURL
       document.createElement = vi.fn(() => mockLink as unknown as HTMLAnchorElement)
       document.body.appendChild = vi.fn()
       document.body.removeChild = vi.fn()

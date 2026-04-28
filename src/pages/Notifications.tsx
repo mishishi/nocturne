@@ -1,24 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { notificationApi } from '../services/api'
+import { notificationApi, Notification as ApiNotification } from '../services/api'
 import { Toast } from '../components/ui/Toast'
 import styles from './Notifications.module.css'
 
-interface Notification {
-  id: string
-  type: string
-  fromOpenid?: string
-  fromNickname?: string
-  targetId?: string
-  targetTitle?: string
-  message: string
-  isRead: boolean
-  createdAt: string
-}
-
 export function Notifications() {
   const navigate = useNavigate()
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [notifications, setNotifications] = useState<ApiNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -66,7 +54,7 @@ export function Notifications() {
     }
   }
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: ApiNotification) => {
     // Navigate based on type
     let path = '/'
     switch (notification.type) {
