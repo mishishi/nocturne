@@ -28,6 +28,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
   const [submitting, setSubmitting] = useState(false)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState('')
+  const [newComment, setNewComment] = useState('')
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -76,6 +77,38 @@ export function CommentThread({ postId }: CommentThreadProps) {
   const cancelReply = () => {
     setReplyingTo(null)
     setReplyContent('')
+  }
+
+  const submitNewComment = async () => {
+    if (!newComment.trim()) {
+      showToast('请输入评论内容', 'error')
+      return
+    }
+    if (!user?.openid) {
+      showToast('请先登录后再评论', 'error')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await wallApi.postComment(postId, {
+        openid: user.openid,
+        content: newComment.trim()
+      })
+      if (res.success) {
+        setNewComment('')
+        showToast('评论成功')
+        await loadComments()
+      } else {
+        const reason = (res as unknown as { reason?: string }).reason
+        showToast(reason || '评论失败，请稍后重试', 'error')
+      }
+    } catch (err) {
+      console.error('Failed to post comment:', err)
+      showToast('评论失败，请稍后重试', 'error')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const submitReply = async (parentId: string) => {
@@ -208,6 +241,36 @@ export function CommentThread({ postId }: CommentThreadProps) {
 
   return (
     <div className={styles.container}>
+      {/* New comment input */}
+      {user?.openid ? (
+        <div className={styles.newComment}>
+          <textarea
+            className={styles.textarea}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="写下你的评论..."
+            rows={3}
+            maxLength={500}
+          />
+          <div className={styles.newCommentActions}>
+            <span className={styles.charCount}>{newComment.length}/500</span>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={submitNewComment}
+              loading={submitting}
+              disabled={!newComment.trim()}
+            >
+              发布评论
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.loginPrompt}>
+          <span>登录后即可参与评论</span>
+        </div>
+      )}
+
       <div className={styles.commentsList}>
         {topLevelComments.length === 0 ? (
           <div className={styles.empty}>

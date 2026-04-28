@@ -2,6 +2,64 @@
   padding: 16px 0;
 }
 
+/* New comment input */
+.newComment {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(26, 58, 92, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(139, 157, 195, 0.15);
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px;
+  background: rgba(13, 27, 42, 0.6);
+  border: 1px solid rgba(139, 157, 195, 0.2);
+  border-radius: 8px;
+  color: var(--color-moonlight);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.textarea::placeholder {
+  color: rgba(139, 157, 195, 0.5);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-golden);
+  box-shadow: 0 0 0 3px rgba(244, 211, 94, 0.1);
+}
+
+.newCommentActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.charCount {
+  font-size: 12px;
+  color: var(--color-silver);
+  opacity: 0.7;
+}
+
+.loginPrompt {
+  margin-bottom: 20px;
+  padding: 16px;
+  text-align: center;
+  color: var(--color-silver);
+  font-size: 14px;
+  background: rgba(26, 58, 92, 0.2);
+  border-radius: 8px;
+  border: 1px dashed rgba(139, 157, 195, 0.2);
+}
+
 .commentsList {
   display: flex;
   flex-direction: column;
