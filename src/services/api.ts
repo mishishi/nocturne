@@ -619,6 +619,29 @@ export const storyFeedbackApi = {
     return res.json()
   },
 
+  // Check if user has submitted feedback for a session
+  async check(sessionId: string, openid: string): Promise<{
+    success: boolean
+    hasSubmitted: boolean
+    feedback: {
+      id: string
+      overallRating: number
+      elementRatings: {
+        character?: number
+        location?: number
+        object?: number
+        emotion?: number
+        plot?: number
+      }
+      comment?: string
+      createdAt: string
+    } | null
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/story-feedback/${sessionId}/check?openid=${encodeURIComponent(openid)}`)
+    if (!res.ok) throw new Error(`检查反馈失败: ${res.status}`)
+    return res.json()
+  },
+
   // Get AI quality analytics
   async getAnalytics(): Promise<{
     success: boolean

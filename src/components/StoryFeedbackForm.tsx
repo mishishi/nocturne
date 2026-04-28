@@ -18,15 +18,40 @@ interface ElementRatings {
   plot: number
 }
 
-const FEEDBACK_STORAGE_PREFIX = 'yeelin_story_feedback_'
+const FEEDBACK_STORAGE_KEY = 'yeelin_story_feedbacks'
 
-function getFeedbackKey(sessionId: string): string {
-  return `${FEEDBACK_STORAGE_PREFIX}${sessionId}`
+type FeedbackStatus = 'submitted' | 'skipped'
+
+interface StoredFeedbackRecord {
+  status: FeedbackStatus
+  timestamp: number
 }
 
-interface StoredFeedback {
-  status: 'submitted' | 'skipped'
-  timestamp: number
+type AllStoredFeedbacks = Record<string, StoredFeedbackRecord>
+
+function getStoredFeedbacks(): AllStoredFeedbacks {
+  const stored = localStorage.getItem(FEEDBACK_STORAGE_KEY)
+  if (!stored) return {}
+  try {
+    return JSON.parse(stored) as AllStoredFeedbacks
+  } catch {
+    return {}
+  }
+}
+
+function saveStoredFeedbacks(feedbacks: AllStoredFeedbacks): void {
+  localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(feedbacks))
+}
+
+function getSessionFeedback(sessionId: string): StoredFeedbackRecord | null {
+  const feedbacks = getStoredFeedbacks()
+  return feedbacks[sessionId] || null
+}
+
+function setSessionFeedback(sessionId: string, record: StoredFeedbackRecord): void {
+  const feedbacks = getStoredFeedbacks()
+  feedbacks[sessionId] = record
+  saveStoredFeedbacks(feedbacks)
 }
 
 const ELEMENT_LABELS: Record<keyof ElementRatings, string> = {
@@ -108,38 +133,48 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
     setToastVisible(false)
   }, [])
 
-  // Check localStorage on mount
+  // Check localStorage and server on mount
   useEffect(() => {
-    const stored = localStorage.getItem(getFeedbackKey(sessionId))
-    if (stored) {
-      try {
-        const feedback: StoredFeedback = JSON.parse(stored)
-        if (feedback.status === 'submitted' || feedback.status === 'skipped') {
-          setHasCheckedStorage(true)
-          return
-        }
-      } catch {
-        // Invalid JSON, proceed normally
+    const checkFeedback = async () => {
+      const feedback = getSessionFeedback(sessionId)
+      if (feedback && (feedback.status === 'submitted' || feedback.status === 'skipped')) {
+        setHasCheckedStorage(true)
+        return
       }
+
+      // Check server if localStorage has no record
+      if (user?.openid) {
+        try {
+          const result = await storyFeedbackApi.check(sessionId, user.openid)
+          if (result.hasSubmitted) {
+            // Update localStorage with server state
+            setSessionFeedback(sessionId, {
+              status: 'submitted',
+              timestamp: new Date(result.feedback.createdAt).getTime()
+            })
+            setHasCheckedStorage(true)
+            return
+          }
+        } catch (err) {
+          console.error('Failed to check server feedback:', err)
+        }
+      }
+
+      setHasCheckedStorage(true)
     }
-    setHasCheckedStorage(true)
-  }, [sessionId])
+
+    checkFeedback()
+  }, [sessionId, user?.openid])
 
   // IntersectionObserver to detect 90% scroll
   useEffect(() => {
     if (!hasCheckedStorage) return
 
     // Check storage again before setting up observer
-    const stored = localStorage.getItem(getFeedbackKey(sessionId))
-    if (stored) {
-      try {
-        const feedback: StoredFeedback = JSON.parse(stored)
-        if (feedback.status === 'submitted' || feedback.status === 'skipped') {
-          return
-        }
-      } catch {
-        // Invalid JSON, proceed
-      }
+    const feedback = getSessionFeedback(sessionId)
+    if (feedback && (feedback.status === 'submitted' || feedback.status === 'skipped')) {
+      setIsVisible(false)
+      return
     }
 
     const sentinel = sentinelRef.current
@@ -168,12 +203,37 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
   useEffect(() => {
     if (!hasCheckedStorage) return
 
-    const handleScroll = () => {
+    let cancelled = false
+
+    const handleScroll = async () => {
       const scrollTop = window.scrollY
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
       const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
 
       if (progress >= 90) {
+        // Check if already submitted/skipped before showing
+        const feedback = getSessionFeedback(sessionId)
+        if (feedback && (feedback.status === 'submitted' || feedback.status === 'skipped')) {
+          return // Don't show if already submitted
+        }
+
+        // Check server as well
+        if (user?.openid) {
+          try {
+            const result = await storyFeedbackApi.check(sessionId, user.openid)
+            if (cancelled) return
+            if (result.hasSubmitted) {
+              setSessionFeedback(sessionId, {
+                status: 'submitted',
+                timestamp: new Date(result.feedback.createdAt).getTime()
+              })
+              return // Don't show if already submitted on server
+            }
+          } catch (err) {
+            console.error('Failed to check server feedback:', err)
+          }
+        }
+
         setIsVisible(true)
         window.removeEventListener('scroll', handleScroll)
       }
@@ -183,20 +243,20 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
     handleScroll() // Check immediately
 
     return () => {
+      cancelled = true
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [hasCheckedStorage])
+  }, [hasCheckedStorage, sessionId, user?.openid])
 
   const handleElementRatingChange = (element: keyof ElementRatings, value: number) => {
     setElementRatings((prev) => ({ ...prev, [element]: value }))
   }
 
   const handleSkip = () => {
-    const feedback: StoredFeedback = {
+    setSessionFeedback(sessionId, {
       status: 'skipped',
       timestamp: Date.now()
-    }
-    localStorage.setItem(getFeedbackKey(sessionId), JSON.stringify(feedback))
+    })
     setIsVisible(false)
   }
 
@@ -215,16 +275,17 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
         openid: user.openid,
         overallRating,
         elementRatings: overallRating > 0 && Object.values(elementRatings).some((v) => v > 0)
-          ? elementRatings
+          ? Object.fromEntries(
+              Object.entries(elementRatings).filter(([_, v]) => v > 0)
+            )
           : undefined,
         comment: comment.trim() || undefined
       })
 
-      const feedback: StoredFeedback = {
+      setSessionFeedback(sessionId, {
         status: 'submitted',
         timestamp: Date.now()
-      }
-      localStorage.setItem(getFeedbackKey(sessionId), JSON.stringify(feedback))
+      })
 
       setToastMessage('感谢反馈')
       setToastVisible(true)

@@ -197,6 +197,43 @@ export default async function storyFeedbackRoutes(fastify) {
     }
   })
 
+  // GET /api/story-feedback/:sessionId/check - 检查当前用户是否已提交反馈
+  fastify.get('/story-feedback/:sessionId/check', async (req, res) => {
+    const { sessionId } = req.params
+    const { openid } = req.query
+
+    if (!openid) {
+      return res.status(400).send({ success: false, reason: '缺少openid参数' })
+    }
+
+    try {
+      const feedback = await prisma.storyFeedback.findFirst({
+        where: { sessionId, openid }
+      })
+
+      return {
+        success: true,
+        hasSubmitted: !!feedback,
+        feedback: feedback ? {
+          id: feedback.id,
+          overallRating: feedback.overallRating,
+          elementRatings: {
+            character: feedback.characterRating,
+            location: feedback.locationRating,
+            object: feedback.objectRating,
+            emotion: feedback.emotionRating,
+            plot: feedback.plotRating
+          },
+          comment: feedback.comment,
+          createdAt: feedback.createdAt
+        } : null
+      }
+    } catch (err) {
+      console.error('Failed to check feedback:', err)
+      return res.status(500).send({ success: false, reason: '服务器错误' })
+    }
+  })
+
   // GET /api/story-feedback/analytics - AI质量分析 (需管理员)
   fastify.get('/story-feedback/analytics', async (req, res) => {
     try {
@@ -390,8 +427,8 @@ export default async function storyFeedbackRoutes(fastify) {
           let storyMagnitude = 0
 
           Object.keys(preference).forEach(k => {
-            const prefVal = preference[k as keyof typeof preference]
-            const storyVal = storyDimAvg[k as keyof typeof storyDimAvg] || 0
+            const prefVal = preference[k]
+            const storyVal = storyDimAvg[k] || 0
             if (prefVal > 0 && storyVal > 0) {
               dotProduct += prefVal * storyVal
               prefMagnitude += prefVal * prefVal
@@ -405,7 +442,7 @@ export default async function storyFeedbackRoutes(fastify) {
           // Find strongest dimension of this story
           const storyDims = Object.entries(storyDimAvg)
             .filter(([_, v]) => v !== null)
-            .sort((a, b) => (b[1] as number) - (a[1] as number))
+            .sort((a, b) => Number(b[1]) - Number(a[1]))
 
           const topDim = storyDims[0]?.[0] || null
           const dimNames = { character: '角色塑造', location: '场景描写', object: '物品细节', emotion: '情感表达', plot: '情节设计' }
@@ -420,7 +457,7 @@ export default async function storyFeedbackRoutes(fastify) {
             commentCount: story.commentCount,
             createdAt: story.createdAt,
             score: similarity,
-            reason: topDim ? `匹配你的${dimNames[topDim as keyof typeof dimNames]}偏好` : '猜你喜欢'
+            reason: topDim ? `匹配你的${dimNames[topDim]}偏好` : '猜你喜欢'
           }
         })
         .filter(s => s !== null && s.score > 0)
@@ -433,7 +470,7 @@ export default async function storyFeedbackRoutes(fastify) {
         hasPreferences: true
       }
     } catch (err) {
-      console.error('Failed to generate recommendations:', err)
+      console.error('Failed to generate recommendations:', err.message, err.stack)
       return res.status(500).send({ success: false, reason: '服务器错误' })
     }
   })

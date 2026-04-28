@@ -62,6 +62,7 @@ model Session {
   answers              Answer[]
   story                Story?
   storyFeedback        StoryFeedback[]
+  wallPost             DreamWall?
 }
 
 model Message {
@@ -138,6 +139,7 @@ model DreamWall {
   updatedAt    DateTime @updatedAt
 
   user         User      @relation("WallPosts", fields: [openid], references: [openid])
+  session      Session?  @relation(fields: [sessionId], references: [id])
   likes        DreamWallLike[]
   comments     DreamWallComment[]
 
