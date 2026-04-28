@@ -32,7 +32,72 @@ export default async function dreamWallRoutes(fastify) {
 
     // Tab filtering
     if (tab === 'featured') {
-      where.isFeatured = true
+      // Featured algorithm: 30天内, 至少3条反馈, 按综合分排序
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+      // Use raw query to get featured posts with rating-based algorithm
+      const featuredPosts = await prisma.$queryRaw`
+        SELECT
+          dw.*,
+          AVG(sf.overall_rating)::float as overall_avg,
+          COUNT(sf.id)::int as feedback_count
+        FROM dream_wall dw
+        INNER JOIN "Session" s ON dw."sessionId" = s.id
+        INNER JOIN story_feedback sf ON s.id = sf."sessionId"
+        WHERE dw.status = 'approved'
+          AND dw.visibility = 'public'
+          AND sf.created_at >= ${thirtyDaysAgo}
+        GROUP BY dw.id
+        HAVING COUNT(sf.id) >= 3
+        ORDER BY overall_avg DESC
+        LIMIT ${parseInt(limit)}
+        OFFSET ${skip}
+      `
+
+      // Get total count for pagination
+      const countResult = await prisma.$queryRaw`
+        SELECT COUNT(DISTINCT dw.id)::int as total
+        FROM dream_wall dw
+        INNER JOIN "Session" s ON dw."sessionId" = s.id
+        INNER JOIN story_feedback sf ON s.id = sf."sessionId"
+        WHERE dw.status = 'approved'
+          AND dw.visibility = 'public'
+          AND sf.created_at >= ${thirtyDaysAgo}
+        GROUP BY dw.id
+        HAVING COUNT(sf.id) >= 3
+      `
+      const total = countResult.length
+
+      const posts = featuredPosts
+      const items = posts.map(post => ({
+        id: post.id,
+        sessionId: post.sessionId,
+        openid: post.openid,
+        storyTitle: post.storyTitle,
+        storySnippet: post.storySnippet,
+        storyFull: post.storyFull,
+        isAnonymous: post.isAnonymous,
+        nickname: post.isAnonymous ? '匿名用户' : post.nickname,
+        avatar: post.isAnonymous ? null : post.avatar,
+        likeCount: post.likeCount,
+        commentCount: post.commentCount,
+        isFeatured: post.isFeatured,
+        createdAt: post.createdAt,
+        hasLiked: false,
+        overallAvg: post.overall_avg,
+        feedbackCount: post.feedback_count
+      }))
+
+      return {
+        posts: items,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          hasMore: skip + items.length < total
+        }
+      }
     }
 
     const [posts, total] = await Promise.all([
