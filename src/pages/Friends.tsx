@@ -6,9 +6,10 @@ import styles from './Friends.module.css'
 
 export function Friends() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'list' | 'requests'>('list')
+  const [activeTab, setActiveTab] = useState<'list' | 'requests' | 'sent'>('list')
   const [friends, setFriends] = useState<FriendListItem[]>([])
   const [requests, setRequests] = useState<FriendRequestItem[]>([])
+  const [sentRequests, setSentRequests] = useState<FriendRequestItem[]>([])
   const [loading, setLoading] = useState(true)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -22,15 +23,19 @@ export function Friends() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [friendsRes, requestsRes] = await Promise.all([
+      const [friendsRes, requestsRes, sentRes] = await Promise.all([
         friendApi.getFriends(),
-        friendApi.getFriendRequests()
+        friendApi.getFriendRequests(),
+        friendApi.getSentRequests()
       ])
       if (friendsRes.success) {
         setFriends(friendsRes.friends)
       }
       if (requestsRes.success) {
         setRequests(requestsRes.requests)
+      }
+      if (sentRes.success) {
+        setSentRequests(sentRes.sentRequests)
       }
     } catch (err) {
       console.error('Failed to load friends data:', err)
@@ -136,9 +141,20 @@ export function Friends() {
             role="tab"
             aria-selected={activeTab === 'requests'}
           >
-            好友请求
+            收到的请求
             {requests.length > 0 && (
               <span className={styles.badge}>{requests.length}</span>
+            )}
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'sent' ? styles.active : ''}`}
+            onClick={() => setActiveTab('sent')}
+            role="tab"
+            aria-selected={activeTab === 'sent'}
+          >
+            发出的请求
+            {sentRequests.length > 0 && (
+              <span className={styles.badge}>{sentRequests.length}</span>
             )}
           </button>
         </div>
@@ -246,6 +262,37 @@ export function Friends() {
                             拒绝
                           </button>
                         </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Sent Requests */}
+              {activeTab === 'sent' && (
+                <div className={styles.requestSection}>
+                  {sentRequests.length === 0 ? (
+                    <p className={styles.noRequests}>暂无发出的请求</p>
+                  ) : (
+                    sentRequests.map((request) => (
+                      <div key={request.id} className={styles.requestCard}>
+                        <div className={styles.friendAvatar}>
+                          {request.avatar ? (
+                            <img src={request.avatar} alt={request.nickname} />
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                              <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                          )}
+                        </div>
+                        <div className={styles.requestInfo}>
+                          <span className={styles.friendName}>{request.nickname || '匿名旅人'}</span>
+                          <span className={styles.requestMeta}>
+                            {formatDate(request.createdAt)} 发送
+                          </span>
+                        </div>
+                        <span className={styles.waitingLabel}>等待对方确认</span>
                       </div>
                     ))
                   )}

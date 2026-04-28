@@ -365,6 +365,12 @@
   color: var(--color-error);
 }
 
+.waitingLabel {
+  font-size: var(--text-sm);
+  color: var(--color-silver-dim);
+  padding: var(--space-2) var(--space-4);
+}
+
 /* Search Section */
 .searchSection {
   display: flex;
