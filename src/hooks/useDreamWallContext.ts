@@ -7,6 +7,7 @@ export interface DreamWallContext {
   storyTitle: string | null
   storyFull: string | null
   authorOpenid: string | null
+  postId: string | null
 }
 
 const CONTEXT_KEY = 'dreamwall_context'
@@ -24,6 +25,7 @@ export function useDreamWallContext(): DreamWallContext {
         storyTitle: locState.storyTitle || null,
         storyFull: locState.storyFull || null,
         authorOpenid: locState.authorOpenid || null,
+        postId: locState.postId || null,
       }
     }
 
@@ -41,6 +43,7 @@ export function useDreamWallContext(): DreamWallContext {
       storyTitle: null,
       storyFull: null,
       authorOpenid: null,
+      postId: null,
     }
   })
 

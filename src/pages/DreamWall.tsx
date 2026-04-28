@@ -197,6 +197,7 @@ export function DreamWall() {
       storyTitle: post.storyTitle,
       storyFull: post.storyFull || null,
       authorOpenid: post.openid,
+      postId: post.id,
     })
 
     navigate('/story', {
@@ -205,7 +206,8 @@ export function DreamWall() {
         sessionId: post.sessionId,
         storyTitle: post.storyTitle,
         storyFull: post.storyFull || null,
-        authorOpenid: post.openid
+        authorOpenid: post.openid,
+        postId: post.id,
       }
     })
   }

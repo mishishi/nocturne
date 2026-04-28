@@ -14,6 +14,7 @@ import { DreamIllustration } from '../components/DreamIllustration'
 import { StoryFeedbackForm } from '../components/StoryFeedbackForm'
 import { StoryCommentList } from '../components/StoryCommentList'
 import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
+import { CommentThread } from '../components/CommentThread'
 import { shareApi, api, wallApi } from '../services/api'
 import styles from './Story.module.css'
 
@@ -701,6 +702,11 @@ export function Story() {
         {/* Comments - visible to all users from Dream Wall or History */}
         {(fromDreamWall || fromHistory) && (
           <StoryCommentList sessionId={sessionId} />
+        )}
+
+        {/* Nested Comment Thread - for Dream Wall posts */}
+        {fromDreamWall && wallContext.postId && (
+          <CommentThread postId={wallContext.postId} />
         )}
 
         {/* Feedback Panel - only visible to author */}
