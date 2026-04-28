@@ -334,6 +334,52 @@ export default async function friendRoutes(fastify) {
     }
   })
 
+  // GET /api/friends/sent - 获取发出的好友请求 (需登录)
+  fastify.get('/friends/sent', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    try {
+      // Get authenticated user
+      const tokenUser = await authService.getUser(req.userId)
+      if (!tokenUser) {
+        return res.status(401).send({ success: false, reason: '用户未找到' })
+      }
+
+      // Find all Friend records where userId = current user's id AND status = PENDING
+      const sentRequests = await prisma.friend.findMany({
+        where: {
+          userId: tokenUser.id,
+          status: 'PENDING'
+        },
+        include: {
+          friend: {
+            select: {
+              openid: true,
+              nickname: true,
+              avatar: true
+            }
+          }
+        }
+      })
+
+      // Return list with createdAt
+      return res.status(200).send({
+        success: true,
+        sentRequests: sentRequests.map(r => ({
+          id: r.id,
+          openid: r.friend.openid,
+          nickname: r.friend.nickname,
+          avatar: r.friend.avatar,
+          createdAt: r.createdAt
+        }))
+      })
+    } catch (error) {
+      return res.status(500).send({ success: false, reason: '服务器错误' })
+    }
+  })
+
   // GET /api/friends/:openid/posts - 获取好友公开帖子 (需登录)
   fastify.get('/friends/:openid/posts', {
     preHandler: async (req, res) => {
