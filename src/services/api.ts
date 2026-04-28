@@ -74,6 +74,23 @@ export interface PendingRequest {
   createdAt: string
 }
 
+// Friend system API response types (per spec)
+export interface FriendListItem {
+  id: string
+  openid: string
+  nickname: string
+  avatar: string
+  friendSince: string
+}
+
+export interface FriendRequestItem {
+  id: string
+  openid: string
+  nickname: string
+  avatar: string
+  createdAt: string
+}
+
 export const api = {
   // Create session
   async createSession(openid: string): Promise<{ sessionId: string; status: string }> {
@@ -341,53 +358,52 @@ export const authApi = {
 
 // Friend API
 export const friendApi = {
-  // Add friend
-  async addFriend(userId: string, friendId: string): Promise<{ success: boolean; reason?: string }> {
-    const res = await fetchWithTimeout(`${API_BASE}/friends/add`, {
+  // Send friend request
+  async sendFriendRequest(friendOpenid: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetchWithTimeout(`${API_BASE}/friends/request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ userId, friendId })
+      body: JSON.stringify({ friendOpenid })
     })
-    if (!res.ok) throw new Error(`添加好友失败: ${res.status}`)
+    if (!res.ok) throw new Error(`发送好友请求失败: ${res.status}`)
     return res.json()
   },
 
   // Accept friend request
-  async acceptFriend(userId: string, friendId: string): Promise<{ success: boolean; reason?: string }> {
+  async acceptFriendRequest(requestId: string): Promise<{ success: boolean; message: string }> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/accept`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ userId, friendId })
+      body: JSON.stringify({ requestId })
     })
     if (!res.ok) throw new Error(`接受好友请求失败: ${res.status}`)
     return res.json()
   },
 
   // Reject friend request
-  async rejectFriend(userId: string, friendId: string): Promise<{ success: boolean; reason?: string }> {
+  async rejectFriendRequest(requestId: string): Promise<{ success: boolean; message: string }> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ userId, friendId })
+      body: JSON.stringify({ requestId })
     })
     if (!res.ok) throw new Error(`拒绝好友请求失败: ${res.status}`)
     return res.json()
   },
 
   // Remove friend
-  async removeFriend(userId: string, friendId: string): Promise<{ success: boolean }> {
-    const res = await fetchWithTimeout(`${API_BASE}/friends/remove`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ userId, friendId })
+  async removeFriend(friendOpenid: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetchWithTimeout(`${API_BASE}/friends/${friendOpenid}`, {
+      method: 'DELETE',
+      headers: authHeaders()
     })
     if (!res.ok) throw new Error(`删除好友失败: ${res.status}`)
     return res.json()
   },
 
   // Get friend list
-  async getFriends(userId: string): Promise<{ success: boolean; friends: Friend[] }> {
-    const res = await fetchWithTimeout(`${API_BASE}/friends/list/${userId}`, {
+  async getFriends(): Promise<{ success: boolean; friends: FriendListItem[] }> {
+    const res = await fetchWithTimeout(`${API_BASE}/friends`, {
       headers: authHeaders()
     })
     if (!res.ok) throw new Error(`获取好友列表失败: ${res.status}`)
@@ -395,11 +411,24 @@ export const friendApi = {
   },
 
   // Get pending friend requests
-  async getPendingRequests(userId: string): Promise<{ success: boolean; received: PendingRequest[]; sent: PendingRequest[] }> {
-    const res = await fetchWithTimeout(`${API_BASE}/friends/requests/${userId}`, {
+  async getFriendRequests(): Promise<{ success: boolean; requests: FriendRequestItem[] }> {
+    const res = await fetchWithTimeout(`${API_BASE}/friends/requests`, {
       headers: authHeaders()
     })
     if (!res.ok) throw new Error(`获取好友请求失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get friend's public posts
+  async getFriendPosts(openid: string, page = 1, limit = 20): Promise<{
+    success: boolean
+    posts: DreamWallPost[]
+    pagination: { page: number; limit: number; total: number }
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/friends/${openid}/posts?page=${page}&limit=${limit}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取好友发布失败: ${res.status}`)
     return res.json()
   },
 
