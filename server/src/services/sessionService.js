@@ -123,6 +123,7 @@ export const sessionService = {
     return {
       sessions: sessions.map(s => ({
         id: s.id,
+        sessionId: s.id,
         date: s.completedAt?.toISOString() || s.updatedAt.toISOString(),
         dreamFragment: s.dreamFragment,
         storyTitle: s.story?.title || '',
