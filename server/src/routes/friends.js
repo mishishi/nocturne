@@ -2,6 +2,27 @@ import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 
+// Helper to create notifications (fire-and-forget)
+async function createNotification(prisma, { openid, type, fromOpenid, fromNickname, targetId, targetTitle, message }) {
+  // Skip self-notification
+  if (openid === fromOpenid) return null
+
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+  return prisma.notification.create({
+    data: {
+      openid,
+      type,
+      fromOpenid,
+      fromNickname,
+      targetId,
+      targetTitle,
+      message,
+      expiresAt
+    }
+  })
+}
+
 export default async function friendRoutes(fastify) {
   // POST /api/friends/request - 发送好友请求 (需登录)
   fastify.post('/friends/request', {
@@ -77,6 +98,19 @@ export default async function friendRoutes(fastify) {
         })
       })
 
+      // Create FRIEND_REQUEST notification for the target user (fire-and-forget)
+      createNotification(prisma, {
+        openid: friendUser.openid,
+        type: 'FRIEND_REQUEST',
+        fromOpenid: tokenUser.openid,
+        fromNickname: tokenUser.nickname,
+        targetId: null,
+        targetTitle: null,
+        message: tokenUser.nickname + ' 申请加你为好友'
+      }).catch(err => {
+        console.error('Failed to create FRIEND_REQUEST notification', err)
+      })
+
       return res.status(200).send({
         success: true,
         requestId: friend.id,
@@ -123,6 +157,16 @@ export default async function friendRoutes(fastify) {
         return res.status(404).send({ success: false, reason: '好友请求不存在或已处理' })
       }
 
+      // Get original requester's user info for notification
+      const requesterUser = await prisma.user.findUnique({
+        where: { id: friendRequest.userId },
+        select: { openid: true, nickname: true }
+      })
+
+      if (!requesterUser) {
+        return res.status(404).send({ success: false, reason: '用户不存在' })
+      }
+
       // Update status to ACCEPTED and create reciprocal record atomically
       await prisma.$transaction([
         prisma.friend.update({
@@ -137,6 +181,19 @@ export default async function friendRoutes(fastify) {
           }
         })
       ])
+
+      // Create FRIEND_ACCEPTED notification for the original requester (fire-and-forget)
+      createNotification(prisma, {
+        openid: requesterUser.openid,
+        type: 'FRIEND_ACCEPTED',
+        fromOpenid: tokenUser.openid,
+        fromNickname: tokenUser.nickname,
+        targetId: null,
+        targetTitle: null,
+        message: tokenUser.nickname + ' 已通过你的好友申请'
+      }).catch(err => {
+        console.error('Failed to create FRIEND_ACCEPTED notification', err)
+      })
 
       return res.status(200).send({
         success: true,
