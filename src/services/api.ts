@@ -419,6 +419,15 @@ export const friendApi = {
     return res.json()
   },
 
+  // Get sent friend requests
+  async getSentRequests(): Promise<{ success: boolean; sentRequests: FriendRequestItem[] }> {
+    const res = await fetchWithTimeout(`${API_BASE}/friends/sent`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取发出的好友请求失败: ${res.status}`)
+    return res.json()
+  },
+
   // Get friend's public posts
   async getFriendPosts(openid: string, page = 1, limit = 20): Promise<{
     success: boolean
