@@ -9,7 +9,7 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { FriendRequestButton } from '../components/FriendRequestButton'
 import styles from './DreamWall.module.css'
 
-type TabType = 'all' | 'featured' | 'my'
+type TabType = 'all' | 'featured' | 'my' | 'friends'
 
 export function DreamWall() {
   const navigate = useNavigate()
@@ -102,6 +102,43 @@ export function DreamWall() {
     }
   }, [user?.nickname, user?.avatar])
 
+  const loadFriendPosts = useCallback(async (pageNum: number, reset = false) => {
+    if (pageNum !== 1) {
+      setLoadingMore(true)
+    }
+
+    try {
+      const result = await wallApi.getFriendFeed({ page: pageNum, limit: 20 })
+
+      if (!result) {
+        console.warn('Empty response from wall friends API')
+        setPosts([])
+        setHasMore(false)
+        return
+      }
+
+      const newPosts = result.posts || []
+      if (reset) {
+        setPosts(newPosts)
+      } else {
+        setPosts(prev => [...prev, ...newPosts])
+      }
+      setHasMore(result.pagination?.hasMore ?? false)
+    } catch (err) {
+      console.error('Failed to load friend posts:', err)
+      setPosts([])
+      setHasMore(false)
+      setToastType('error')
+      setToastMessage('加载失败，请重试')
+      setToastVisible(true)
+    } finally {
+      if (pageNum === 1) {
+        setLoading(false)
+      }
+      setLoadingMore(false)
+    }
+  }, [])
+
   // Load posts when tab changes
   useEffect(() => {
     setPage(1)
@@ -113,10 +150,17 @@ export function DreamWall() {
         // Not logged in, no loading needed
         setLoading(false)
       }
+    } else if (activeTab === 'friends') {
+      // Load friends posts (requires auth)
+      if (user?.openid) {
+        loadFriendPosts(1, true)
+      } else {
+        setLoading(false)
+      }
     } else {
       loadPosts(activeTab, 1, true, searchKeyword)
     }
-  }, [activeTab, user?.openid, loadPosts, loadMyPosts, searchKeyword])
+  }, [activeTab, user?.openid, loadPosts, loadMyPosts, loadFriendPosts, searchKeyword])
 
   // Infinite scroll with IntersectionObserver
   useEffect(() => {
@@ -124,10 +168,14 @@ export function DreamWall() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && activeTab !== 'my') {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && activeTab !== 'my' && activeTab !== 'friends') {
           const nextPage = page + 1
           setPage(nextPage)
-          loadPosts(activeTab, nextPage, false, searchKeyword)
+          if (activeTab === 'friends') {
+            loadFriendPosts(nextPage, false)
+          } else {
+            loadPosts(activeTab, nextPage, false, searchKeyword)
+          }
         }
       },
       { threshold: 0.1 }
@@ -135,7 +183,7 @@ export function DreamWall() {
 
     observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
-  }, [hasMore, loadingMore, activeTab, page, loadPosts, searchKeyword])
+  }, [hasMore, loadingMore, activeTab, page, loadPosts, loadFriendPosts, searchKeyword])
 
   // Debounced search effect
   useEffect(() => {
@@ -302,6 +350,22 @@ export function DreamWall() {
             </svg>
             本周精选
           </button>
+          {user?.openid && (
+            <button
+              className={`${styles.tab} ${activeTab === 'friends' ? styles.active : ''}`}
+              onClick={() => handleTabChange('friends')}
+              role="tab"
+              aria-selected={activeTab === 'friends'}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              关注的人
+            </button>
+          )}
           <button
             className={`${styles.tab} ${activeTab === 'my' ? styles.active : ''}`}
             onClick={() => handleTabChange('my')}
@@ -317,7 +381,7 @@ export function DreamWall() {
         </div>
 
         {/* Search */}
-        {activeTab !== 'my' && (
+        {activeTab !== 'my' && activeTab !== 'friends' && (
           <div className={styles.searchWrapper}>
             <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
@@ -375,13 +439,15 @@ export function DreamWall() {
                 </svg>
               </div>
               <h2 className={styles.emptyTitle}>
-                {searchQuery ? '没有找到匹配的梦境' : activeTab === 'my' ? '还没有发布' : '暂无内容'}
+                {searchQuery ? '没有找到匹配的梦境' : activeTab === 'my' ? '还没有发布' : activeTab === 'friends' ? '关注的人还没有发布故事' : '暂无内容'}
               </h2>
               <p className={styles.emptyText}>
                 {searchQuery
                   ? '换个关键词试试吧'
                   : activeTab === 'my'
                   ? '记录梦境后可以发布到这里'
+                  : activeTab === 'friends'
+                  ? '快去关注一些好友吧'
                   : '成为第一个分享梦境的人'}
               </p>
               {activeTab === 'my' && (
@@ -482,7 +548,7 @@ export function DreamWall() {
               ))}
 
               {/* Infinite scroll sentinel */}
-              {hasMore && activeTab !== 'my' && (
+              {hasMore && activeTab !== 'my' && activeTab !== 'friends' && (
                 <div
                   ref={loadMoreRef}
                   className={styles.loadMore}
@@ -499,7 +565,7 @@ export function DreamWall() {
               )}
 
               {/* End of results */}
-              {!hasMore && posts.length > 0 && activeTab !== 'my' && (
+              {!hasMore && posts.length > 0 && activeTab !== 'my' && activeTab !== 'friends' && (
                 <p className={styles.endMessage}>— 已加载全部 —</p>
               )}
             </div>

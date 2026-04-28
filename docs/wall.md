@@ -226,6 +226,69 @@ const result = await wallApi.getMyPosts(openid)
 
 ---
 
+### GET /api/wall/friends
+
+**功能：** 获取关注的人（好友）的帖子列表
+
+**需要认证：** **是**（需 Bearer Token）
+
+**Query 参数：**
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `page` | number | `1` | 页码 |
+| `limit` | number | `20` | 每页数量 |
+
+**响应 (200)：**
+```json
+{
+  "posts": [
+    {
+      "id": "post_cuid",
+      "sessionId": "session_cuid",
+      "openid": "author_openid",
+      "storyTitle": "飞翔的梦",
+      "storySnippet": "我梦见自己在天空中飞翔...",
+      "storyFull": "完整故事内容...",
+      "isAnonymous": false,
+      "nickname": "小明",
+      "avatar": "https://example.com/avatar.jpg",
+      "likeCount": 12,
+      "commentCount": 3,
+      "isFeatured": false,
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "hasLiked": false
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 30,
+    "hasMore": true
+  }
+}
+```
+
+**业务逻辑：**
+1. 验证用户认证状态
+2. 获取当前用户的所有已接受好友关系
+3. 查询这些好友发布的、状态为 approved 且可见性为 public 的帖子
+4. 按创建时间降序排列
+5. 未登录用户访问返回空列表
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/pages/DreamWall.tsx` | `loadFriendPosts()` | 切换到"关注的人" Tab 时 |
+
+**前端代码位置：** `src/pages/DreamWall.tsx:104`
+
+```typescript
+const result = await wallApi.getFriendFeed({ page: pageNum, limit: 20 })
+```
+
+---
+
 ### POST /api/wall/:postId/like
 
 **功能：** 点赞或取消点赞
@@ -391,6 +454,8 @@ const result = await wallApi.toggleLike(postId, user.openid)
 │   └── 加载更多
 ├── 本周精选 (featured)
 │   └── 加载更多
+├── 关注的人 (friends) [需登录]
+│   └── 查看已关注好友的公开帖子
 └── 我的发布 (my)
     └── 查看自己发布的帖子
 

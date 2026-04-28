@@ -10,7 +10,7 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
 import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
-import { shareApi, UserStats } from '../services/api'
+import { shareApi, UserStats, checkInApi } from '../services/api'
 import styles from './Profile.module.css'
 
 // Medal definitions (mirrors server-side MEDALS)
@@ -35,7 +35,7 @@ const THEME_OPTIONS = [
 
 export function Profile() {
   const navigate = useNavigate()
-  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user } = useDreamStore()
+  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus } = useDreamStore()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
@@ -66,6 +66,19 @@ export function Profile() {
       }
     }
     fetchStats()
+
+    // Fetch check-in status
+    const fetchCheckInStatus = async () => {
+      try {
+        const status = await checkInApi.getStatus()
+        if (status.success) {
+          setCheckInStatus(status.checkedInToday, status.consecutiveDays)
+        }
+      } catch (err) {
+        console.error('Failed to fetch check-in status:', err)
+      }
+    }
+    fetchCheckInStatus()
   }, [user?.openid, currentSession.openid])
 
   const handleCreateInvite = async () => {
@@ -116,6 +129,23 @@ export function Profile() {
           <div className={styles.statCard}>
             <span className={styles.statValue}>{totalWords.toLocaleString()}</span>
             <span className={styles.statLabel}>累计文字</span>
+          </div>
+        </div>
+
+        {/* Check-in Stats */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>每日签到</h2>
+          <div className={styles.shareStats}>
+            <div className={styles.pointsCard}>
+              <span className={styles.pointsValue}>{consecutiveDays}</span>
+              <span className={styles.pointsLabel}>连续签到</span>
+            </div>
+            <div className={styles.shareInfo}>
+              <div className={styles.streakInfo}>
+                <span className={styles.streakIcon}>{checkedInToday ? '✅' : '📅'}</span>
+                <span>{checkedInToday ? '今日已签到' : '今日未签到'}</span>
+              </div>
+            </div>
           </div>
         </div>
 

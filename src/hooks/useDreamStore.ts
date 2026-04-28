@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { checkInApi } from '../services/api'
 
 export interface DreamSession {
   id: string
@@ -131,6 +132,10 @@ interface DreamState {
   friends: Friend[]
   pendingRequests: { received: PendingRequest[]; sent: PendingRequest[] }
 
+  // Check-in
+  checkedInToday: boolean
+  consecutiveDays: number
+
   // Settings
   fontSize: 'small' | 'medium' | 'large'
   theme: 'starry' | 'aurora' | 'highcontrast' | 'dark'
@@ -149,7 +154,7 @@ interface DreamState {
   prevQuestion: () => void
   setStory: (title: string, content: string) => void
   setStatus: (status: DreamState['currentSession']['status']) => void
-  addToHistory: () => void
+  addToHistory: () => Promise<void>
   removeFromHistory: (id: string) => void
   restoreItem: (item: DreamSession) => void
   clearHistory: () => void
@@ -177,6 +182,8 @@ interface DreamState {
   setPendingRequests: (received: PendingRequest[], sent: PendingRequest[]) => void
   addFriend: (friend: Friend) => void
   removeFriend: (friendId: string) => void
+  // Check-in actions
+  setCheckInStatus: (checkedInToday: boolean, consecutiveDays: number) => void
 }
 
 // Helper to check 7-day streak
@@ -231,6 +238,8 @@ const initialState = {
   token: null,
   friends: [],
   pendingRequests: { received: [] as PendingRequest[], sent: [] as PendingRequest[] },
+  checkedInToday: false,
+  consecutiveDays: 0,
   fontSize: 'medium' as const,
   theme: 'starry' as const,
   reduceMotion: false,
@@ -329,7 +338,7 @@ export const useDreamStore = create<DreamState>()(
           currentSession: { ...state.currentSession, status }
         })),
 
-      addToHistory: () => {
+      addToHistory: async () => {
         const state = get()
         const { dreamText, questions, answers, storyTitle, story } = state.currentSession
 
@@ -379,6 +388,23 @@ export const useDreamStore = create<DreamState>()(
           recentlyUnlocked: newlyUnlocked,
           currentSession: initialState.currentSession
         }))
+
+        // Record check-in after successful dream submission
+        // Only check in if user is logged in (has token)
+        const token = localStorage.getItem('yeelin_token')
+        if (token) {
+          try {
+            const checkInResult = await checkInApi.checkIn()
+            if (checkInResult.success) {
+              set({
+                checkedInToday: true,
+                consecutiveDays: checkInResult.consecutiveDays
+              })
+            }
+          } catch (error) {
+            console.error('Failed to record check-in:', error)
+          }
+        }
       },
 
       removeFromHistory: (id) =>
@@ -530,7 +556,11 @@ export const useDreamStore = create<DreamState>()(
       removeFriend: (friendId) =>
         set((state) => ({
           friends: state.friends.filter(f => f.friendId !== friendId)
-        }))
+        })),
+
+      // Check-in actions
+      setCheckInStatus: (checkedInToday, consecutiveDays) =>
+        set({ checkedInToday, consecutiveDays })
     }),
     {
       name: 'yeelin-dream-storage',
@@ -548,7 +578,9 @@ export const useDreamStore = create<DreamState>()(
         lastShareDate: state.lastShareDate,
         user: state.user,
         token: state.token,
-        friends: state.friends
+        friends: state.friends,
+        checkedInToday: state.checkedInToday,
+        consecutiveDays: state.consecutiveDays
       })
     }
   )
