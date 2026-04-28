@@ -59,6 +59,10 @@
   font-weight: 600;
 }
 
+.hidden {
+  display: none;
+}
+
 .commentMain {
   flex: 1;
   min-width: 0;

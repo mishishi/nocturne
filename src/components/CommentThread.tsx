@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { wallApi } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { Button } from './ui/Button'
@@ -7,7 +7,6 @@ import styles from './CommentThread.module.css'
 
 interface CommentThreadProps {
   postId: string
-  wallOwnerOpenid: string
 }
 
 interface Comment {
@@ -22,7 +21,7 @@ interface Comment {
   replies: Comment[]
 }
 
-export function CommentThread({ postId, wallOwnerOpenid }: CommentThreadProps) {
+export function CommentThread({ postId }: CommentThreadProps) {
   const { user } = useDreamStore()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,6 +100,9 @@ export function CommentThread({ postId, wallOwnerOpenid }: CommentThreadProps) {
         setReplyingTo(null)
         showToast('回复成功')
         await loadComments()
+      } else {
+        const reason = (res as unknown as { reason?: string }).reason
+        showToast(reason || '回复失败，请稍后重试', 'error')
       }
     } catch (err) {
       console.error('Failed to post reply:', err)
@@ -111,12 +113,14 @@ export function CommentThread({ postId, wallOwnerOpenid }: CommentThreadProps) {
   }
 
   // Sort comments by createdAt descending (newest first)
-  const sortedComments = [...comments].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  const sortedComments = useMemo(() =>
+    [...comments].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ), [comments])
 
   // Get top-level comments (parentId === null)
-  const topLevelComments = sortedComments.filter(c => c.parentId === null)
+  const topLevelComments = useMemo(() =>
+    sortedComments.filter(c => c.parentId === null), [sortedComments])
 
   // Render a single comment
   const renderComment = (comment: Comment, isReply = false) => {
@@ -129,9 +133,9 @@ export function CommentThread({ postId, wallOwnerOpenid }: CommentThreadProps) {
         <div className={styles.commentHeader}>
           <div className={styles.avatar}>
             {comment.avatar ? (
-              <img src={comment.avatar} alt="" />
+              <img src={comment.avatar} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove(styles.hidden); }} />
             ) : (
-              <div className={styles.avatarPlaceholder}>
+              <div className={`${styles.avatarPlaceholder} ${styles.hidden}`}>
                 {displayNickname.charAt(0)}
               </div>
             )}
