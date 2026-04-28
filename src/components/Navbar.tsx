@@ -95,6 +95,11 @@ export function Navbar() {
             </Link>
           </li>
           <li>
+            <Link to="/favorites" aria-current={isActive('/favorites') ? 'page' : undefined} className={`${styles.link} ${isActive('/favorites') ? styles.active : ''}`}>
+              收藏
+            </Link>
+          </li>
+          <li>
             <Link to="/profile" aria-current={isActive('/profile') ? 'page' : undefined} className={`${styles.link} ${isActive('/profile') ? styles.active : ''}`}>
               我的
             </Link>

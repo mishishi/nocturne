@@ -16,6 +16,7 @@ import { Dream } from './pages/Dream'
 import { Questions } from './pages/Questions'
 import { Story } from './pages/Story'
 import { History } from './pages/History'
+import { Favorites } from './pages/Favorites'
 import { Profile } from './pages/Profile'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
@@ -82,8 +83,9 @@ function App() {
             <Route path="/" element={<PageErrorBoundary><Home /></PageErrorBoundary>} />
             <Route path="/dream" element={<PageErrorBoundary><Dream /></PageErrorBoundary>} />
             <Route path="/questions" element={<PageErrorBoundary><Questions /></PageErrorBoundary>} />
-            <Route path="/story" element={<PageErrorBoundary><Story /></PageErrorBoundary>} />
+            <Route path="/story/:sessionId" element={<PageErrorBoundary><Story /></PageErrorBoundary>} />
             <Route path="/history" element={<PageErrorBoundary><History /></PageErrorBoundary>} />
+            <Route path="/favorites" element={<PageErrorBoundary><Favorites /></PageErrorBoundary>} />
             <Route path="/wall" element={<PageErrorBoundary><DreamWall /></PageErrorBoundary>} />
             <Route path="/login" element={<PageErrorBoundary><Login /></PageErrorBoundary>} />
             <Route path="/register" element={<PageErrorBoundary><Register /></PageErrorBoundary>} />
