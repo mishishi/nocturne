@@ -2,6 +2,27 @@ import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 
+// Notification creation helper
+async function createNotification(prisma, { openid, type, fromOpenid, fromNickname, targetId, targetTitle, message }) {
+  // Skip self-notification
+  if (openid === fromOpenid) return null
+
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+  return prisma.notification.create({
+    data: {
+      openid,
+      type,
+      fromOpenid,
+      fromNickname,
+      targetId,
+      targetTitle,
+      message,
+      expiresAt
+    }
+  })
+}
+
 // Content moderation check (simplified - in production use a proper service)
 function checkContentSafety(text) {
   // Basic checks - in production use AI-based moderation
@@ -310,6 +331,21 @@ export default async function dreamWallRoutes(fastify) {
         data: { likeCount: { increment: 1 } }
       })
 
+      // Create LIKE notification for post author
+      const liker = await prisma.user.findUnique({
+        where: { openid },
+        select: { nickname: true }
+      })
+      await createNotification(prisma, {
+        openid: post.openid,
+        type: 'LIKE',
+        fromOpenid: openid,
+        fromNickname: liker?.nickname || '匿名用户',
+        targetId: post.sessionId,
+        targetTitle: post.storyTitle,
+        message: `${liker?.nickname || '匿名用户'} 点赞了你的故事《${post.storyTitle}》`
+      })
+
       return { success: true, liked: true }
     }
   })
@@ -450,6 +486,17 @@ export default async function dreamWallRoutes(fastify) {
         data: { commentCount: { increment: 1 } }
       })
     ])
+
+    // Create COMMENT notification for post author
+    await createNotification(prisma, {
+      openid: post.openid,
+      type: 'COMMENT',
+      fromOpenid: openid,
+      fromNickname: user?.nickname || '匿名用户',
+      targetId: post.sessionId,
+      targetTitle: post.storyTitle,
+      message: `${user?.nickname || '匿名用户'} 评论了你的故事`
+    })
 
     return {
       success: true,
