@@ -34,6 +34,10 @@ export function Navbar() {
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
+      if (!user?.openid) {
+        setNotificationCount(0)
+        return
+      }
       try {
         const res = await notificationApi.getUnreadCount()
         const data = await res.json()
@@ -48,7 +52,7 @@ export function Navbar() {
     fetchUnreadCount()
     const interval = setInterval(fetchUnreadCount, 60000) // 60s
     return () => clearInterval(interval)
-  }, [])
+  }, [user?.openid])
 
   const isActive = (path: string) => location.pathname === path
 

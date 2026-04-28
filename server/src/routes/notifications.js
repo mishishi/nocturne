@@ -61,6 +61,9 @@ export default async function notificationRoutes(fastify) {
         })
       ])
 
+      // Compute isRead per notification using lastViewedNotificationsAt snapshot
+      // (lastViewedNotificationsAt marks the cutoff: notifications after this are "unread")
+      const lastViewed = user?.lastViewedNotificationsAt
       return res.status(200).send({
         success: true,
         notifications: notifications.map(n => ({
@@ -71,7 +74,7 @@ export default async function notificationRoutes(fastify) {
           targetId: n.targetId,
           targetTitle: n.targetTitle,
           message: n.message,
-          isRead: n.isRead,
+          isRead: lastViewed ? n.createdAt <= lastViewed : false,
           createdAt: n.createdAt
         })),
         unreadCount,

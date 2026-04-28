@@ -761,19 +761,23 @@ export const storyFeedbackApi = {
 }
 
 // Notification API
+export interface Notification {
+  id: string
+  type: string
+  fromOpenid: string
+  fromNickname: string
+  targetId: string | null
+  targetTitle: string | null
+  message: string
+  isRead: boolean
+  createdAt: string
+}
+
 export const notificationApi = {
   // Get notification list
   async getNotifications(page = 1, limit = 20): Promise<{
     success: boolean
-    notifications: Array<{
-      id: string
-      type: string
-      title: string
-      content: string
-      data?: Record<string, unknown>
-      isRead: boolean
-      createdAt: string
-    }>
+    notifications: Notification[]
     unreadCount: number
     pagination: { page: number; limit: number; total: number; hasMore: boolean }
   }> {
