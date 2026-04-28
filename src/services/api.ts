@@ -583,5 +583,37 @@ export const storyFeedbackApi = {
     })
     if (!res.ok) throw new Error(`提交反馈失败: ${res.status}`)
     return res.json()
+  },
+
+  // Get all feedbacks for a session
+  async getAll(sessionId: string): Promise<{
+    feedbacks: Array<{
+      id: string
+      overallRating: number
+      elementRatings: {
+        character?: number
+        location?: number
+        object?: number
+        emotion?: number
+        plot?: number
+      }
+      comment?: string
+      createdAt: string
+    }>
+    stats: {
+      count: number
+      overallAvg: number
+      elementAvgs: {
+        character?: number
+        location?: number
+        object?: number
+        emotion?: number
+        plot?: number
+      }
+    }
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/story-feedback/${sessionId}/all`)
+    if (!res.ok) throw new Error(`获取反馈失败: ${res.status}`)
+    return res.json()
   }
 }

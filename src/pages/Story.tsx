@@ -12,6 +12,8 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamInterpretationModal, DreamInterpretationLoadingModal } from '../components/DreamInterpretationModal'
 import { DreamIllustration } from '../components/DreamIllustration'
 import { StoryFeedbackForm } from '../components/StoryFeedbackForm'
+import { StoryCommentList } from '../components/StoryCommentList'
+import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
 import { shareApi, api, wallApi } from '../services/api'
 import styles from './Story.module.css'
 
@@ -695,6 +697,16 @@ export function Story() {
             {dreamText}
           </div>
         </details>
+
+        {/* Comments - visible to all users from Dream Wall or History */}
+        {(fromDreamWall || fromHistory) && (
+          <StoryCommentList sessionId={sessionId} />
+        )}
+
+        {/* Feedback Panel - only visible to author */}
+        {(fromDreamWall || fromHistory) && isAuthor && (
+          <StoryFeedbackPanel sessionId={sessionId} />
+        )}
 
         {/* Next Actions */}
         <div className={styles.nextActions}>

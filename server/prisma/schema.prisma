@@ -61,7 +61,7 @@ model Session {
   messages             Message[]
   answers              Answer[]
   story                Story?
-  storyFeedback        StoryFeedback?
+  storyFeedback        StoryFeedback[]
 }
 
 model Message {
@@ -178,7 +178,7 @@ model DreamWallComment {
 
 model StoryFeedback {
   id               String   @id @default(cuid())
-  sessionId        String   @unique
+  sessionId        String
   openid           String
   overallRating    Int
   characterRating  Int?

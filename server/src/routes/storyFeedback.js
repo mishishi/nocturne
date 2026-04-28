@@ -133,4 +133,74 @@ export default async function storyFeedbackRoutes(fastify) {
       }
     }
   })
+
+  // GET /api/story-feedback/:sessionId/all - 获取该session的所有反馈
+  fastify.get('/story-feedback/:sessionId/all', async (req, res) => {
+    const { sessionId } = req.params
+
+    try {
+      const feedbacks = await prisma.storyFeedback.findMany({
+        where: { sessionId },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      // 计算统计数据
+      const count = feedbacks.length
+      if (count === 0) {
+        return {
+          success: true,
+          feedbacks: [],
+          stats: {
+            count: 0,
+            overallAvg: 0,
+            elementAvgs: null
+          }
+        }
+      }
+
+      const overallSum = feedbacks.reduce((sum, f) => sum + f.overallRating, 0)
+      const overallAvg = parseFloat((overallSum / count).toFixed(1))
+
+      // 计算各维度平均
+      const elementAvgs = {
+        character: calculateAvg(feedbacks, 'characterRating'),
+        location: calculateAvg(feedbacks, 'locationRating'),
+        object: calculateAvg(feedbacks, 'objectRating'),
+        emotion: calculateAvg(feedbacks, 'emotionRating'),
+        plot: calculateAvg(feedbacks, 'plotRating')
+      }
+
+      return {
+        success: true,
+        feedbacks: feedbacks.map(f => ({
+          id: f.id,
+          overallRating: f.overallRating,
+          elementRatings: {
+            character: f.characterRating,
+            location: f.locationRating,
+            object: f.objectRating,
+            emotion: f.emotionRating,
+            plot: f.plotRating
+          },
+          comment: f.comment,
+          createdAt: f.createdAt
+        })),
+        stats: {
+          count,
+          overallAvg,
+          elementAvgs
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch feedbacks:', err)
+      return res.status(500).send({ success: false, reason: '服务器错误' })
+    }
+  })
+}
+
+function calculateAvg(feedbacks, field) {
+  const values = feedbacks.map(f => f[field]).filter(v => v !== null)
+  if (values.length === 0) return null
+  const sum = values.reduce((a, b) => a + b, 0)
+  return parseFloat((sum / values.length).toFixed(1))
 }
