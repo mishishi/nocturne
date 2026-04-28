@@ -1,7 +1,6 @@
 .page {
   min-height: 100vh;
-  padding: var(--space-md, 16px);
-  padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
+  padding: 70px var(--space-md, 16px) calc(80px + env(safe-area-inset-bottom, 20px));
 }
 
 .container {

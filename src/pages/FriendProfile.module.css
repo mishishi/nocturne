@@ -4,8 +4,7 @@
 
 .page {
   min-height: 100vh;
-  padding: var(--space-6);
-  padding-bottom: calc(60px + var(--space-6) + env(safe-area-inset-bottom));
+  padding: 70px var(--space-6) calc(60px + var(--space-6) + env(safe-area-inset-bottom));
   background: var(--color-night-deep);
 }
 

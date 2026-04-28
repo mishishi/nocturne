@@ -2,7 +2,7 @@
   display: block;
   width: 100%;
   padding: var(--space-2) var(--space-2);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
   background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
 }
