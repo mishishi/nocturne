@@ -559,3 +559,29 @@ export const wallApi = {
     return res.json()
   }
 }
+
+// Story Feedback API
+export const storyFeedbackApi = {
+  // Submit feedback
+  async submit(params: {
+    sessionId: string
+    openid?: string
+    overallRating: number
+    elementRatings?: {
+      character?: number
+      location?: number
+      object?: number
+      emotion?: number
+      plot?: number
+    }
+    comment?: string
+  }): Promise<{ success: boolean }> {
+    const res = await fetchWithTimeout(`${API_BASE}/story-feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(params)
+    })
+    if (!res.ok) throw new Error(`提交反馈失败: ${res.status}`)
+    return res.json()
+  }
+}
