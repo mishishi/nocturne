@@ -133,12 +133,7 @@ export function Notifications() {
             </svg>
           </button>
           <h1 className={styles.title}>通知</h1>
-          <button
-            className={styles.markAllRead}
-            onClick={handleMarkAllRead}
-          >
-            全部已读
-          </button>
+          <div style={{ width: 60 }} /> {/* Spacer to balance the header */}
         </header>
 
         {/* Notification List */}
@@ -185,6 +180,20 @@ export function Notifications() {
           )}
         </div>
       </div>
+
+      {/* Floating Mark All Read Button */}
+      {notifications.some(n => !n.isRead) && (
+        <button
+          className={styles.floatingMarkRead}
+          onClick={handleMarkAllRead}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          全部已读
+        </button>
+      )}
 
       <Toast
         message={toastMessage}
