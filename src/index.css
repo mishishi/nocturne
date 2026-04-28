@@ -182,6 +182,26 @@ html[data-font-size="large"] {
   text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
 }
 
+/* ==========================================
+   THEME: Dark
+   ========================================== */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --color-night-deep: #0a0a0f;
+  --color-night-surface: #141420;
+  --color-night-mid: #1c1c2e;
+  /* Text */
+  --color-moonlight: #e8e8f0;
+  --color-silver: #8888a0;
+  --color-silver-dim: #5a5a70;
+  /* Accent */
+  --color-golden: #c9a0ff;
+  --color-golden-bright: #e0c0ff;
+  --shadow-glow: rgba(201, 160, 255, 0.25);
+  /* Borders */
+  --color-border: rgba(255, 255, 255, 0.08);
+}
+
 /* Reset */
 *, *::before, *::after {
   box-sizing: border-box;

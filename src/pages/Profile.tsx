@@ -29,7 +29,8 @@ const FONT_SIZE_OPTIONS = [
 const THEME_OPTIONS = [
   { value: 'starry' as const, label: '星夜', icon: '🌙', desc: '深邃星空' },
   { value: 'aurora' as const, label: '极光', icon: '🌌', desc: '神秘极光' },
-  { value: 'highcontrast' as const, label: '高对比', icon: '☀️', desc: '清晰高对比' }
+  { value: 'highcontrast' as const, label: '高对比', icon: '☀️', desc: '清晰高对比' },
+  { value: 'dark' as const, label: '暗黑', icon: '🌑', desc: '深邃静谧' }
 ]
 
 export function Profile() {
