@@ -314,36 +314,60 @@ export default async function dreamWallRoutes(fastify) {
     }
   })
 
-  // GET /api/wall/:postId/comments - 获取评论
+  // GET /api/wall/:postId/comments - 获取评论 (嵌套结构)
   fastify.get('/wall/:postId/comments', async (req, res) => {
     const { postId } = req.params
-    const { page = '1', limit = '20' } = req.query
-    const skip = (parseInt(page) - 1) * parseInt(limit)
 
-    const [comments, total] = await Promise.all([
-      prisma.dreamWallComment.findMany({
-        where: { wallId: postId },
-        orderBy: { createdAt: 'asc' },
-        skip,
-        take: parseInt(limit)
-      }),
-      prisma.dreamWallComment.count({ where: { wallId: postId } })
-    ])
+    // Get wall post to determine isAuthor
+    const wallPost = await prisma.dreamWall.findUnique({
+      where: { id: postId },
+      select: { openid: true }
+    })
 
-    return {
-      comments: comments.map(c => ({
+    if (!wallPost) {
+      return res.status(404).send({ success: false, reason: '帖子不存在' })
+    }
+
+    // Fetch all comments with their replies
+    const comments = await prisma.dreamWallComment.findMany({
+      where: { wallId: postId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        replies: {
+          orderBy: { createdAt: 'asc' }
+        }
+      }
+    })
+
+    // Build nested structure: top-level comments with replies
+    const topLevelComments = comments
+      .filter(c => !c.parentId)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map(c => ({
         id: c.id,
         content: c.content,
         isAnonymous: c.isAnonymous,
         nickname: c.isAnonymous ? '匿名用户' : c.nickname,
         avatar: c.isAnonymous ? null : c.avatar,
-        createdAt: c.createdAt
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total
-      }
+        isAuthor: c.openid === wallPost.openid,
+        parentId: c.parentId,
+        createdAt: c.createdAt,
+        replies: c.replies.map(r => ({
+          id: r.id,
+          content: r.content,
+          isAnonymous: r.isAnonymous,
+          nickname: r.isAnonymous ? '匿名用户' : r.nickname,
+          avatar: r.isAnonymous ? null : r.avatar,
+          isAuthor: r.openid === wallPost.openid,
+          parentId: r.parentId,
+          createdAt: r.createdAt,
+          replies: []
+        }))
+      }))
+
+    return {
+      success: true,
+      comments: topLevelComments
     }
   })
 
