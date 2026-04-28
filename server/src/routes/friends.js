@@ -1,35 +1,81 @@
-import { friendService } from '../services/friendService.js'
-import { authMiddleware } from '../middleware/auth.js'
+import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
+import { authMiddleware } from '../middleware/auth.js'
 
 export default async function friendRoutes(fastify) {
-  // POST /api/friends/add - 添加好友 (需登录)
-  fastify.post('/friends/add', {
+  // POST /api/friends/request - 发送好友请求 (需登录)
+  fastify.post('/friends/request', {
     preHandler: async (req, res) => {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { userId, friendId } = req.body
+    const { friendOpenid } = req.body
 
-    // Verify the userId matches the token user
+    // Get authenticated user
     const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userId) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
     }
 
-    if (!userId || !friendId) {
-      return res.status(400).send({ error: 'userId and friendId are required' })
+    // Validate input
+    if (!friendOpenid) {
+      return res.status(400).send({ success: false, reason: '缺少 friendOpenid' })
     }
 
-    try {
-      const result = await friendService.addFriend(userId, friendId)
-      if (!result.success) {
-        return res.status(400).send(result)
+    // Check: not sending to self
+    if (friendOpenid === tokenUser.openid) {
+      return res.status(400).send({ success: false, reason: '不能添加自己为好友' })
+    }
+
+    // Find friend user by openid
+    const friendUser = await prisma.user.findUnique({
+      where: { openid: friendOpenid }
+    })
+
+    if (!friendUser) {
+      return res.status(404).send({ success: false, reason: '用户不存在' })
+    }
+
+    // Check: no existing PENDING or ACCEPTED record
+    const existingFriend = await prisma.friend.findFirst({
+      where: {
+        OR: [
+          { userId: tokenUser.id, friendId: friendUser.id, status: 'ACCEPTED' },
+          { userId: tokenUser.id, friendId: friendUser.id, status: 'PENDING' }
+        ]
       }
-      return { success: true }
-    } catch (error) {
-      console.error('Add friend error:', error)
-      return res.status(500).send({ error: '添加好友失败' })
+    })
+
+    if (existingFriend) {
+      return res.status(409).send({ success: false, reason: '好友请求已存在' })
+    }
+
+    // Also check reverse direction
+    const existingReverse = await prisma.friend.findFirst({
+      where: {
+        OR: [
+          { userId: friendUser.id, friendId: tokenUser.id, status: 'ACCEPTED' },
+          { userId: friendUser.id, friendId: tokenUser.id, status: 'PENDING' }
+        ]
+      }
+    })
+
+    if (existingReverse) {
+      return res.status(409).send({ success: false, reason: '你们已经是好友或已有待处理请求' })
+    }
+
+    // Create Friend record with status: 'PENDING'
+    const friend = await prisma.friend.create({
+      data: {
+        userId: tokenUser.id,
+        friendId: friendUser.id,
+        status: 'PENDING'
+      }
+    })
+
+    return {
+      success: true,
+      requestId: friend.id
     }
   })
 
@@ -39,27 +85,49 @@ export default async function friendRoutes(fastify) {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { userId, friendId } = req.body
+    const { requestId } = req.body
 
-    // Verify the userId matches the token user
+    // Get authenticated user
     const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userId) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
     }
 
-    if (!userId || !friendId) {
-      return res.status(400).send({ error: 'userId and friendId are required' })
+    // Validate input
+    if (!requestId) {
+      return res.status(400).send({ success: false, reason: '缺少 requestId' })
     }
 
-    try {
-      const result = await friendService.acceptFriend(userId, friendId)
-      if (!result.success) {
-        return res.status(400).send(result)
+    // Find the Friend record where friendId = current user and status = PENDING
+    const friendRequest = await prisma.friend.findFirst({
+      where: {
+        id: requestId,
+        friendId: tokenUser.id,
+        status: 'PENDING'
       }
-      return { success: true }
-    } catch (error) {
-      console.error('Accept friend error:', error)
-      return res.status(500).send({ error: '接受好友请求失败' })
+    })
+
+    if (!friendRequest) {
+      return res.status(404).send({ success: false, reason: '好友请求不存在或已处理' })
+    }
+
+    // Update status to ACCEPTED
+    await prisma.friend.update({
+      where: { id: requestId },
+      data: { status: 'ACCEPTED' }
+    })
+
+    // Create reciprocal Friend record (current user -> them)
+    await prisma.friend.create({
+      data: {
+        userId: tokenUser.id,
+        friendId: friendRequest.userId,
+        status: 'ACCEPTED'
+      }
+    })
+
+    return {
+      success: true
     }
   })
 
@@ -69,183 +137,249 @@ export default async function friendRoutes(fastify) {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { userId, friendId } = req.body
+    const { requestId } = req.body
 
-    // Verify the userId matches the token user
+    // Get authenticated user
     const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userId) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
     }
 
-    if (!userId || !friendId) {
-      return res.status(400).send({ error: 'userId and friendId are required' })
+    // Validate input
+    if (!requestId) {
+      return res.status(400).send({ success: false, reason: '缺少 requestId' })
     }
 
-    try {
-      const result = await friendService.rejectFriend(userId, friendId)
-      if (!result.success) {
-        return res.status(400).send(result)
+    // Find the Friend record
+    const friendRequest = await prisma.friend.findFirst({
+      where: {
+        id: requestId,
+        friendId: tokenUser.id,
+        status: 'PENDING'
       }
-      return { success: true }
-    } catch (error) {
-      console.error('Reject friend error:', error)
-      return res.status(500).send({ error: '拒绝好友请求失败' })
+    })
+
+    if (!friendRequest) {
+      return res.status(404).send({ success: false, reason: '好友请求不存在或已处理' })
+    }
+
+    // Delete the Friend record
+    await prisma.friend.delete({
+      where: { id: requestId }
+    })
+
+    return {
+      success: true
     }
   })
 
-  // POST /api/friends/remove - 删除好友 (需登录)
-  fastify.post('/friends/remove', {
+  // DELETE /api/friends/:friendOpenid - 删除好友 (需登录)
+  fastify.delete('/friends/:friendOpenid', {
     preHandler: async (req, res) => {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { userId, friendId } = req.body
+    const { friendOpenid } = req.params
 
-    // Verify the userId matches the token user
+    // Get authenticated user
     const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userId) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
     }
 
-    if (!userId || !friendId) {
-      return res.status(400).send({ error: 'userId and friendId are required' })
+    // Validate input
+    if (!friendOpenid) {
+      return res.status(400).send({ success: false, reason: '缺少 friendOpenid' })
     }
 
-    try {
-      const result = await friendService.removeFriend(userId, friendId)
-      return { success: true }
-    } catch (error) {
-      console.error('Remove friend error:', error)
-      return res.status(500).send({ error: '删除好友失败' })
+    // Find friend user by openid
+    const friendUser = await prisma.user.findUnique({
+      where: { openid: friendOpenid }
+    })
+
+    if (!friendUser) {
+      return res.status(404).send({ success: false, reason: '用户不存在' })
+    }
+
+    // Delete both Friend records (user->friend and friend->user)
+    await prisma.friend.deleteMany({
+      where: {
+        OR: [
+          { userId: tokenUser.id, friendId: friendUser.id },
+          { userId: friendUser.id, friendId: tokenUser.id }
+        ]
+      }
+    })
+
+    return {
+      success: true
     }
   })
 
-  // GET /api/friends/list/:userId - 获取好友列表 (需登录)
-  fastify.get('/friends/list/:userId', {
+  // GET /api/friends - 获取好友列表 (需登录)
+  fastify.get('/friends', {
     preHandler: async (req, res) => {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { userId } = req.params
-
-    // Verify the userId matches the token user
+    // Get authenticated user
     const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userId) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
     }
 
-    if (!userId) {
-      return res.status(400).send({ error: 'userId is required' })
-    }
+    // Find all Friend records where userId = current user's id AND status = ACCEPTED
+    const friends = await prisma.friend.findMany({
+      where: {
+        userId: tokenUser.id,
+        status: 'ACCEPTED'
+      },
+      include: {
+        friend: {
+          select: {
+            openid: true,
+            nickname: true,
+            avatar: true
+          }
+        }
+      }
+    })
 
-    try {
-      const friends = await friendService.getFriends(userId)
-      return { success: true, friends }
-    } catch (error) {
-      console.error('Get friends error:', error)
-      return res.status(500).send({ error: '获取好友列表失败' })
+    // Return list with friendSince date
+    return {
+      success: true,
+      friends: friends.map(f => ({
+        openid: f.friend.openid,
+        nickname: f.friend.nickname,
+        avatar: f.friend.avatar,
+        friendSince: f.createdAt
+      }))
     }
   })
 
-  // GET /api/friends/requests/:userId - 获取待处理请求 (需登录)
-  fastify.get('/friends/requests/:userId', {
+  // GET /api/friends/requests - 获取待处理请求 (需登录)
+  fastify.get('/friends/requests', {
     preHandler: async (req, res) => {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { userId } = req.params
-
-    // Verify the userId matches the token user
+    // Get authenticated user
     const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userId) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
     }
 
-    if (!userId) {
-      return res.status(400).send({ error: 'userId is required' })
-    }
+    // Find all Friend records where friendId = current user's id AND status = PENDING
+    const requests = await prisma.friend.findMany({
+      where: {
+        friendId: tokenUser.id,
+        status: 'PENDING'
+      },
+      include: {
+        user: {
+          select: {
+            openid: true,
+            nickname: true,
+            avatar: true
+          }
+        }
+      }
+    })
 
-    try {
-      const requests = await friendService.getPendingRequests(userId)
-      return { success: true, ...requests }
-    } catch (error) {
-      console.error('Get pending requests error:', error)
-      return res.status(500).send({ error: '获取好友请求失败' })
+    // Return list with createdAt
+    return {
+      success: true,
+      requests: requests.map(r => ({
+        requestId: r.id,
+        openid: r.user.openid,
+        nickname: r.user.nickname,
+        avatar: r.user.avatar,
+        createdAt: r.createdAt
+      }))
     }
   })
 
-  // POST /api/friends/block - 拉黑用户 (需登录)
-  fastify.post('/friends/block', {
+  // GET /api/friends/:openid/posts - 获取好友公开帖子 (需登录)
+  fastify.get('/friends/:openid/posts', {
     preHandler: async (req, res) => {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { userId, blockedId } = req.body
+    const { openid } = req.params
+    const { page = 1, limit = 10 } = req.query
 
-    // Verify the userId matches the token user
+    // Get authenticated user
     const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userId) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
     }
 
-    if (!userId || !blockedId) {
-      return res.status(400).send({ error: 'userId and blockedId are required' })
+    // Validate input
+    if (!openid) {
+      return res.status(400).send({ success: false, reason: '缺少 openid' })
     }
 
-    try {
-      const result = await friendService.blockUser(userId, blockedId)
-      return { success: true }
-    } catch (error) {
-      console.error('Block user error:', error)
-      return res.status(500).send({ error: '拉黑用户失败' })
-    }
-  })
+    // Check: requesting user is friends with :openid (has ACCEPTED record)
+    const friendUser = await prisma.user.findUnique({
+      where: { openid }
+    })
 
-  // GET /api/friends/search - 搜索用户 (需登录)
-  fastify.get('/friends/search', {
-    preHandler: async (req, res) => {
-      await authMiddleware(req, res)
-    }
-  }, async (req, res) => {
-    const { query, excludeId } = req.query
-
-    if (!query) {
-      return res.status(400).send({ error: 'query is required' })
+    if (!friendUser) {
+      return res.status(404).send({ success: false, reason: '用户不存在' })
     }
 
-    try {
-      const users = await friendService.searchUsers(query, excludeId)
-      return { success: true, users }
-    } catch (error) {
-      console.error('Search users error:', error)
-      return res.status(500).send({ error: '搜索用户失败' })
-    }
-  })
+    const friendship = await prisma.friend.findFirst({
+      where: {
+        userId: tokenUser.id,
+        friendId: friendUser.id,
+        status: 'ACCEPTED'
+      }
+    })
 
-  // GET /api/friends/count/:userId - 获取好友数量 (需登录)
-  fastify.get('/friends/count/:userId', {
-    preHandler: async (req, res) => {
-      await authMiddleware(req, res)
-    }
-  }, async (req, res) => {
-    const { userId } = req.params
-
-    // Verify the userId matches the token user
-    const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userId) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+    if (!friendship) {
+      return res.status(403).send({ success: false, reason: '你们不是好友关系' })
     }
 
-    if (!userId) {
-      return res.status(400).send({ error: 'userId is required' })
-    }
+    // Query DreamWall where openid = :openid, visibility = 'public', status = 'approved'
+    const skip = (parseInt(page) - 1) * parseInt(limit)
+    const posts = await prisma.dreamWall.findMany({
+      where: {
+        openid: openid,
+        visibility: 'public',
+        status: 'approved'
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: parseInt(limit)
+    })
 
-    try {
-      const count = await friendService.getFriendCount(userId)
-      return { success: true, count }
-    } catch (error) {
-      console.error('Get friend count error:', error)
-      return res.status(500).send({ error: '获取好友数量失败' })
+    const total = await prisma.dreamWall.count({
+      where: {
+        openid: openid,
+        visibility: 'public',
+        status: 'approved'
+      }
+    })
+
+    return {
+      success: true,
+      posts: posts.map(p => ({
+        id: p.id,
+        sessionId: p.sessionId,
+        storyTitle: p.storyTitle,
+        storySnippet: p.storySnippet,
+        nickname: p.isAnonymous ? '匿名用户' : p.nickname,
+        avatar: p.isAnonymous ? null : p.avatar,
+        likeCount: p.likeCount,
+        commentCount: p.commentCount,
+        createdAt: p.createdAt
+      })),
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
     }
   })
 }
