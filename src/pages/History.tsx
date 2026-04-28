@@ -79,7 +79,9 @@ export function History() {
 
           // Add new items from backend that don't exist locally
           sessions.forEach((s: any) => {
-            if (!merged.find(item => item.id === s.id)) {
+            // Check by both id and sessionId to avoid duplicates
+            // Local entries use id like "session_xxx", backend uses sessionId as id
+            if (!merged.find(item => item.id === s.id || item.sessionId === s.sessionId)) {
               const dateObj = new Date(s.date)
               const dateStr = dateObj.toLocaleDateString('zh-CN')
               merged.push({
@@ -274,7 +276,7 @@ export function History() {
   }
 
   const handleReadStory = (item: typeof history[0]) => {
-    navigate('/story', { state: { fromHistory: item } })
+    navigate(`/story/${item.sessionId}`, { state: { fromHistory: item } })
   }
 
   const toggleExpand = (id: string) => {
