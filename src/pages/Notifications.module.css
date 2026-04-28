@@ -19,7 +19,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   margin-bottom: var(--space-6);
+  min-width: 0;
 }
 
 .backButton {
@@ -35,6 +37,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s var(--ease-dream);
+  flex-shrink: 0;
 }
 
 .backButton:hover {
@@ -53,6 +56,12 @@
   font-weight: 500;
   color: var(--color-moonlight);
   margin: 0;
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .markAllRead {
@@ -63,6 +72,9 @@
   font-size: var(--text-sm);
   cursor: pointer;
   transition: all 0.3s var(--ease-dream);
+  flex-shrink: 0;
+  min-width: 60px;
+  text-align: right;
 }
 
 .markAllRead:hover {
