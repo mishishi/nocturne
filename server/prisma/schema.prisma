@@ -23,6 +23,8 @@ model User {
   medals           String[]  @default([])   // 已解锁勋章
   consecutiveShares Int      @default(0)    // 连续分享天数
   lastShareDate    DateTime?               // 上次分享日期
+  lastViewedNotificationsAt DateTime?        // 上次查看通知时间
+  notifications    Notification[] @relation("Notifications")
   sessions         Session[]
   shareLogs        ShareLog[]
   storyFeedbacks   StoryFeedback[]
@@ -33,6 +35,7 @@ model User {
   dreamWallPosts   DreamWall[] @relation("WallPosts")
   dreamWallLikes   DreamWallLike[]
   dreamWallComments DreamWallComment[]
+  notificationsFrom Notification[] @relation("NotificationFrom")
 }
 
 model Friend {
@@ -199,4 +202,25 @@ model StoryFeedback {
   user             User     @relation(fields: [openid], references: [openid])
 
   @@index([openid])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  openid      String   // 接收通知的用户
+  type        String   // LIKE | COMMENT | FRIEND_REQUEST | FRIEND_ACCEPTED
+  fromOpenid  String   // 触发通知的用户
+  fromNickname String  // 触发通知的用户昵称（快照）
+  targetId    String?  // 关联目标ID（如故事ID）
+  targetTitle String?  // 关联目标标题（如故事标题）
+  message     String   // 通知文案
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime // 30天后过期
+
+  user        User     @relation("Notifications", fields: [openid], references: [openid])
+  fromUser    User     @relation("NotificationFrom", fields: [fromOpenid], references: [openid])
+
+  @@index([openid, createdAt])
+  @@index([openid, isRead])
+  @@index([expiresAt])
 }
