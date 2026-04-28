@@ -1,6 +1,10 @@
 .breadcrumb {
-  padding: var(--space-2) 0;
-  margin-bottom: var(--space-3);
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-2);
+  margin-bottom: var(--space-2);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
 }
 
 .list {
@@ -11,6 +15,8 @@
   margin: 0;
   padding: 0;
   flex-wrap: wrap;
+  padding-left: 0;
+  margin-left: 0;
 }
 
 .item {
@@ -20,32 +26,31 @@
 }
 
 .link {
-  color: var(--color-silver);
+  color: var(--color-golden);
   text-decoration: none;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   transition: color 0.2s ease;
 }
 
 .link:hover {
-  color: var(--color-moonlight);
+  color: var(--color-golden-bright);
   text-decoration: underline;
 }
 
 .text {
-  color: var(--color-silver);
-  font-size: 0.8125rem;
+  color: var(--color-silver-dim);
+  font-size: 0.875rem;
 }
 
 .current {
   color: var(--color-moonlight);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
 .separator {
-  width: 8px;
-  height: 14px;
-  color: var(--color-silver);
-  opacity: 0.5;
+  width: 12px;
+  height: 12px;
+  color: var(--color-silver-dim);
   flex-shrink: 0;
 }
