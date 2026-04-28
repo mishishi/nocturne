@@ -34,7 +34,6 @@ export function Story() {
   const [showFabMenu, setShowFabMenu] = useState(false)
   const [showPosterModal, setShowPosterModal] = useState(false)
   const [readProgress, setReadProgress] = useState(0)
-  const [showProgressInfo, setShowProgressInfo] = useState(false)
   const [isRevealed, setIsRevealed] = useState(false)
   const [showContent, setShowContent] = useState(false)
   const [showInterpretation, setShowInterpretation] = useState(false)
@@ -54,7 +53,7 @@ export function Story() {
   )
   // Pending share confirmation state
   const [pendingShareType, setPendingShareType] = useState<'friend' | 'moment' | null>(null)
-  const { speak, stop, isSpeaking, isSupported: isTtsSupported, voices, selectedVoice, setVoice } = useTextToSpeech()
+  const { speak, stop, isSpeaking, voices, selectedVoice, setVoice } = useTextToSpeech()
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const aiWrapperRef = useRef<HTMLDivElement>(null)
   const shareMenuRef = useRef<HTMLDivElement>(null)
@@ -77,6 +76,7 @@ export function Story() {
   // 从梦墙进入时，判断当前用户是否是作者
   const currentUserOpenid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
   const storyAuthorOpenid = location.state?.authorOpenid
+  const authorIsFriend = location.state?.isFriend
   // 只有在梦墙场景下才需要判断作者身份：当前用户openid与故事作者openid相同才是作者
   // isAuthor: user is the author if their openid matches the session's openid
   // For history stories where currentSession.openid is empty, use currentUserOpenid from localStorage
@@ -107,7 +107,6 @@ export function Story() {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
       const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
       setReadProgress(Math.min(100, Math.max(0, progress)))
-      if (scrollTop > 0) setShowProgressInfo(true)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
@@ -658,7 +657,7 @@ export function Story() {
               </svg>
             </span>
             <span className={styles.badge}>你的故事</span>
-            {fromDreamWall && !isAuthor && storyAuthorOpenid && (
+            {fromDreamWall && !isAuthor && storyAuthorOpenid && !authorIsFriend && (
               <FriendRequestButton friendOpenid={storyAuthorOpenid} />
             )}
           </div>

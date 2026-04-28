@@ -24,6 +24,7 @@ export function DreamWall() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [likingId, setLikingId] = useState<string | null>(null)
+  const [favoritingId, setFavoritingId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -35,10 +36,11 @@ export function DreamWall() {
 
     try {
       const result = await wallApi.getPosts({
-        tab: tab === 'my' ? 'all' : tab,
+        tab: (tab === 'my' ? 'all' : tab) as 'all' | 'featured',
         page: pageNum,
         limit: 20,
-        keyword
+        keyword,
+        openid: user?.openid
       })
 
       // Defensive check for response structure
@@ -168,7 +170,7 @@ export function DreamWall() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && activeTab !== 'my' && activeTab !== 'friends') {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && activeTab !== 'my') {
           const nextPage = page + 1
           setPage(nextPage)
           if (activeTab === 'friends') {
@@ -246,6 +248,50 @@ export function DreamWall() {
     }
   }
 
+  const handleFavorite = async (postId: string) => {
+    if (!user?.openid) {
+      setToastType('info')
+      setToastMessage('请先登录')
+      setToastVisible(true)
+      return
+    }
+
+    if (favoritingId) return
+    setFavoritingId(postId)
+
+    // Optimistic update - immediately update UI
+    const previousPosts = posts
+    setPosts(prev => prev.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          isFavorite: !post.isFavorite
+        }
+      }
+      return post
+    }))
+
+    try {
+      const result = await wallApi.toggleFavorite(postId, user.openid)
+      if (!result.success) {
+        // Revert on failure
+        setPosts(previousPosts)
+        setToastType('error')
+        setToastMessage('收藏失败，请重试')
+        setToastVisible(true)
+      }
+    } catch (err) {
+      // Revert on error
+      setPosts(previousPosts)
+      console.error('Failed to toggle favorite:', err)
+      setToastType('error')
+      setToastMessage('收藏失败，请重试')
+      setToastVisible(true)
+    } finally {
+      setFavoritingId(null)
+    }
+  }
+
   const handlePostClick = (post: DreamWallPost) => {
     console.log('[DreamWall] Post clicked:', {
       id: post.id,
@@ -270,6 +316,7 @@ export function DreamWall() {
         storyFull: post.storyFull || null,
         authorOpenid: post.openid,
         postId: post.id,
+        isFriend: post.isFriend,
       }
     })
   }
@@ -540,7 +587,19 @@ export function DreamWall() {
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </svg>
                     </button>
-                    {user?.openid && post.openid !== user.openid && (
+                    {user?.openid && (
+                      <button
+                        className={`${styles.actionBtn} ${post.isFavorite ? styles.favorited : ''}`}
+                        onClick={() => handleFavorite(post.id)}
+                        disabled={favoritingId === post.id}
+                        aria-label={post.isFavorite ? '取消收藏' : '收藏'}
+                      >
+                        <svg viewBox="0 0 24 24" fill={post.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                      </button>
+                    )}
+                    {user?.openid && post.openid !== user.openid && !post.isFriend && (
                       <FriendRequestButton friendOpenid={post.openid} />
                     )}
                   </div>

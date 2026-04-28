@@ -43,7 +43,7 @@ function checkContentSafety(text) {
 export default async function dreamWallRoutes(fastify) {
   // GET /api/wall - 获取梦墙列表 (公开)
   fastify.get('/wall', async (req, res) => {
-    const { tab = 'all', page = '1', limit = '20', keyword } = req.query
+    const { tab = 'all', page = '1', limit = '20', keyword, openid: userOpenid } = req.query
     const skip = (parseInt(page) - 1) * parseInt(limit)
 
     const where = {
@@ -91,13 +91,50 @@ export default async function dreamWallRoutes(fastify) {
           skip,
           take: parseInt(limit),
           include: {
-            likes: { take: 1, select: { openid: true } }
+            likes: { take: 1, select: { openid: true } },
+            favorites: { take: 1, select: { openid: true } }
           }
         }),
         prisma.dreamWall.count({
           where: featuredWhere
         })
       ])
+
+      // Get friend relationships for the current user
+      // Note: Friend.userId and Friend.friendId store User.id (internal cuid), not User.openid
+      let friendOpenidSet = new Set()
+      if (userOpenid && posts.length > 0) {
+        const postOpenids = [...new Set(posts.map(p => p.openid))]
+
+        // Look up internal User ids from openids
+        const currentUser = await prisma.user.findUnique({ where: { openid: userOpenid } })
+        const postAuthors = await prisma.user.findMany({
+          where: { openid: { in: postOpenids } },
+          select: { id: true, openid: true }
+        })
+        const authorIdToOpenid = new Map(postAuthors.map(a => [a.id, a.openid]))
+        const authorOpenidsSet = new Set(postOpenids)
+
+        if (currentUser) {
+          const friends = await prisma.friend.findMany({
+            where: {
+              status: 'ACCEPTED',
+              OR: [
+                { userId: currentUser.id, friendId: { in: [...authorIdToOpenid.keys()] } },
+                { friendId: currentUser.id, userId: { in: [...authorIdToOpenid.keys()] } }
+              ]
+            }
+          })
+          friends.forEach(f => {
+            // Get the friend's openid from the authorIdToOpenid map
+            const friendId = f.userId === currentUser.id ? f.friendId : f.userId
+            const friendOpenid = authorIdToOpenid.get(friendId)
+            if (friendOpenid && authorOpenidsSet.has(friendOpenid)) {
+              friendOpenidSet.add(friendOpenid)
+            }
+          })
+        }
+      }
 
       const items = posts.map(post => ({
         id: post.id,
@@ -113,7 +150,9 @@ export default async function dreamWallRoutes(fastify) {
         commentCount: post.commentCount,
         isFeatured: post.isFeatured,
         createdAt: post.createdAt,
-        hasLiked: false,
+        hasLiked: userOpenid ? post.likes.some(l => l.openid === userOpenid) : false,
+        isFavorite: userOpenid ? post.favorites.some(f => f.openid === userOpenid) : false,
+        isFriend: userOpenid ? friendOpenidSet.has(post.openid) : false,
         engagementScore: post.likeCount + post.commentCount * 2
       }))
 
@@ -139,11 +178,48 @@ export default async function dreamWallRoutes(fastify) {
         take: parseInt(limit),
         include: {
           likes: { take: 1, select: { openid: true } },
+          favorites: { take: 1, select: { openid: true } },
           _count: { select: { comments: true } }
         }
       }),
       prisma.dreamWall.count({ where })
     ])
+
+    // Get friend relationships for the current user
+    // Note: Friend.userId and Friend.friendId store User.id (internal cuid), not User.openid
+    let friendOpenidSet = new Set()
+    if (userOpenid && posts.length > 0) {
+      const postOpenids = [...new Set(posts.map(p => p.openid))]
+
+      // Look up internal User ids from openids
+      const currentUser = await prisma.user.findUnique({ where: { openid: userOpenid } })
+      const postAuthors = await prisma.user.findMany({
+        where: { openid: { in: postOpenids } },
+        select: { id: true, openid: true }
+      })
+      const authorIdToOpenid = new Map(postAuthors.map(a => [a.id, a.openid]))
+      const authorOpenidsSet = new Set(postOpenids)
+
+      if (currentUser) {
+        const friends = await prisma.friend.findMany({
+          where: {
+            status: 'ACCEPTED',
+            OR: [
+              { userId: currentUser.id, friendId: { in: [...authorIdToOpenid.keys()] } },
+              { friendId: currentUser.id, userId: { in: [...authorIdToOpenid.keys()] } }
+            ]
+          }
+        })
+        friends.forEach(f => {
+          // Get the friend's openid from the authorIdToOpenid map
+          const friendId = f.userId === currentUser.id ? f.friendId : f.userId
+          const friendOpenid = authorIdToOpenid.get(friendId)
+          if (friendOpenid && authorOpenidsSet.has(friendOpenid)) {
+            friendOpenidSet.add(friendOpenid)
+          }
+        })
+      }
+    }
 
     // Transform response
     const items = posts.map(post => ({
@@ -160,7 +236,9 @@ export default async function dreamWallRoutes(fastify) {
       commentCount: post.commentCount,
       isFeatured: post.isFeatured,
       createdAt: post.createdAt,
-      hasLiked: false // Will be set if user is logged in
+      hasLiked: userOpenid ? post.likes.some(l => l.openid === userOpenid) : false,
+      isFavorite: userOpenid ? post.favorites.some(f => f.openid === userOpenid) : false,
+      isFriend: userOpenid ? friendOpenidSet.has(post.openid) : false
     }))
 
     return {
@@ -279,9 +357,9 @@ export default async function dreamWallRoutes(fastify) {
         }
       })
 
-      const friendIds = friends.map(f => f.friendId)
+      const friendInternalIds = friends.map(f => f.friendId)
 
-      if (friendIds.length === 0) {
+      if (friendInternalIds.length === 0) {
         return {
           posts: [],
           pagination: {
@@ -293,11 +371,18 @@ export default async function dreamWallRoutes(fastify) {
         }
       }
 
-      // Query DreamWall where openid IN friendIds AND status='approved' AND visibility='public'
+      // Look up openids for these friends (Friend.friendId stores internal User.id, not openid)
+      const friendUsers = await prisma.user.findMany({
+        where: { id: { in: friendInternalIds } },
+        select: { openid: true }
+      })
+      const friendOpenids = friendUsers.map(u => u.openid)
+
+      // Query DreamWall where openid IN friendOpenids AND status='approved' AND visibility='public'
       const [posts, total] = await Promise.all([
         prisma.dreamWall.findMany({
           where: {
-            openid: { in: friendIds },
+            openid: { in: friendOpenids },
             status: 'approved',
             visibility: 'public'
           },
@@ -306,12 +391,13 @@ export default async function dreamWallRoutes(fastify) {
           take: parseInt(limit),
           include: {
             likes: { take: 1, select: { openid: true } },
+            favorites: { take: 1, select: { openid: true } },
             _count: { select: { comments: true } }
           }
         }),
         prisma.dreamWall.count({
           where: {
-            openid: { in: friendIds },
+            openid: { in: friendOpenids },
             status: 'approved',
             visibility: 'public'
           }
@@ -332,7 +418,8 @@ export default async function dreamWallRoutes(fastify) {
         commentCount: post.commentCount,
         isFeatured: post.isFeatured,
         createdAt: post.createdAt,
-        hasLiked: false
+        hasLiked: post.likes.some(l => l.openid === tokenUser.openid),
+        isFavorite: post.favorites.some(f => f.openid === tokenUser.openid)
       }))
 
       return {
@@ -627,6 +714,127 @@ export default async function dreamWallRoutes(fastify) {
         createdAt: comment.createdAt,
         replies: []
       }
+    }
+  })
+
+  // POST /api/wall/:postId/favorite - 收藏/取消收藏 (需登录)
+  fastify.post('/wall/:postId/favorite', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { postId } = req.params
+    const { openid } = req.body
+
+    if (!openid) {
+      return res.status(400).send({ success: false, reason: '缺少 openid' })
+    }
+
+    // Verify the openid matches the token user
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser || tokenUser.openid !== openid) {
+      return res.status(403).send({ success: false, reason: '无权操作' })
+    }
+
+    const post = await prisma.dreamWall.findUnique({
+      where: { id: postId }
+    })
+
+    if (!post) {
+      return res.status(404).send({ success: false, reason: '帖子不存在' })
+    }
+
+    // Check if already favorited
+    const existingFavorite = await prisma.dreamWallFavorite.findUnique({
+      where: {
+        wallId_openid: { wallId: postId, openid }
+      }
+    })
+
+    if (existingFavorite) {
+      // Remove favorite
+      await prisma.dreamWallFavorite.delete({
+        where: { id: existingFavorite.id }
+      })
+
+      return { success: true, favorited: false }
+    } else {
+      // Add favorite
+      await prisma.dreamWallFavorite.create({
+        data: { wallId: postId, openid }
+      })
+
+      return { success: true, favorited: true }
+    }
+  })
+
+  // GET /api/wall/favorites - 获取我的收藏列表 (需登录)
+  fastify.get('/wall/favorites', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    try {
+      const { page = '1', limit = '20' } = req.query
+      const skip = (parseInt(page) - 1) * parseInt(limit)
+
+      // Get authenticated user
+      const tokenUser = await authService.getUser(req.userId)
+      if (!tokenUser) {
+        return res.status(401).send({ success: false, reason: '用户未找到' })
+      }
+
+      const [favorites, total] = await Promise.all([
+        prisma.dreamWallFavorite.findMany({
+          where: { openid: tokenUser.openid },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: parseInt(limit),
+          include: {
+            wall: {
+              include: {
+                likes: { take: 1, select: { openid: true } }
+              }
+            }
+          }
+        }),
+        prisma.dreamWallFavorite.count({
+          where: { openid: tokenUser.openid }
+        })
+      ])
+
+      const posts = favorites
+        .filter(f => f.wall.status === 'approved')
+        .map(f => ({
+          id: f.wall.id,
+          sessionId: f.wall.sessionId,
+          openid: f.wall.openid,
+          storyTitle: f.wall.storyTitle,
+          storySnippet: f.wall.storySnippet,
+          storyFull: f.wall.storyFull,
+          isAnonymous: f.wall.isAnonymous,
+          nickname: f.wall.isAnonymous ? '匿名用户' : f.wall.nickname,
+          avatar: f.wall.isAnonymous ? null : f.wall.avatar,
+          likeCount: f.wall.likeCount,
+          commentCount: f.wall.commentCount,
+          isFeatured: f.wall.isFeatured,
+          createdAt: f.wall.createdAt,
+          hasLiked: f.wall.likes.some(l => l.openid === tokenUser.openid),
+          isFavorite: true
+        }))
+
+      return {
+        posts,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          hasMore: skip + posts.length < total
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error)
+      return res.status(500).send({ success: false, reason: '服务器错误' })
     }
   })
 }
