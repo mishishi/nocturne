@@ -331,12 +331,12 @@ export default async function dreamWallRoutes(fastify) {
         data: { likeCount: { increment: 1 } }
       })
 
-      // Create LIKE notification for post author
+      // Create LIKE notification for post author (fire-and-forget)
       const liker = await prisma.user.findUnique({
         where: { openid },
         select: { nickname: true }
       })
-      await createNotification(prisma, {
+      createNotification(prisma, {
         openid: post.openid,
         type: 'LIKE',
         fromOpenid: openid,
@@ -344,6 +344,8 @@ export default async function dreamWallRoutes(fastify) {
         targetId: post.sessionId,
         targetTitle: post.storyTitle,
         message: `${liker?.nickname || '匿名用户'} 点赞了你的故事《${post.storyTitle}》`
+      }).catch(err => {
+        req.log.error({ err }, 'Failed to create notification')
       })
 
       return { success: true, liked: true }
@@ -487,8 +489,8 @@ export default async function dreamWallRoutes(fastify) {
       })
     ])
 
-    // Create COMMENT notification for post author
-    await createNotification(prisma, {
+    // Create COMMENT notification for post author (fire-and-forget)
+    createNotification(prisma, {
       openid: post.openid,
       type: 'COMMENT',
       fromOpenid: openid,
@@ -496,6 +498,8 @@ export default async function dreamWallRoutes(fastify) {
       targetId: post.sessionId,
       targetTitle: post.storyTitle,
       message: `${user?.nickname || '匿名用户'} 评论了你的故事`
+    }).catch(err => {
+      req.log.error({ err }, 'Failed to create notification')
     })
 
     return {
