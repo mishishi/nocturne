@@ -16,32 +16,34 @@
 
 /* Header */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  text-align: center;
   margin-bottom: var(--space-6);
 }
 
+.moonIcon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto var(--space-4);
+}
+
+.moonIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
 .title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: 500;
   color: var(--color-moonlight);
-  margin: 0;
+  margin: 0 0 var(--space-2);
 }
 
-.titleIcon {
-  width: 28px;
-  height: 28px;
-  color: var(--color-golden);
-}
-
-.friendCount {
+.subtitle {
   font-size: var(--text-sm);
-  color: var(--color-silver-dim);
+  color: var(--color-silver);
+  margin: 0;
+  opacity: 0.7;
 }
 
 /* Tabs */

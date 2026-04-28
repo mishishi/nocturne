@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { friendApi, FriendListItem, FriendRequestItem } from '../services/api'
 import { Toast } from '../components/ui/Toast'
+import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Friends.module.css'
 
 export function Friends() {
@@ -111,18 +112,32 @@ export function Friends() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: '首页', href: '/' },
+            { label: '好友' }
+          ]}
+        />
+
         {/* Header */}
         <header className={styles.header}>
-          <h1 className={styles.title}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.titleIcon}>
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          <div className={styles.moonIcon}>
+            <svg viewBox="0 0 60 60" fill="none">
+              <circle cx="30" cy="30" r="25" fill="url(#friendMoonGrad)" />
+              <circle cx="22" cy="22" r="4" fill="rgba(255,255,255,0.3)" />
+              <circle cx="35" cy="28" r="3" fill="rgba(255,255,255,0.2)" />
+              <circle cx="25" cy="35" r="3.5" fill="rgba(255,255,255,0.25)" />
+              <defs>
+                <radialGradient id="friendMoonGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FFD666" />
+                  <stop offset="100%" stopColor="#F4D35E" />
+                </radialGradient>
+              </defs>
             </svg>
-            好友
-          </h1>
-          <span className={styles.friendCount}>{friends.length} 位好友</span>
+          </div>
+          <h1 className={styles.title}>好友</h1>
+          <p className={styles.subtitle}>管理您的好友关系</p>
         </header>
 
         {/* Tabs */}
