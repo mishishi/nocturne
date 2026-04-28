@@ -591,26 +591,7 @@ export const wallApi = {
     return res.json()
   },
 
-  // Add comment (需登录) - legacy method
-  async addComment(params: {
-    postId: string
-    openid: string
-    content: string
-    isAnonymous?: boolean
-  }): Promise<{ success: boolean; comment?: DreamWallComment }> {
-    const res = await fetchWithTimeout(`${API_BASE}/wall/${params.postId}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({
-        openid: params.openid,
-        content: params.content,
-        isAnonymous: params.isAnonymous ?? true
-      })
-    })
-    if (!res.ok) throw new Error(`添加评论失败: ${res.status}`)
-    return res.json()
   }
-}
 
 // Story Feedback API
 export const storyFeedbackApi = {
