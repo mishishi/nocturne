@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
+import { friendApi } from '../services/api'
 import styles from './BottomNav.module.css'
 
 const NAV_ITEMS = [
@@ -21,6 +23,18 @@ const NAV_ITEMS = [
         <circle cx="12" cy="12" r="10" />
         <path d="M12 2a7 7 0 0 1 0 14 7 7 0 0 1 0-14" />
         <circle cx="12" cy="9" r="3" />
+      </svg>
+    )
+  },
+  {
+    path: '/friends',
+    label: '好友',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
     )
   },
@@ -48,7 +62,29 @@ const NAV_ITEMS = [
 
 export function BottomNav() {
   const location = useLocation()
-  const { achievements } = useDreamStore()
+  const { recentlyUnlocked, user } = useDreamStore()
+  const [pendingCount, setPendingCount] = useState(0)
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      if (!user?.openid) {
+        setPendingCount(0)
+        return
+      }
+      try {
+        const res = await friendApi.getFriendRequests()
+        if (res.success) {
+          setPendingCount(res.requests.length)
+        }
+      } catch (err) {
+        console.error('Failed to fetch pending requests:', err)
+      }
+    }
+
+    fetchPendingCount()
+    const interval = setInterval(fetchPendingCount, 30000)
+    return () => clearInterval(interval)
+  }, [user?.openid])
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
@@ -69,9 +105,14 @@ export function BottomNav() {
           >
             <span className={styles.icon}>{item.icon}</span>
             <span className={styles.label}>{item.label}</span>
-            {item.path === '/profile' && achievements.length > 0 && (
-              <span className={styles.badge} aria-label={`${achievements.length}个已解锁成就`}>
-                {achievements.length}
+            {item.path === '/profile' && recentlyUnlocked.length > 0 && (
+              <span className={styles.badge} aria-label={`${recentlyUnlocked.length}个新成就`}>
+                {recentlyUnlocked.length}
+              </span>
+            )}
+            {item.path === '/friends' && pendingCount > 0 && (
+              <span className={styles.badge} aria-label={`${pendingCount}个待处理好友请求`}>
+                {pendingCount}
               </span>
             )}
           </Link>

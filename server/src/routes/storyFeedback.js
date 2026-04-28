@@ -65,8 +65,8 @@ export default async function storyFeedbackRoutes(fastify) {
     }
 
     // Check if already submitted
-    const existingFeedback = await prisma.storyFeedback.findUnique({
-      where: { sessionId }
+    const existingFeedback = await prisma.storyFeedback.findFirst({
+      where: { sessionId, openid: tokenUser.openid }
     })
 
     if (existingFeedback) {
@@ -106,7 +106,7 @@ export default async function storyFeedbackRoutes(fastify) {
   fastify.get('/story-feedback/:sessionId', async (req, res) => {
     const { sessionId } = req.params
 
-    const feedback = await prisma.storyFeedback.findUnique({
+    const feedback = await prisma.storyFeedback.findFirst({
       where: { sessionId }
     })
 

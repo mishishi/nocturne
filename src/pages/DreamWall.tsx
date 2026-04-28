@@ -82,6 +82,7 @@ export function DreamWall() {
           isAnonymous: p.isAnonymous,
           nickname: p.isAnonymous ? '匿名用户' : user?.nickname,
           avatar: p.isAnonymous ? undefined : user?.avatar,
+          openid: openid,
           likeCount: p.likeCount,
           commentCount: p.commentCount,
           isFeatured: p.isFeatured,
