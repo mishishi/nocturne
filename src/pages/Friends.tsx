@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { friendApi, FriendListItem, FriendRequestItem } from '../services/api'
 import { Toast } from '../components/ui/Toast'
 import styles from './Friends.module.css'
 
 export function Friends() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'list' | 'requests'>('list')
   const [friends, setFriends] = useState<FriendListItem[]>([])
   const [requests, setRequests] = useState<FriendRequestItem[]>([])
@@ -165,7 +167,11 @@ export function Friends() {
                     </div>
                   ) : (
                     friends.map((friend) => (
-                      <div key={friend.id} className={styles.friendCard}>
+                      <div
+                        key={friend.id}
+                        className={styles.friendCard}
+                        onClick={() => navigate(`/friends/${friend.openid}`)}
+                      >
                         <div className={styles.friendAvatar}>
                           {friend.avatar ? (
                             <img src={friend.avatar} alt={friend.nickname} />
@@ -186,7 +192,10 @@ export function Friends() {
                         </div>
                         <button
                           className={styles.removeButton}
-                          onClick={() => handleRemoveFriend(friend.openid)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRemoveFriend(friend.openid)
+                          }}
                           aria-label="删除好友"
                         >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

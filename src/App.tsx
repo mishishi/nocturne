@@ -20,6 +20,7 @@ import { Profile } from './pages/Profile'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { Friends } from './pages/Friends'
+import { FriendProfile } from './pages/FriendProfile'
 import { DreamWall } from './pages/DreamWall'
 import { WeChatCallback } from './pages/WeChatCallback'
 
@@ -90,6 +91,9 @@ function App() {
             } />
             <Route path="/friends" element={
               <PageErrorBoundary><ProtectedRoute><Friends /></ProtectedRoute></PageErrorBoundary>
+            } />
+            <Route path="/friends/:openid" element={
+              <PageErrorBoundary><ProtectedRoute><FriendProfile /></ProtectedRoute></PageErrorBoundary>
             } />
             <Route path="/auth/wechat/callback" element={<PageErrorBoundary><WeChatCallback /></PageErrorBoundary>} />
           </Routes>
