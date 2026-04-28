@@ -75,7 +75,8 @@ export default async function friendRoutes(fastify) {
 
     return {
       success: true,
-      requestId: friend.id
+      requestId: friend.id,
+      message: "好友请求已发送"
     }
   })
 
@@ -127,7 +128,8 @@ export default async function friendRoutes(fastify) {
     })
 
     return {
-      success: true
+      success: true,
+      message: "已添加好友"
     }
   })
 
@@ -169,7 +171,8 @@ export default async function friendRoutes(fastify) {
     })
 
     return {
-      success: true
+      success: true,
+      message: "已拒绝请求"
     }
   })
 
@@ -212,7 +215,8 @@ export default async function friendRoutes(fastify) {
     })
 
     return {
-      success: true
+      success: true,
+      message: "已删除好友"
     }
   })
 
@@ -249,6 +253,7 @@ export default async function friendRoutes(fastify) {
     return {
       success: true,
       friends: friends.map(f => ({
+        id: f.id,
         openid: f.friend.openid,
         nickname: f.friend.nickname,
         avatar: f.friend.avatar,
@@ -290,7 +295,7 @@ export default async function friendRoutes(fastify) {
     return {
       success: true,
       requests: requests.map(r => ({
-        requestId: r.id,
+        id: r.id,
         openid: r.user.openid,
         nickname: r.user.nickname,
         avatar: r.user.avatar,
