@@ -533,7 +533,28 @@ export const wallApi = {
 
   // Get comments (public, no auth needed)
   async getComments(postId: string, page = 1, limit = 20): Promise<{
-    comments: DreamWallComment[]
+    success: boolean
+    comments: Array<{
+      id: string
+      content: string
+      isAnonymous: boolean
+      nickname: string | null
+      avatar: string | null
+      isAuthor: boolean
+      createdAt: string
+      parentId: string | null
+      replies: Array<{
+        id: string
+        content: string
+        isAnonymous: boolean
+        nickname: string | null
+        avatar: string | null
+        isAuthor: boolean
+        createdAt: string
+        parentId: string | null
+        replies: []
+      }>
+    }>
     pagination: { page: number; limit: number; total: number }
   }> {
     const res = await fetchWithTimeout(`${API_BASE}/wall/${postId}/comments?page=${page}&limit=${limit}`)
@@ -541,7 +562,36 @@ export const wallApi = {
     return res.json()
   },
 
-  // Add comment (需登录)
+  // Post comment (需登录)
+  async postComment(postId: string, data: {
+    openid: string
+    content: string
+    isAnonymous?: boolean
+    parentId?: string | null
+  }): Promise<{
+    success: boolean
+    comment: {
+      id: string
+      content: string
+      isAnonymous: boolean
+      nickname: string | null
+      avatar: string | null
+      isAuthor: boolean
+      createdAt: string
+      parentId: string | null
+      replies: []
+    }
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/wall/${postId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(data)
+    })
+    if (!res.ok) throw new Error(`添加评论失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Add comment (需登录) - legacy method
   async addComment(params: {
     postId: string
     openid: string
