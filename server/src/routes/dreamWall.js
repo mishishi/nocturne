@@ -422,6 +422,12 @@ export default async function dreamWallRoutes(fastify) {
       }
     }
 
+    // Content safety check
+    const safety = checkContentSafety(content)
+    if (!safety.safe) {
+      return res.status(400).send({ success: false, reason: safety.reason })
+    }
+
     // Get user info
     const user = await prisma.user.findUnique({
       where: { openid }
