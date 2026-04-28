@@ -452,8 +452,7 @@ export interface DreamWallPost {
   hasLiked?: boolean
   createdAt: string
   // Featured algorithm fields (only populated when tab=featured)
-  overallAvg?: number
-  feedbackCount?: number
+  engagementScore?: number
 }
 
 export interface DreamWallComment {

@@ -303,8 +303,8 @@
   overflow: hidden;
 }
 
-/* Rating Display for Featured */
-.ratingDisplay {
+/* Engagement Display for Featured */
+.engagementDisplay {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -315,30 +315,10 @@
   border: 1px solid rgba(244, 211, 94, 0.2);
 }
 
-.ratingScore {
-  font-size: 1.25rem;
-  font-weight: 700;
+.engagementScore {
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--color-golden, #F4D35E);
-}
-
-.ratingStars {
-  display: flex;
-  gap: 2px;
-}
-
-.ratingStar {
-  font-size: 14px;
-  color: rgba(244, 211, 94, 0.3);
-}
-
-.ratingStar.filled {
-  color: var(--color-golden, #F4D35E);
-}
-
-.ratingCount {
-  font-size: 0.75rem;
-  color: var(--color-silver, #A8B5C9);
-  margin-left: auto;
 }
 
 /* Post Actions */

@@ -32,44 +32,37 @@ export default async function dreamWallRoutes(fastify) {
 
     // Tab filtering
     if (tab === 'featured') {
-      // Featured algorithm: 30天内, 至少3条反馈, 按综合分排序
+      // Featured algorithm: 30天内, 按综合分(点赞+评论*2)排序
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-      // Use raw query to get featured posts with rating-based algorithm
-      const featuredPosts = await prisma.$queryRaw`
-        SELECT
-          dw.*,
-          AVG(sf.overall_rating)::float as overall_avg,
-          COUNT(sf.id)::int as feedback_count
-        FROM dream_wall dw
-        INNER JOIN "Session" s ON dw."sessionId" = s.id
-        INNER JOIN story_feedback sf ON s.id = sf."sessionId"
-        WHERE dw.status = 'approved'
-          AND dw.visibility = 'public'
-          AND sf.created_at >= ${thirtyDaysAgo}
-        GROUP BY dw.id
-        HAVING COUNT(sf.id) >= 3
-        ORDER BY overall_avg DESC
-        LIMIT ${parseInt(limit)}
-        OFFSET ${skip}
-      `
+      const [posts, total] = await Promise.all([
+        prisma.dreamWall.findMany({
+          where: {
+            status: 'approved',
+            visibility: 'public',
+            createdAt: { gte: thirtyDaysAgo }
+          },
+          orderBy: [
+            { likeCount: 'desc' },
+            { commentCount: 'desc' },
+            { createdAt: 'desc' }
+          ],
+          skip,
+          take: parseInt(limit),
+          include: {
+            likes: { take: 1, select: { openid: true } }
+          }
+        }),
+        prisma.dreamWall.count({
+          where: {
+            status: 'approved',
+            visibility: 'public',
+            createdAt: { gte: thirtyDaysAgo }
+          }
+        })
+      ])
 
-      // Get total count for pagination
-      const countResult = await prisma.$queryRaw`
-        SELECT COUNT(DISTINCT dw.id)::int as total
-        FROM dream_wall dw
-        INNER JOIN "Session" s ON dw."sessionId" = s.id
-        INNER JOIN story_feedback sf ON s.id = sf."sessionId"
-        WHERE dw.status = 'approved'
-          AND dw.visibility = 'public'
-          AND sf.created_at >= ${thirtyDaysAgo}
-        GROUP BY dw.id
-        HAVING COUNT(sf.id) >= 3
-      `
-      const total = countResult.length
-
-      const posts = featuredPosts
       const items = posts.map(post => ({
         id: post.id,
         sessionId: post.sessionId,
@@ -85,8 +78,7 @@ export default async function dreamWallRoutes(fastify) {
         isFeatured: post.isFeatured,
         createdAt: post.createdAt,
         hasLiked: false,
-        overallAvg: post.overall_avg,
-        feedbackCount: post.feedback_count
+        engagementScore: post.likeCount + post.commentCount * 2
       }))
 
       return {

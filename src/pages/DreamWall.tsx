@@ -388,21 +388,10 @@ export function DreamWall() {
                   {/* Snippet */}
                   <p className={styles.postSnippet}>{post.storySnippet}</p>
 
-                  {/* Rating for featured posts */}
-                  {activeTab === 'featured' && post.overallAvg && (
-                    <div className={styles.ratingDisplay}>
-                      <span className={styles.ratingScore}>{post.overallAvg.toFixed(1)}</span>
-                      <div className={styles.ratingStars}>
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <span
-                            key={star}
-                            className={`${styles.ratingStar} ${star <= Math.round(post.overallAvg!) ? styles.filled : ''}`}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                      <span className={styles.ratingCount}>({post.feedbackCount}条反馈)</span>
+                  {/* Engagement score for featured posts */}
+                  {activeTab === 'featured' && post.engagementScore !== undefined && (
+                    <div className={styles.engagementDisplay}>
+                      <span className={styles.engagementScore}>热度 {post.engagementScore}</span>
                     </div>
                   )}
 
