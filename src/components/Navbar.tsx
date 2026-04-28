@@ -39,8 +39,7 @@ export function Navbar() {
         return
       }
       try {
-        const res = await notificationApi.getUnreadCount()
-        const data = await res.json()
+        const data = await notificationApi.getUnreadCount()
         if (data.success) {
           setNotificationCount(data.unreadCount)
         }
