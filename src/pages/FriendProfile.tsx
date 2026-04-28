@@ -47,16 +47,24 @@ export function FriendProfile() {
     const loadFriendInfo = async () => {
       try {
         const result = await authApi.getUser(openid)
-        if (result.success) {
+        if (result.success && result.user) {
           setFriend({
             nickname: result.user.nickname,
             avatar: result.user.avatar,
             isMember: result.user.isMember,
             memberSince: result.user.memberSince
           })
+        } else {
+          console.error('Failed to load friend info:', result)
+          setToastType('error')
+          setToastMessage('加载好友信息失败')
+          setToastVisible(true)
         }
       } catch (err) {
         console.error('Failed to load friend info:', err)
+        setToastType('error')
+        setToastMessage('加载好友信息失败')
+        setToastVisible(true)
       }
     }
 
@@ -69,7 +77,7 @@ export function FriendProfile() {
       return
     }
     loadFriendPosts(1, true)
-  }, [openid, loadFriendPosts, navigate])
+  }, [openid])
 
   const handlePostClick = (post: DreamWallPost) => {
     navigate('/story', {
