@@ -13,6 +13,8 @@
 | 梦墙 | [wall.md](./wall.md) | 故事广场、点赞、评论 |
 | 故事反馈 | [storyFeedback.md](./storyFeedback.md) | 故事评分、个性化推荐 |
 | 通知 | [notifications.md](./notifications.md) | 通知中心、点赞、评论、好友请求 |
+| 签到 | [checkin.md](./checkin.md) | 每日签到、连续签到 |
+| 私信 | [message.md](./message.md) | 好友私信、消息历史、已读标记 |
 
 ---
 
@@ -25,6 +27,9 @@
 | 2026-04-28 | 完成 storyFeedback.md 文档 |
 | 2026-04-28 | 完成 notifications.md 文档 |
 | 2026-04-28 | GET /api/wall 新增 keyword 搜索参数 |
+| 2026-04-28 | 完成 checkin.md 签到模块文档 |
+| 2026-04-28 | 完成 message.md 私信模块文档 |
+| 2026-04-28 | GET /api/wall/friends 新增关注的人动态接口 |
 
 ---
 
@@ -82,6 +87,7 @@
 |------|------|------|----------|
 | `/api/wall` | GET | 获取梦墙列表 | 否 |
 | `/api/wall` | POST | 发布到梦墙 | **是** |
+| `/api/wall/friends` | GET | 获取关注的人动态 | **是** |
 | `/api/wall/my` | GET | 获取我发布的 | **是** |
 | `/api/wall/:postId/like` | POST | 点赞/取消点赞 | **是** |
 | `/api/wall/:postId/comments` | GET | 获取评论 | 否 |
@@ -106,6 +112,23 @@
 | `/api/notifications/unread-count` | GET | 获取未读数 | **是** |
 | `/api/notifications/mark-read` | POST | 全部已读 | **是** |
 | `/api/notifications/:notificationId/read` | POST | 单条已读 | **是** |
+
+### 签到相关
+
+| 端点 | 方法 | 功能 | 需要认证 |
+|------|------|------|----------|
+| `/api/checkin` | POST | 每日签到 | **是** |
+| `/api/checkin/status` | GET | 获取签到状态 | **是** |
+| `/api/checkin/history` | GET | 获取签到历史 | **是** |
+
+### 私信相关
+
+| 端点 | 方法 | 功能 | 需要认证 |
+|------|------|------|----------|
+| `/api/messages/conversations` | GET | 获取会话列表 | **是** |
+| `/api/messages/:friendOpenid` | GET | 获取消息历史 | **是** |
+| `/api/messages` | POST | 发送消息 | **是** |
+| `/api/messages/:messageId/read` | POST | 标记已读 | **是** |
 
 ---
 
@@ -165,7 +188,9 @@ User
 ├── Friend (1:N - as friend)
 ├── DreamWall (1:N)
 ├── DreamWallLike (1:N)
-└── DreamWallComment (1:N)
+├── DreamWallComment (1:N)
+├── CheckIn (1:N)
+└── Message (1:N)
 ```
 
 ---
@@ -187,6 +212,7 @@ User
 | 好友 | `/friends` | 好友列表 |
 | 好友主页 | `/friends/:openid` | 好友个人页 |
 | 通知 | `/notifications` | 通知中心 |
+| 聊天 | `/chat` | 私信聊天 |
 
 ---
 

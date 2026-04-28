@@ -36,6 +36,7 @@ model User {
   dreamWallLikes   DreamWallLike[]
   dreamWallComments DreamWallComment[]
   notificationsFrom Notification[] @relation("NotificationFrom")
+  checkIns      CheckIn[]
 }
 
 model Friend {
@@ -207,7 +208,7 @@ model StoryFeedback {
 model Notification {
   id          String   @id @default(cuid())
   openid      String   // 接收通知的用户
-  type        String   // LIKE | COMMENT | FRIEND_REQUEST | FRIEND_ACCEPTED
+  type        String   // LIKE | COMMENT | FRIEND_REQUEST | FRIEND_ACCEPTED | MESSAGE
   fromOpenid  String   // 触发通知的用户
   fromNickname String  // 触发通知的用户昵称（快照）
   targetId    String?  // 关联目标ID（如故事ID）
@@ -223,4 +224,27 @@ model Notification {
   @@index([openid, createdAt])
   @@index([openid, isRead])
   @@index([expiresAt])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  fromOpenid  String
+  toOpenid    String
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([toOpenid, createdAt])
+  @@index([fromOpenid, toOpenid])
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  openid    String
+  date      String   // 'YYYY-MM-DD' format
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [openid], references: [openid])
+
+  @@unique([openid, date])
+  @@index([openid, date])
 }
