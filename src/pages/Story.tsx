@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { useAchievementSound } from '../hooks/useAchievementSound'
 import { useTextToSpeech } from '../hooks/useTextToSpeech'
@@ -14,6 +14,7 @@ import { DreamIllustration } from '../components/DreamIllustration'
 import { StoryFeedbackForm } from '../components/StoryFeedbackForm'
 import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
 import { CommentThread } from '../components/CommentThread'
+import { FriendRequestButton } from '../components/FriendRequestButton'
 import { shareApi, api, wallApi } from '../services/api'
 import styles from './Story.module.css'
 
@@ -22,6 +23,7 @@ const PUBLISHED_SESSIONS_KEY = 'yeelin_published_sessions'
 export function Story() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { sessionId: urlSessionId } = useParams()
   const { currentSession, addToHistory, reset, user } = useDreamStore()
   const { playSound } = useAchievementSound()
   const [toastVisible, setToastVisible] = useState(false)
@@ -46,9 +48,9 @@ export function Story() {
   // Unified Dream Wall context - handles location.state vs sessionStorage automatically
   const wallContext = useDreamWallContext()
   const isFromDreamWall = wallContext.fromDreamWall
-  // Only show loading if coming from Dream Wall AND storyFull is not already available
+  // Show loading if coming from Dream Wall (and storyFull not available) OR if we have a URL sessionId and no story data yet
   const [isLoadingDreamWallStory, setIsLoadingDreamWallStory] = useState(
-    isFromDreamWall && !wallContext.storyFull
+    (isFromDreamWall && !wallContext.storyFull) || (!!urlSessionId && !wallContext.storyFull && !dreamWallStory)
   )
   // Pending share confirmation state
   const [pendingShareType, setPendingShareType] = useState<'friend' | 'moment' | null>(null)
@@ -70,7 +72,7 @@ export function Story() {
   const fromDreamWall = location.state?.fromDreamWall
 
   // sessionId for feedback form
-  const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId
+  const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId || urlSessionId
 
   // 从梦墙进入时，判断当前用户是否是作者
   const currentUserOpenid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
@@ -212,41 +214,45 @@ export function Story() {
   // Check if this session was already published
   useEffect(() => {
     // Use sessionId from location state (fromHistory) since currentSession resets on refresh
-    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || urlSessionId
     if (sessionId) {
       const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
       if (publishedSessions.includes(sessionId)) {
         setIsPublished(true)
       }
     }
-  }, [location.state?.fromHistory?.sessionId, location.state?.fromHistory?.id, location.state?.sessionId])
+  }, [location.state?.fromHistory?.sessionId, location.state?.fromHistory?.id, location.state?.sessionId, urlSessionId])
 
-  // Fetch full story when coming from Dream Wall (only if not already passed in state)
+  // Fetch full story when coming from Dream Wall or direct URL (notifications)
   useEffect(() => {
     const { sessionId, storyFull, fromDreamWall } = wallContext
 
-    // Skip if not from Dream Wall or no sessionId
-    if (!fromDreamWall || !sessionId) {
+    // Determine which sessionId to use: wallContext takes priority, then URL param
+    const targetSessionId = sessionId || urlSessionId
+
+    // Skip if no sessionId available
+    if (!targetSessionId) {
       return
     }
 
-    // If storyFull is already available, use it directly - no need to fetch
-    if (storyFull) {
+    // If storyFull is already available in wallContext, use it directly - no need to fetch
+    if (fromDreamWall && storyFull) {
       console.log('[DreamWall] Using storyFull from state directly')
       setDreamWallStory(storyFull)
       setIsLoadingDreamWallStory(false)
       return
     }
 
-    // Otherwise fetch from API
-    console.log('[DreamWall] Starting fetch for sessionId:', sessionId)
+    // If from Dream Wall but no storyFull yet, or coming from notifications (direct URL):
+    // fetch from API using targetSessionId
+    console.log('[Story] Fetching story for sessionId:', targetSessionId, 'fromDreamWall:', fromDreamWall)
     setIsLoadingDreamWallStory(true)
     let cancelled = false
 
     const fetchFullStory = async () => {
       try {
-        const result = await api.getStory(sessionId)
-        console.log('[DreamWall] Fetch result:', result)
+        const result = await api.getStory(targetSessionId)
+        console.log('[Story] Fetch result:', result)
         if (!cancelled) {
           if (result.story) {
             setDreamWallStory(result.story.content)
@@ -254,7 +260,7 @@ export function Story() {
           setIsLoadingDreamWallStory(false)
         }
       } catch (err) {
-        console.error('[DreamWall] Failed to fetch story:', err)
+        console.error('[Story] Failed to fetch story:', err)
         if (!cancelled) {
           setIsLoadingDreamWallStory(false)
         }
@@ -265,8 +271,8 @@ export function Story() {
     return () => {
       cancelled = true
     }
-  // Only re-run when wallContext.sessionId changes to avoid infinite loops
-  }, [wallContext.sessionId, wallContext.storyFull, wallContext.fromDreamWall])
+  // Re-run when wallContext changes OR when urlSessionId changes
+  }, [wallContext.sessionId, wallContext.storyFull, wallContext.fromDreamWall, urlSessionId])
 
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle || wallContext.storyTitle
   const story = wallContext.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
@@ -471,7 +477,7 @@ export function Story() {
 
   const handleInterpret = async () => {
     const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
-    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId || urlSessionId
 
     if (!openid) {
       setToastType('error')
@@ -524,7 +530,7 @@ export function Story() {
 
   const handlePublishToWall = async () => {
     const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
-    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id
+    const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || urlSessionId
 
     if (!openid) {
       setToastType('error')
@@ -662,6 +668,9 @@ export function Story() {
               </svg>
             </span>
             <span className={styles.badge}>你的故事</span>
+            {fromDreamWall && !isAuthor && storyAuthorOpenid && (
+              <FriendRequestButton friendOpenid={storyAuthorOpenid} />
+            )}
           </div>
           <h1 className={styles.title}>{storyTitle}</h1>
           <div className={styles.headerDecor}>
