@@ -25,6 +25,7 @@ model User {
   lastShareDate    DateTime?               // 上次分享日期
   sessions         Session[]
   shareLogs        ShareLog[]
+  storyFeedbacks   StoryFeedback[]
   invitesSent      Invite[]  @relation("Inviter")
   invitesReceived  Invite[]  @relation("Invitee")
   friends          Friend[]  @relation("UserFriends")
@@ -60,6 +61,7 @@ model Session {
   messages             Message[]
   answers              Answer[]
   story                Story?
+  storyFeedback        StoryFeedback?
 }
 
 model Message {
@@ -172,4 +174,23 @@ model DreamWallComment {
   user       User     @relation(fields: [openid], references: [openid])
 
   @@index([wallId])
+}
+
+model StoryFeedback {
+  id               String   @id @default(cuid())
+  sessionId        String   @unique
+  openid           String
+  overallRating    Int
+  characterRating  Int?
+  locationRating   Int?
+  objectRating     Int?
+  emotionRating    Int?
+  plotRating       Int?
+  comment          String?
+  createdAt        DateTime @default(now())
+
+  session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [openid], references: [openid])
+
+  @@index([openid])
 }
