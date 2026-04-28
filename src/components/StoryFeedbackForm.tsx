@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { storyFeedbackApi } from '../services/api'
+import { useDreamStore } from '../hooks/useDreamStore'
 import { Toast } from './ui/Toast'
 import { Button } from './ui/Button'
 import styles from './StoryFeedbackForm.module.css'
@@ -70,6 +71,9 @@ function StarRating({ value, onChange, hoverValue, onHover, readOnly = false }: 
 }
 
 export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps) {
+  const { user } = useDreamStore()
+  const isLoggedIn = !!user?.openid
+
   const [isVisible, setIsVisible] = useState(false)
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false)
   const [isPanelExpanded, setIsPanelExpanded] = useState(true)
@@ -206,7 +210,7 @@ export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps)
     try {
       await storyFeedbackApi.submit({
         sessionId,
-        openid,
+        openid: user.openid,
         overallRating,
         elementRatings: overallRating > 0 && Object.values(elementRatings).some((v) => v > 0)
           ? elementRatings
@@ -241,7 +245,7 @@ export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps)
   const isNearLimit = charCount >= 160
   const isAtLimit = charCount >= 200
 
-  if (!hasCheckedStorage) {
+  if (!hasCheckedStorage || !isLoggedIn) {
     return null
   }
 
