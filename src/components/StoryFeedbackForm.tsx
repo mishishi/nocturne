@@ -1,0 +1,368 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { storyFeedbackApi } from '../services/api'
+import { Toast } from './ui/Toast'
+import { Button } from './ui/Button'
+import styles from './StoryFeedbackForm.module.css'
+
+interface StoryFeedbackFormProps {
+  sessionId: string
+  openid?: string
+}
+
+interface ElementRatings {
+  character: number
+  location: number
+  object: number
+  emotion: number
+  plot: number
+}
+
+const FEEDBACK_STORAGE_KEY = 'yeelin_story_feedback'
+
+interface StoredFeedback {
+  sessionId: string
+  status: 'submitted' | 'skipped'
+  timestamp: number
+}
+
+const ELEMENT_LABELS: Record<keyof ElementRatings, string> = {
+  character: '角色',
+  location: '场景',
+  object: '物品',
+  emotion: '情感',
+  plot: '情节'
+}
+
+// Star rating sub-component
+interface StarRatingProps {
+  value: number
+  onChange: (value: number) => void
+  hoverValue?: number
+  onHover?: (value: number) => void
+  readOnly?: boolean
+}
+
+function StarRating({ value, onChange, hoverValue, onHover, readOnly = false }: StarRatingProps) {
+  const displayValue = hoverValue !== undefined && hoverValue > 0 ? hoverValue : value
+
+  return (
+    <div className={styles.stars} role="radiogroup" aria-label="评分">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          className={`${styles.star} ${star <= displayValue ? styles.starFilled : ''}`}
+          onClick={() => !readOnly && onChange(star)}
+          onMouseEnter={() => !readOnly && onHover?.(star)}
+          onMouseLeave={() => !readOnly && onHover?.(0)}
+          disabled={readOnly}
+          aria-label={`${star}星`}
+          role="radio"
+          aria-checked={star === value}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps) {
+  const [isVisible, setIsVisible] = useState(false)
+  const [hasCheckedStorage, setHasCheckedStorage] = useState(false)
+  const [isPanelExpanded, setIsPanelExpanded] = useState(true)
+  const [overallRating, setOverallRating] = useState(0)
+  const [hoverOverallRating, setHoverOverallRating] = useState(0)
+  const [elementRatings, setElementRatings] = useState<ElementRatings>({
+    character: 0,
+    location: 0,
+    object: 0,
+    emotion: 0,
+    plot: 0
+  })
+  const [hoverElementRatings, setHoverElementRatings] = useState<ElementRatings>({
+    character: 0,
+    location: 0,
+    object: 0,
+    emotion: 0,
+    plot: 0
+  })
+  const [comment, setComment] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [toastVisible, setToastVisible] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+
+  const handleToastClose = useCallback(() => {
+    setToastVisible(false)
+  }, [])
+
+  // Check localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(FEEDBACK_STORAGE_KEY)
+    if (stored) {
+      try {
+        const feedback: StoredFeedback = JSON.parse(stored)
+        if (feedback.sessionId === sessionId && (feedback.status === 'submitted' || feedback.status === 'skipped')) {
+          setHasCheckedStorage(true)
+          return
+        }
+      } catch {
+        // Invalid JSON, proceed normally
+      }
+    }
+    setHasCheckedStorage(true)
+  }, [sessionId])
+
+  // IntersectionObserver to detect 90% scroll
+  useEffect(() => {
+    if (!hasCheckedStorage) return
+
+    // Check storage again before setting up observer
+    const stored = localStorage.getItem(FEEDBACK_STORAGE_KEY)
+    if (stored) {
+      try {
+        const feedback: StoredFeedback = JSON.parse(stored)
+        if (feedback.sessionId === sessionId && (feedback.status === 'submitted' || feedback.status === 'skipped')) {
+          return
+        }
+      } catch {
+        // Invalid JSON, proceed
+      }
+    }
+
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true)
+            observer.disconnect()
+          }
+        })
+      },
+      { threshold: 0 }
+    )
+
+    observer.observe(sentinel)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [hasCheckedStorage, sessionId])
+
+  // Also check scroll position as fallback
+  useEffect(() => {
+    if (!hasCheckedStorage) return
+
+    const handleScroll = () => {
+      const scrollTop = window.scrollY
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
+
+      if (progress >= 90) {
+        setIsVisible(true)
+        window.removeEventListener('scroll', handleScroll)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // Check immediately
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [hasCheckedStorage])
+
+  const handleElementRatingChange = (element: keyof ElementRatings, value: number) => {
+    setElementRatings((prev) => ({ ...prev, [element]: value }))
+  }
+
+  const handleSkip = () => {
+    const feedback: StoredFeedback = {
+      sessionId,
+      status: 'skipped',
+      timestamp: Date.now()
+    }
+    localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(feedback))
+    setIsVisible(false)
+  }
+
+  const handleSubmit = async () => {
+    if (overallRating === 0) {
+      setToastMessage('请选择总体评分')
+      setToastVisible(true)
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      await storyFeedbackApi.submit({
+        sessionId,
+        openid,
+        overallRating,
+        elementRatings: overallRating > 0 && Object.values(elementRatings).some((v) => v > 0)
+          ? elementRatings
+          : undefined,
+        comment: comment.trim() || undefined
+      })
+
+      const feedback: StoredFeedback = {
+        sessionId,
+        status: 'submitted',
+        timestamp: Date.now()
+      }
+      localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(feedback))
+
+      setToastMessage('感谢反馈')
+      setToastVisible(true)
+
+      // Auto-hide form after 3 seconds
+      setTimeout(() => {
+        setIsVisible(false)
+      }, 3000)
+    } catch (err) {
+      console.error('Failed to submit feedback:', err)
+      setToastMessage('提交失败，请重试')
+      setToastVisible(true)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const charCount = comment.length
+  const isNearLimit = charCount >= 160
+  const isAtLimit = charCount >= 200
+
+  if (!hasCheckedStorage) {
+    return null
+  }
+
+  return (
+    <>
+      {/* Sentinel element at 90% scroll position */}
+      <div ref={sentinelRef} className={styles.sentinel} aria-hidden="true" />
+
+      {/* Feedback form */}
+      <div
+        ref={formRef}
+        className={`${styles.container} ${isVisible ? styles.visible : ''}`}
+        role="dialog"
+        aria-label="故事反馈"
+        aria-modal="false"
+      >
+        <div className={styles.card}>
+          <div className={styles.header}>
+            <h3 className={styles.title}>分享你的反馈</h3>
+            <p className={styles.subtitle}>帮助我们优化梦境故事体验</p>
+          </div>
+
+          {/* Overall satisfaction */}
+          <div className={styles.section}>
+            <label className={styles.label}>总体评分</label>
+            <StarRating
+              value={overallRating}
+              onChange={setOverallRating}
+              hoverValue={hoverOverallRating}
+              onHover={setHoverOverallRating}
+            />
+          </div>
+
+          {/* Element ratings - collapsible panel */}
+          <div className={styles.section}>
+            <button
+              type="button"
+              className={styles.collapseHeader}
+              onClick={() => setIsPanelExpanded(!isPanelExpanded)}
+              aria-expanded={isPanelExpanded}
+            >
+              <span className={styles.collapseLabel}>详细评分（可选）</span>
+              <svg
+                className={`${styles.collapseIcon} ${isPanelExpanded ? styles.collapseIconOpen : ''}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {isPanelExpanded && (
+              <div className={styles.elementRatings}>
+                {(Object.keys(ELEMENT_LABELS) as Array<keyof ElementRatings>).map((element) => (
+                  <div key={element} className={styles.elementRow}>
+                    <span className={styles.elementLabel}>{ELEMENT_LABELS[element]}</span>
+                    <StarRating
+                      value={elementRatings[element]}
+                      onChange={(val) => handleElementRatingChange(element, val)}
+                      hoverValue={hoverElementRatings[element]}
+                      onHover={(val) =>
+                        setHoverElementRatings((prev) => ({ ...prev, [element]: val }))
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Comment */}
+          <div className={styles.section}>
+            <div className={styles.textareaHeader}>
+              <label className={styles.label} htmlFor="feedback-comment">
+                反馈意见（可选）
+              </label>
+              <span
+                className={`${styles.charCount} ${isNearLimit ? styles.charCountNear : ''} ${isAtLimit ? styles.charCountDanger : ''}`}
+              >
+                {charCount}/200
+              </span>
+            </div>
+            <textarea
+              id="feedback-comment"
+              className={styles.textarea}
+              value={comment}
+              onChange={(e) => setComment(e.target.value.slice(0, 200))}
+              placeholder="分享你的想法或建议..."
+              rows={3}
+              maxLength={200}
+            />
+          </div>
+
+          {/* Actions */}
+          <div className={styles.actions}>
+            <Button variant="ghost" size="md" onClick={handleSkip}>
+              暂时跳过
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleSubmit}
+              loading={isSubmitting}
+              disabled={overallRating === 0}
+            >
+              提交反馈
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Toast */}
+      <Toast
+        message={toastMessage}
+        visible={toastVisible}
+        onClose={handleToastClose}
+        type={toastMessage.includes('失败') ? 'error' : 'success'}
+        duration={3000}
+      />
+    </>
+  )
+}
