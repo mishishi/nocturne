@@ -6,6 +6,7 @@ import shareRoutes from './routes/share.js'
 import authRoutes from './routes/auth.js'
 import friendRoutes from './routes/friends.js'
 import dreamWallRoutes from './routes/dreamWall.js'
+import storyFeedbackRoutes from './routes/storyFeedback.js'
 
 const fastify = Fastify({ logger: true })
 
@@ -18,6 +19,7 @@ fastify.register(shareRoutes, { prefix: '/api' })
 fastify.register(authRoutes, { prefix: '/api' })
 fastify.register(friendRoutes, { prefix: '/api' })
 fastify.register(dreamWallRoutes, { prefix: '/api' })
+fastify.register(storyFeedbackRoutes, { prefix: '/api' })
 
 // Error handler
 fastify.setErrorHandler((err, req, res) => {
