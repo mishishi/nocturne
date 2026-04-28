@@ -67,7 +67,7 @@ export function Login() {
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
         if (guestOpenid && guestOpenid !== result.user.openid) {
-          await api.migrateSession(guestOpenid, result.user.openid)
+          await api.migrateSession(guestOpenid)
         }
 
         setUser(result.user, result.token)

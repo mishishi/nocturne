@@ -31,7 +31,7 @@ export function WeChatCallback() {
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
         if (guestOpenid && guestOpenid !== user.openid) {
-          await api.migrateSession(guestOpenid, user.openid)
+          await api.migrateSession(guestOpenid)
         }
 
         // Set user in store
