@@ -120,7 +120,7 @@ export function CommentThread({ postId, wallOwnerOpenid }: CommentThreadProps) {
 
   // Render a single comment
   const renderComment = (comment: Comment, isReply = false) => {
-    const isOwner = comment.isAuthor || (wallOwnerOpenid && comment.nickname?.includes('作者'))
+    const isOwner = comment.isAuthor
     const displayNickname = comment.isAnonymous ? '匿名用户' : (comment.nickname || '未知用户')
     const isReplyingToThis = replyingTo === comment.id
 
