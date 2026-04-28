@@ -43,8 +43,10 @@
     {
       "id": "post_cuid",
       "sessionId": "session_cuid",
+      "openid": "author_openid",
       "storyTitle": "飞翔的梦",
       "storySnippet": "我梦见自己在天空中飞翔...",
+      "storyFull": "完整故事内容...",
       "isAnonymous": true,
       "nickname": "匿名用户",
       "avatar": null,
@@ -68,6 +70,7 @@
 - 只返回 `status: 'approved'` 且 `visibility: 'public'` 的帖子
 - 按 `isFeatured` 降序，然后按 `createdAt` 降序排列
 - 未登录用户 `hasLiked` 固定为 `false`
+- `featured` Tab 帖子额外包含 `engagementScore` 字段（热度值 = likeCount + commentCount * 2）
 
 **前端调用：**
 
@@ -187,8 +190,10 @@ const result = await wallApi.publish({
   "posts": [
     {
       "id": "post_cuid",
+      "sessionId": "session_cuid",
       "storyTitle": "飞翔的梦",
       "storySnippet": "我梦见自己在天空中飞翔...",
+      "storyFull": "完整故事内容...",
       "isAnonymous": true,
       "likeCount": 12,
       "commentCount": 3,

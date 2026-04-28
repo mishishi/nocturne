@@ -62,15 +62,14 @@
 
 | 端点 | 方法 | 功能 | 需要认证 |
 |------|------|------|----------|
-| `/api/friends/add` | POST | 添加好友 | **是** |
+| `/api/friends/request` | POST | 发送好友请求 | **是** |
 | `/api/friends/accept` | POST | 接受好友请求 | **是** |
 | `/api/friends/reject` | POST | 拒绝好友请求 | **是** |
-| `/api/friends/remove` | POST | 删除好友 | **是** |
-| `/api/friends/list/:userId` | GET | 获取好友列表 | **是** |
-| `/api/friends/requests/:userId` | GET | 获取待处理请求 | **是** |
-| `/api/friends/block` | POST | 拉黑用户 | **是** |
-| `/api/friends/search` | GET | 搜索用户 | **是** |
-| `/api/friends/count/:userId` | GET | 获取好友数量 | **是** |
+| `/api/friends/:friendOpenid` | DELETE | 删除好友 | **是** |
+| `/api/friends` | GET | 获取好友列表 | **是** |
+| `/api/friends/requests` | GET | 获取收到的请求 | **是** |
+| `/api/friends/sent` | GET | 获取发出的请求 | **是** |
+| `/api/friends/:openid/posts` | GET | 获取好友公开帖子 | **是** |
 
 ### 梦墙相关
 
