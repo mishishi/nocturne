@@ -18,10 +18,13 @@ interface ElementRatings {
   plot: number
 }
 
-const FEEDBACK_STORAGE_KEY = 'yeelin_story_feedback'
+const FEEDBACK_STORAGE_PREFIX = 'yeelin_story_feedback_'
+
+function getFeedbackKey(sessionId: string): string {
+  return `${FEEDBACK_STORAGE_PREFIX}${sessionId}`
+}
 
 interface StoredFeedback {
-  sessionId: string
   status: 'submitted' | 'skipped'
   timestamp: number
 }
@@ -107,11 +110,11 @@ export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps)
 
   // Check localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(FEEDBACK_STORAGE_KEY)
+    const stored = localStorage.getItem(getFeedbackKey(sessionId))
     if (stored) {
       try {
         const feedback: StoredFeedback = JSON.parse(stored)
-        if (feedback.sessionId === sessionId && (feedback.status === 'submitted' || feedback.status === 'skipped')) {
+        if (feedback.status === 'submitted' || feedback.status === 'skipped') {
           setHasCheckedStorage(true)
           return
         }
@@ -127,11 +130,11 @@ export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps)
     if (!hasCheckedStorage) return
 
     // Check storage again before setting up observer
-    const stored = localStorage.getItem(FEEDBACK_STORAGE_KEY)
+    const stored = localStorage.getItem(getFeedbackKey(sessionId))
     if (stored) {
       try {
         const feedback: StoredFeedback = JSON.parse(stored)
-        if (feedback.sessionId === sessionId && (feedback.status === 'submitted' || feedback.status === 'skipped')) {
+        if (feedback.status === 'submitted' || feedback.status === 'skipped') {
           return
         }
       } catch {
@@ -190,11 +193,10 @@ export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps)
 
   const handleSkip = () => {
     const feedback: StoredFeedback = {
-      sessionId,
       status: 'skipped',
       timestamp: Date.now()
     }
-    localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(feedback))
+    localStorage.setItem(getFeedbackKey(sessionId), JSON.stringify(feedback))
     setIsVisible(false)
   }
 
@@ -219,11 +221,10 @@ export function StoryFeedbackForm({ sessionId, openid }: StoryFeedbackFormProps)
       })
 
       const feedback: StoredFeedback = {
-        sessionId,
         status: 'submitted',
         timestamp: Date.now()
       }
-      localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(feedback))
+      localStorage.setItem(getFeedbackKey(sessionId), JSON.stringify(feedback))
 
       setToastMessage('感谢反馈')
       setToastVisible(true)
