@@ -171,11 +171,15 @@ model DreamWallComment {
   content    String
   isAnonymous Boolean @default(true)
   createdAt  DateTime @default(now())
+  parentId   String?
 
   wall       DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [openid], references: [openid])
+  parent     DreamWallComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies    DreamWallComment[] @relation("CommentReplies")
 
   @@index([wallId])
+  @@index([parentId])
 }
 
 model StoryFeedback {
