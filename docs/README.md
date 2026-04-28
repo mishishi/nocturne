@@ -24,6 +24,7 @@
 | 2026-04-27 | 完成 wall.md 文档 |
 | 2026-04-28 | 完成 storyFeedback.md 文档 |
 | 2026-04-28 | 完成 notifications.md 文档 |
+| 2026-04-28 | GET /api/wall 新增 keyword 搜索参数 |
 
 ---
 

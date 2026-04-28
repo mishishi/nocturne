@@ -24,9 +24,11 @@ export function DreamWall() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [likingId, setLikingId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState('')
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  const loadPosts = useCallback(async (tab: TabType, pageNum: number, reset = false) => {
+  const loadPosts = useCallback(async (tab: TabType, pageNum: number, reset = false, keyword?: string) => {
     if (pageNum !== 1) {
       setLoadingMore(true)
     }
@@ -35,7 +37,8 @@ export function DreamWall() {
       const result = await wallApi.getPosts({
         tab: tab === 'my' ? 'all' : tab,
         page: pageNum,
-        limit: 20
+        limit: 20,
+        keyword
       })
 
       // Defensive check for response structure
@@ -111,9 +114,9 @@ export function DreamWall() {
         setLoading(false)
       }
     } else {
-      loadPosts(activeTab, 1, true)
+      loadPosts(activeTab, 1, true, searchKeyword)
     }
-  }, [activeTab, user?.openid, loadPosts, loadMyPosts])
+  }, [activeTab, user?.openid, loadPosts, loadMyPosts, searchKeyword])
 
   // Infinite scroll with IntersectionObserver
   useEffect(() => {
@@ -124,7 +127,7 @@ export function DreamWall() {
         if (entries[0].isIntersecting && hasMore && !loadingMore && activeTab !== 'my') {
           const nextPage = page + 1
           setPage(nextPage)
-          loadPosts(activeTab, nextPage)
+          loadPosts(activeTab, nextPage, false, searchKeyword)
         }
       },
       { threshold: 0.1 }
@@ -132,7 +135,16 @@ export function DreamWall() {
 
     observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
-  }, [hasMore, loadingMore, activeTab, page, loadPosts])
+  }, [hasMore, loadingMore, activeTab, page, loadPosts, searchKeyword])
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchKeyword(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const handleTabChange = (tab: TabType) => {
     if (tab === activeTab) return // Don't reset if same tab
@@ -202,7 +214,7 @@ export function DreamWall() {
       postId: post.id,
     })
 
-    navigate('/story', {
+    navigate(`/story/${post.sessionId}`, {
       state: {
         fromDreamWall: true,
         sessionId: post.sessionId,
@@ -304,6 +316,33 @@ export function DreamWall() {
           </button>
         </div>
 
+        {/* Search */}
+        {activeTab !== 'my' && (
+          <div className={styles.searchWrapper}>
+            <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="search"
+              id="search-dream-wall"
+              className={styles.searchInput}
+              placeholder="搜索梦墙故事..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="搜索梦墙故事"
+            />
+            {searchQuery && (
+              <button className={styles.searchClear} onClick={() => setSearchQuery('')} aria-label="清除搜索">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Content */}
         <div className={styles.content}>
           {loading ? (
@@ -336,10 +375,12 @@ export function DreamWall() {
                 </svg>
               </div>
               <h2 className={styles.emptyTitle}>
-                {activeTab === 'my' ? '还没有发布' : '暂无内容'}
+                {searchQuery ? '没有找到匹配的梦境' : activeTab === 'my' ? '还没有发布' : '暂无内容'}
               </h2>
               <p className={styles.emptyText}>
-                {activeTab === 'my'
+                {searchQuery
+                  ? '换个关键词试试吧'
+                  : activeTab === 'my'
                   ? '记录梦境后可以发布到这里'
                   : '成为第一个分享梦境的人'}
               </p>

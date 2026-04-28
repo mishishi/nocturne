@@ -508,13 +508,32 @@ export const wallApi = {
     tab?: 'all' | 'featured'
     page?: number
     limit?: number
+    keyword?: string
   }): Promise<{
     posts: DreamWallPost[]
     pagination: { page: number; limit: number; total: number; hasMore: boolean }
   }> {
-    const { tab = 'all', page = 1, limit = 20 } = params
-    const res = await fetchWithTimeout(`${API_BASE}/wall?tab=${tab}&page=${page}&limit=${limit}`)
+    const { tab = 'all', page = 1, limit = 20, keyword } = params
+    const queryParams = new URLSearchParams({ tab, page: String(page), limit: String(limit) })
+    if (keyword) queryParams.set('keyword', keyword)
+    const res = await fetchWithTimeout(`${API_BASE}/wall?${queryParams}`)
     if (!res.ok) throw new Error(`获取梦墙失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get friends feed (需登录)
+  async getFriendFeed(params: {
+    page?: number
+    limit?: number
+  }): Promise<{
+    posts: DreamWallPost[]
+    pagination: { page: number; limit: number; total: number; hasMore: boolean }
+  }> {
+    const { page = 1, limit = 20 } = params
+    const res = await fetchWithTimeout(`${API_BASE}/wall/friends?page=${page}&limit=${limit}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取关注的人动态失败: ${res.status}`)
     return res.json()
   },
 
@@ -816,6 +835,129 @@ export const notificationApi = {
       headers: authHeaders()
     })
     if (!res.ok) throw new Error(`标记已读失败: ${res.status}`)
+    return res.json()
+  }
+}
+
+// Message API
+export interface Message {
+  id: string
+  fromOpenid: string
+  toOpenid: string
+  content: string
+  isRead: boolean
+  createdAt: string
+  isMine: boolean
+}
+
+export interface Conversation {
+  friendOpenid: string
+  friendNickname: string | null
+  friendAvatar: string | null
+  lastMessage: {
+    id: string
+    content: string
+    fromOpenid: string
+    createdAt: string
+    isRead: boolean
+  } | null
+  unreadCount: number
+}
+
+export const messageApi = {
+  // Get conversation list
+  async getConversations(): Promise<{ success: boolean; conversations: Conversation[] }> {
+    const res = await fetchWithTimeout(`${API_BASE}/messages/conversations`, {
+      method: 'GET',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取会话列表失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get messages with a specific friend
+  async getMessages(friendOpenid: string, page = 1, limit = 50): Promise<{
+    success: boolean
+    messages: Message[]
+    pagination: { page: number; limit: number; total: number; totalPages: number }
+  }> {
+    const res = await fetchWithTimeout(
+      `${API_BASE}/messages/${encodeURIComponent(friendOpenid)}?page=${page}&limit=${limit}`,
+      {
+        method: 'GET',
+        headers: authHeaders()
+      }
+    )
+    if (!res.ok) throw new Error(`获取消息失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Send a message
+  async sendMessage(toOpenid: string, content: string): Promise<{ success: boolean; message: Message }> {
+    const res = await fetchWithTimeout(`${API_BASE}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ toOpenid, content })
+    })
+    if (!res.ok) throw new Error(`发送消息失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Mark a message as read
+  async markRead(messageId: string): Promise<{ success: boolean }> {
+    const res = await fetchWithTimeout(`${API_BASE}/messages/${messageId}/read`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`标记已读失败: ${res.status}`)
+    return res.json()
+  }
+}
+
+// CheckIn API
+export interface CheckInRecord {
+  id: string
+  date: string
+  createdAt: string
+}
+
+export const checkInApi = {
+  // Check in for today
+  async checkIn(): Promise<{
+    success: boolean
+    consecutiveDays: number
+    alreadyCheckedIn?: boolean
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/checkin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() }
+    })
+    if (!res.ok) throw new Error(`签到失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get check-in status
+  async getStatus(): Promise<{
+    success: boolean
+    checkedInToday: boolean
+    consecutiveDays: number
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/checkin/status`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取签到状态失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get check-in history
+  async getHistory(): Promise<{
+    success: boolean
+    records: CheckInRecord[]
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/checkin/history`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取签到记录失败: ${res.status}`)
     return res.json()
   }
 }

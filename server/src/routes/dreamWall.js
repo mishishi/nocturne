@@ -43,12 +43,20 @@ function checkContentSafety(text) {
 export default async function dreamWallRoutes(fastify) {
   // GET /api/wall - 获取梦墙列表 (公开)
   fastify.get('/wall', async (req, res) => {
-    const { tab = 'all', page = '1', limit = '20' } = req.query
+    const { tab = 'all', page = '1', limit = '20', keyword } = req.query
     const skip = (parseInt(page) - 1) * parseInt(limit)
 
     const where = {
       status: 'approved',
       visibility: 'public'
+    }
+
+    // Keyword search (title + snippet)
+    if (keyword) {
+      where.OR = [
+        { storyTitle: { contains: keyword, mode: 'insensitive' } },
+        { storySnippet: { contains: keyword, mode: 'insensitive' } }
+      ]
     }
 
     // Tab filtering
@@ -57,13 +65,24 @@ export default async function dreamWallRoutes(fastify) {
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
+      // Build where clause for featured tab
+      const featuredWhere = {
+        status: 'approved',
+        visibility: 'public',
+        createdAt: { gte: thirtyDaysAgo }
+      }
+
+      // Keyword search (title + snippet)
+      if (keyword) {
+        featuredWhere.OR = [
+          { storyTitle: { contains: keyword, mode: 'insensitive' } },
+          { storySnippet: { contains: keyword, mode: 'insensitive' } }
+        ]
+      }
+
       const [posts, total] = await Promise.all([
         prisma.dreamWall.findMany({
-          where: {
-            status: 'approved',
-            visibility: 'public',
-            createdAt: { gte: thirtyDaysAgo }
-          },
+          where: featuredWhere,
           orderBy: [
             { likeCount: 'desc' },
             { commentCount: 'desc' },
@@ -76,11 +95,7 @@ export default async function dreamWallRoutes(fastify) {
           }
         }),
         prisma.dreamWall.count({
-          where: {
-            status: 'approved',
-            visibility: 'public',
-            createdAt: { gte: thirtyDaysAgo }
-          }
+          where: featuredWhere
         })
       ])
 
@@ -234,6 +249,104 @@ export default async function dreamWallRoutes(fastify) {
       return { success: true, post: { id: post.id }, message: '发布成功' }
     } else {
       return { success: true, post: { id: post.id }, message: '内容待审核，审核通过后将显示在梦墙' }
+    }
+  })
+
+  // GET /api/wall/friends - 获取关注的人的帖子 (需登录)
+  fastify.get('/wall/friends', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    try {
+      const { page = '1', limit = '20' } = req.query
+      const skip = (parseInt(page) - 1) * parseInt(limit)
+
+      // Get authenticated user
+      const tokenUser = await authService.getUser(req.userId)
+      if (!tokenUser) {
+        return res.status(401).send({ success: false, reason: '用户未找到' })
+      }
+
+      // Find all ACCEPTED friend records where userId = current user
+      const friends = await prisma.friend.findMany({
+        where: {
+          userId: tokenUser.id,
+          status: 'ACCEPTED'
+        },
+        select: {
+          friendId: true
+        }
+      })
+
+      const friendIds = friends.map(f => f.friendId)
+
+      if (friendIds.length === 0) {
+        return {
+          posts: [],
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total: 0,
+            hasMore: false
+          }
+        }
+      }
+
+      // Query DreamWall where openid IN friendIds AND status='approved' AND visibility='public'
+      const [posts, total] = await Promise.all([
+        prisma.dreamWall.findMany({
+          where: {
+            openid: { in: friendIds },
+            status: 'approved',
+            visibility: 'public'
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: parseInt(limit),
+          include: {
+            likes: { take: 1, select: { openid: true } },
+            _count: { select: { comments: true } }
+          }
+        }),
+        prisma.dreamWall.count({
+          where: {
+            openid: { in: friendIds },
+            status: 'approved',
+            visibility: 'public'
+          }
+        })
+      ])
+
+      const items = posts.map(post => ({
+        id: post.id,
+        sessionId: post.sessionId,
+        openid: post.openid,
+        storyTitle: post.storyTitle,
+        storySnippet: post.storySnippet,
+        storyFull: post.storyFull,
+        isAnonymous: post.isAnonymous,
+        nickname: post.isAnonymous ? '匿名用户' : post.nickname,
+        avatar: post.isAnonymous ? null : post.avatar,
+        likeCount: post.likeCount,
+        commentCount: post.commentCount,
+        isFeatured: post.isFeatured,
+        createdAt: post.createdAt,
+        hasLiked: false
+      }))
+
+      return {
+        posts: items,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          hasMore: skip + items.length < total
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching friends feed:', error)
+      return res.status(500).send({ success: false, reason: '服务器错误' })
     }
   })
 

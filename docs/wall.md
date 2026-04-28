@@ -35,6 +35,7 @@
 | `tab` | `all` \| `featured` | `all` | 筛选标签，`featured` 仅返回精选 |
 | `page` | number | `1` | 页码 |
 | `limit` | number | `20` | 每页数量 |
+| `keyword` | string | - | 搜索关键词，匹配故事标题和摘要（不区分大小写） |
 
 **响应 (200)：**
 ```json
@@ -71,6 +72,7 @@
 - 按 `isFeatured` 降序，然后按 `createdAt` 降序排列
 - 未登录用户 `hasLiked` 固定为 `false`
 - `featured` Tab 帖子额外包含 `engagementScore` 字段（热度值 = likeCount + commentCount * 2）
+- 当 `keyword` 参数存在时，额外过滤故事标题（storyTitle）或摘要（storySnippet）包含关键词的帖子（不区分大小写）
 
 **前端调用：**
 
@@ -85,7 +87,8 @@
 const result = await wallApi.getPosts({
   tab: tab === 'my' ? 'all' : tab,
   page: pageNum,
-  limit: 20
+  limit: 20,
+  keyword
 })
 ```
 
