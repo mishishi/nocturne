@@ -7,6 +7,8 @@ import { ExportDataModal } from '../components/ExportDataModal'
 import { Statistics } from '../components/Statistics'
 import { AmbientPlayer } from '../components/AmbientPlayer'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
+import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
 import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
 import { shareApi, UserStats } from '../services/api'
 import styles from './Profile.module.css'
@@ -178,6 +180,9 @@ export function Profile() {
           </div>
         )}
 
+        {/* Personalized Recommendations */}
+        <PersonalizedRecommendations />
+
         {/* Ambient Player */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>氛围音乐</h2>
@@ -343,6 +348,9 @@ export function Profile() {
             <p>记录你的每一个梦境</p>
           </div>
         </div>
+
+        {/* AI Quality Analytics (for team review) */}
+        <AIQualityAnalytics />
       </div>
 
       <ConfirmModal
