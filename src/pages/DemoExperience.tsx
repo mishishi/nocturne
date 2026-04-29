@@ -202,11 +202,11 @@ export function DemoExperience() {
                 <div className={styles.questionContent}>
                   <p className={styles.questionTag}>追问 {questionIndex + 1}</p>
                   <h2 className={styles.questionText}>
-                    {showQuestion ? (
-                      <TypewriterText text={DEMO_QUESTIONS[questionIndex]} speed={25} />
-                    ) : (
-                      DEMO_QUESTIONS[questionIndex]
-                    )}
+                    <TypewriterText
+                      text={DEMO_QUESTIONS[questionIndex]}
+                      speed={25}
+                      delay={showQuestion ? 0 : 800}
+                    />
                   </h2>
                 </div>
               </div>
