@@ -564,7 +564,7 @@ export function Dream() {
                 loading={loading}
                 className={styles.nextBtn}
               >
-                生成故事 →
+                让 AI 更懂我的梦 →
               </Button>
             </div>
           </div>

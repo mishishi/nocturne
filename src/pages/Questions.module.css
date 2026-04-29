@@ -24,13 +24,46 @@
   max-width: 560px;
   margin: 0 auto;
   padding: 0 var(--space-5);
+  padding-top: var(--space-3);
   position: relative;
   z-index: 1;
+}
+
+@media (min-width: 769px) {
+  .container {
+    padding-top: var(--space-6);
+  }
 }
 
 /* 进度条 */
 .progressSection {
   margin-bottom: var(--space-8);
+}
+
+.exitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  background: rgba(139, 157, 195, 0.08);
+  border: 1px solid rgba(139, 157, 195, 0.15);
+  border-radius: var(--radius-full);
+  color: rgba(139, 157, 195, 0.8);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.exitBtn:hover {
+  background: rgba(139, 157, 195, 0.15);
+  border-color: rgba(139, 157, 195, 0.3);
+  color: #e8f4ff;
+}
+
+.exitBtn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .progressBar {
@@ -263,20 +296,31 @@
   border-color: rgba(244, 211, 94, 0.3);
 }
 
-.textarea textarea {
+/* Textarea component override - target textarea directly since it has .textarea class */
+textarea.textarea {
   width: 100%;
   min-height: 120px;
   padding: var(--space-4);
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
+  border-image: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
   color: #e8f4ff;
   font-size: 1rem;
   line-height: 1.75;
   resize: none;
-  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.textarea textarea::placeholder {
+.textarea::placeholder {
   color: rgba(139, 157, 195, 0.4);
 }
 

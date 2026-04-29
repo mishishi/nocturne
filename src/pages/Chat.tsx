@@ -323,6 +323,16 @@ export function Chat() {
                     {selectedFriend?.nickname || '匿名旅人'}
                   </span>
                 </div>
+                {/* Mobile back button to return to conversation list */}
+                <button
+                  className={styles.mobileBackBtn}
+                  onClick={handleBackToList}
+                  aria-label="返回消息列表"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
                 <button
                   className={styles.chatHeaderAction}
                   onClick={() => navigate(`/friend/${selectedFriendOpenid}`)}

@@ -134,6 +134,19 @@ export function Register() {
         </div>
 
         <div className={styles.card}>
+          {/* Step Indicator */}
+          <div className={styles.stepIndicator}>
+            <div className={`${styles.step} ${step === 'credentials' ? styles.stepActive : styles.stepDone}`}>
+              <span className={styles.stepNumber}>1</span>
+              <span className={styles.stepLabel}>验证手机</span>
+            </div>
+            <div className={styles.stepLine} />
+            <div className={`${styles.step} ${step === 'nickname' ? styles.stepActive : ''}`}>
+              <span className={styles.stepNumber}>2</span>
+              <span className={styles.stepLabel}>设置昵称</span>
+            </div>
+          </div>
+
           {step === 'credentials' ? (
             <form onSubmit={handleCredentialsSubmit} className={styles.form}>
               <div className={styles.inputGroup}>

@@ -21,6 +21,7 @@ export function Favorites() {
   const [searchQuery, setSearchQuery] = useState('')
   const [unfavoritingId, setUnfavoritingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [storySearchQuery, setStorySearchQuery] = useState('')
 
   const fetchFavorites = useCallback(async (pageNum: number, append = false) => {
     if (!user?.openid) return
@@ -106,6 +107,13 @@ export function Favorites() {
         post.storySnippet.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : posts
+
+  const filteredStories = storySearchQuery.trim()
+    ? storyFavorites.filter(item =>
+        item.storyTitle.toLowerCase().includes(storySearchQuery.toLowerCase()) ||
+        item.story?.toLowerCase().includes(storySearchQuery.toLowerCase())
+      )
+    : storyFavorites
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -256,7 +264,7 @@ export function Favorites() {
                   type="search"
                   id="search-favorites"
                   className={styles.searchInput}
-                  placeholder="搜索收藏..."
+                  placeholder="搜索梦墙故事..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   aria-label="搜索收藏"
@@ -291,7 +299,10 @@ export function Favorites() {
                   >
                     <div className={styles.itemHeader}>
                       <div className={styles.itemMeta}>
-                        <span className={styles.itemDate}>{formatDate(post.createdAt)}</span>
+                        <div className={styles.metaTop}>
+                          <span className={styles.itemDate}>{formatDate(post.createdAt)}</span>
+                          <span className={styles.itemSourceTag}>来自梦墙</span>
+                        </div>
                         <h3 className={styles.itemTitle}>{post.storyTitle}</h3>
                       </div>
                       <div className={styles.itemActions}>
@@ -369,9 +380,43 @@ export function Favorites() {
         ) : (
           <>
             {/* 我的故事 */}
-            {storyFavorites.length > 0 ? (
+            {storyFavorites.length > 0 && (
+              <div className={styles.searchWrapper}>
+                <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  type="search"
+                  id="search-stories"
+                  className={styles.searchInput}
+                  placeholder="搜索原创故事..."
+                  value={storySearchQuery}
+                  onChange={(e) => setStorySearchQuery(e.target.value)}
+                  aria-label="搜索原创故事"
+                />
+                {storySearchQuery && (
+                  <button className={styles.searchClear} onClick={() => setStorySearchQuery('')} aria-label="清除搜索">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Search Results Info */}
+            {storySearchQuery && filteredStories.length === 0 && (
+              <div className={styles.noResults}>
+                <p>没有找到匹配的内容</p>
+              </div>
+            )}
+
+            {/* 我的故事 */}
+            {filteredStories.length > 0 ? (
               <div className={styles.favoritesList}>
-                {storyFavorites.map((item) => {
+                {filteredStories.map((item) => {
                   const isExpanded = expandedId === item.sessionId
                   return (
                     <article
@@ -380,7 +425,7 @@ export function Favorites() {
                     >
                       <div className={styles.itemHeader}>
                         <div className={styles.itemMeta}>
-                          <span className={styles.itemDate}>{item.date}</span>
+                          <span className={styles.itemDate}>{formatDate(item.createdAt)}</span>
                           <h3 className={styles.itemTitle}>{item.storyTitle}</h3>
                         </div>
                         <div className={styles.itemSourceTag}>我的故事</div>
@@ -427,26 +472,35 @@ export function Favorites() {
               </div>
             ) : (
               <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>
-                  <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="20" cy="25" r="1.5" fill="currentColor" opacity="0.3" />
-                    <circle cx="95" cy="20" r="1" fill="currentColor" opacity="0.4" />
-                    <circle cx="100" cy="80" r="1.5" fill="currentColor" opacity="0.3" />
-                    <circle cx="15" cy="90" r="1" fill="currentColor" opacity="0.4" />
-                    <circle cx="50" cy="10" r="1" fill="currentColor" opacity="0.3" />
-                    <circle cx="75" cy="105" r="1.5" fill="currentColor" opacity="0.3" />
-                    <circle cx="60" cy="55" r="30" fill="url(#starGlow)" opacity="0.15" />
-                    <path d="M60 25L66.18 43.82L86 43.82L70.09 55.64L76.27 74.36L60 62.73L43.73 74.36L49.91 55.64L34 43.82L53.82 43.82L60 25Z" fill="currentColor" opacity="0.8" />
-                    <defs>
-                      <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stopColor="currentColor" />
-                        <stop offset="100%" stopColor="transparent" />
-                      </radialGradient>
-                    </defs>
-                  </svg>
-                </div>
-                <h2 className={styles.emptyTitle}>还没有原创之梦</h2>
-                <p className={styles.emptyText}>在历史记录中收藏的故事将显示在这里</p>
+                {storySearchQuery ? (
+                  <>
+                    <h2 className={styles.emptyTitle}>没有找到匹配的内容</h2>
+                    <p className={styles.emptyText}>试试其他关键词</p>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.emptyIcon}>
+                      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="20" cy="25" r="1.5" fill="currentColor" opacity="0.3" />
+                        <circle cx="95" cy="20" r="1" fill="currentColor" opacity="0.4" />
+                        <circle cx="100" cy="80" r="1.5" fill="currentColor" opacity="0.3" />
+                        <circle cx="15" cy="90" r="1" fill="currentColor" opacity="0.4" />
+                        <circle cx="50" cy="10" r="1" fill="currentColor" opacity="0.3" />
+                        <circle cx="75" cy="105" r="1.5" fill="currentColor" opacity="0.3" />
+                        <circle cx="60" cy="55" r="30" fill="url(#starGlow)" opacity="0.15" />
+                        <path d="M60 25L66.18 43.82L86 43.82L70.09 55.64L76.27 74.36L60 62.73L43.73 74.36L49.91 55.64L34 43.82L53.82 43.82L60 25Z" fill="currentColor" opacity="0.8" />
+                        <defs>
+                          <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor="currentColor" />
+                            <stop offset="100%" stopColor="transparent" />
+                          </radialGradient>
+                        </defs>
+                      </svg>
+                    </div>
+                    <h2 className={styles.emptyTitle}>还没有原创之梦</h2>
+                    <p className={styles.emptyText}>在历史记录中收藏的故事将显示在这里</p>
+                  </>
+                )}
               </div>
             )}
           </>

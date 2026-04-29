@@ -498,6 +498,32 @@
   .chatHeaderAction {
     display: none;
   }
+
+  .mobileBackBtn {
+    display: flex;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: rgba(139, 157, 195, 0.1);
+    border: 1px solid rgba(139, 157, 195, 0.2);
+    border-radius: var(--radius-md);
+    color: rgba(139, 157, 195, 0.8);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .mobileBackBtn:hover {
+    background: rgba(139, 157, 195, 0.2);
+    color: #e8f4ff;
+  }
+
+  .mobileBackBtn svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 @media (max-width: 480px) {

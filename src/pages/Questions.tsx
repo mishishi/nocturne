@@ -5,6 +5,7 @@ import { api } from '../services/api'
 import { Textarea } from '../components/ui/Textarea'
 import { Toast } from '../components/ui/Toast'
 import { RevealScreen } from '../components/RevealScreen'
+import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Questions.module.css'
 
 // Prevent concurrent submissions
@@ -25,9 +26,10 @@ export function Questions() {
   const [storyReady, setStoryReady] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const { questions, answers, currentQuestionIndex, sessionId } = currentSession
+  const { questions, answers, currentQuestionIndex, sessionId, dreamText } = currentSession
 
   const currentQuestion = questions[currentQuestionIndex]
+
   const isFirstQuestion = currentQuestionIndex === 0
   const isLastQuestion = currentQuestionIndex === questions.length - 1
 
@@ -213,6 +215,15 @@ export function Questions() {
       )}
 
       <div className={styles.container}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: '首页', href: '/' },
+            { label: '记录梦境', href: '/dream' },
+            { label: 'AI 追问' }
+          ]}
+        />
+
         {/* 顶部进度条 */}
         <div className={styles.progressSection}>
           <div className={styles.progressBar}>

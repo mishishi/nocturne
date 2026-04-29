@@ -18,6 +18,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 0;
 }
 
 .star {
@@ -48,6 +49,7 @@
   transform: translate(-50%, -50%);
   animation: nebulaPulse 8s ease-in-out infinite;
   pointer-events: none;
+  z-index: 0;
 }
 
 .nebulaSecondary {
@@ -62,6 +64,7 @@
   left: 60%;
   animation: nebulaFloat 12s ease-in-out infinite;
   pointer-events: none;
+  z-index: 0;
 }
 
 @keyframes nebulaPulse {
@@ -86,6 +89,7 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  z-index: 0;
 }
 
 .portalRing {
@@ -151,9 +155,8 @@
   flex-direction: column;
   align-items: center;
   padding: var(--space-8);
-  padding-top: 200px;
   width: 100%;
-  max-width: 400px;
+  max-width: 480px;
 }
 
 /* Header */
@@ -199,7 +202,8 @@
 /* Card */
 .card {
   width: 100%;
-  padding: var(--space-8);
+  max-width: 440px;
+  padding: var(--space-10);
   background: rgba(26, 58, 92, 0.3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
@@ -484,6 +488,7 @@
   border: 1px solid rgba(244, 211, 94, 0.1);
   border-radius: 50%;
   pointer-events: none;
+  z-index: 0;
 }
 
 .moonGlow {
@@ -499,6 +504,7 @@
   border-radius: 50%;
   pointer-events: none;
   animation: moonFloat 6s ease-in-out infinite;
+  z-index: 0;
 }
 
 @keyframes moonFloat {
@@ -532,7 +538,6 @@
 /* Responsive */
 @media (max-width: 480px) {
   .content {
-    margin-top: 240px;
     padding: var(--space-6);
   }
 
@@ -541,7 +546,7 @@
   }
 
   .card {
-    padding: var(--space-6);
+    padding: var(--space-8);
   }
 
   .portalContainer {

@@ -103,6 +103,68 @@
   backdrop-filter: blur(20px);
 }
 
+/* Step Indicator */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid rgba(139, 157, 195, 0.1);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepNumber {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: rgba(139, 157, 195, 0.15);
+  color: rgba(139, 157, 195, 0.6);
+  border: 1px solid rgba(139, 157, 195, 0.2);
+  transition: all 0.3s ease;
+}
+
+.stepLabel {
+  font-size: 0.8125rem;
+  color: rgba(139, 157, 195, 0.5);
+  transition: all 0.3s ease;
+}
+
+.stepActive .stepNumber {
+  background: rgba(244, 211, 94, 0.2);
+  color: var(--color-golden);
+  border-color: rgba(244, 211, 94, 0.4);
+  box-shadow: 0 0 12px rgba(244, 211, 94, 0.2);
+}
+
+.stepActive .stepLabel {
+  color: var(--color-golden);
+}
+
+.stepDone .stepNumber {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.stepLine {
+  width: 40px;
+  height: 1px;
+  background: rgba(139, 157, 195, 0.2);
+  margin: 0 var(--space-2);
+}
+
 /* Form */
 .form {
   display: flex;

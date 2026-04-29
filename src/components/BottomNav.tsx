@@ -7,6 +7,16 @@ import styles from './BottomNav.module.css'
 
 const DRAFT_KEY = 'yeelin_draft'
 
+// Hook to check if draft exists
+function useHasDraft() {
+  const [hasDraft, setHasDraft] = useState(false)
+  useEffect(() => {
+    const draft = localStorage.getItem(DRAFT_KEY)
+    setHasDraft(!!draft)
+  }, [])
+  return hasDraft
+}
+
 const NAV_ITEMS = [
   {
     path: '/',
@@ -68,6 +78,7 @@ export function BottomNav() {
   const { recentlyUnlocked, user } = useDreamStore()
   const [pendingCount, setPendingCount] = useState(0)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
+  const hasDraft = useHasDraft()
 
   useEffect(() => {
     const fetchPendingCount = async () => {
@@ -125,21 +136,28 @@ export function BottomNav() {
 
       {/* Floating Action Button for recording */}
       <button
-        className={styles.fab}
-        aria-label="记录梦境"
+        className={`${styles.fab} ${hasDraft ? styles.fabHasDraft : ''}`}
+        aria-label={hasDraft ? '继续编辑梦境草稿' : '记录梦境'}
         onClick={() => {
-          const hasDraft = localStorage.getItem(DRAFT_KEY)
           if (hasDraft) {
             setShowDraftConfirm(true)
           }
         }}
       >
         <Link to="/dream?new=1" className={styles.fabLink}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          {hasDraft ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          )}
         </Link>
+        {hasDraft && <span className={styles.draftIndicator} />}
       </button>
 
       <ConfirmModal

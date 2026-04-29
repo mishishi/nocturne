@@ -979,8 +979,9 @@ export function Story() {
                     </div>
                   )}
                   <button
-                    className={`${styles.shareMenuItem} ${!user ? styles.menuItemDisabled : ''}`}
+                    className={`${styles.shareMenuItem} ${!user || user.points < 10 ? styles.menuItemDisabled : ''}`}
                     onClick={() => {
+                      if (!user || user.points < 10) return
                       handleInterpret()
                       setShowAiMenu(false)
                     }}

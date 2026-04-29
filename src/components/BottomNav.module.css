@@ -144,6 +144,36 @@
   text-decoration: none;
 }
 
+.fabHasDraft {
+  background: linear-gradient(135deg, #F4D35E 0%, #E8C547 100%);
+  animation: draftPulse 2s ease-in-out infinite;
+}
+
+@keyframes draftPulse {
+  0%, 100% {
+    box-shadow:
+      0 4px 20px rgba(244, 211, 94, 0.4),
+      0 0 40px rgba(244, 211, 94, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 4px 24px rgba(244, 211, 94, 0.6),
+      0 0 50px rgba(244, 211, 94, 0.4);
+  }
+}
+
+.draftIndicator {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  background: #4ade80;
+  border-radius: 50%;
+  border: 2px solid var(--color-overlay);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+}
+
 .fab svg {
   width: 28px;
   height: 28px;

@@ -159,8 +159,42 @@ export function Notifications() {
                   )}
                 </div>
                 <div className={styles.content}>
+                  <div className={styles.header}>
+                    <span className={`${styles.typeBadge} ${styles[`type${notification.type.charAt(0) + notification.type.slice(1).toLowerCase()}`]}`}>
+                      {notification.type === 'LIKE' && (
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                      )}
+                      {notification.type === 'COMMENT' && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                      )}
+                      {notification.type === 'FRIEND_REQUEST' && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                          <circle cx="8.5" cy="7" r="4"/>
+                          <line x1="20" y1="8" x2="20" y2="14"/>
+                          <line x1="23" y1="11" x2="17" y2="11"/>
+                        </svg>
+                      )}
+                      {notification.type === 'FRIEND_ACCEPTED' && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                          <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                      )}
+                      <span>
+                        {notification.type === 'LIKE' && '赞'}
+                        {notification.type === 'COMMENT' && '评论'}
+                        {notification.type === 'FRIEND_REQUEST' && '好友请求'}
+                        {notification.type === 'FRIEND_ACCEPTED' && '已互关'}
+                      </span>
+                    </span>
+                    <span className={styles.time}>{formatRelativeTime(notification.createdAt)}</span>
+                  </div>
                   <p className={styles.message}>{notification.message}</p>
-                  <span className={styles.time}>{formatRelativeTime(notification.createdAt)}</span>
                 </div>
                 {!notification.isRead && <div className={styles.unreadDot} />}
               </div>
