@@ -198,7 +198,6 @@ export function Questions() {
 
   // AI persona context based on question type
   const getAIContext = () => {
-    if (isLastQuestion) return '最后一个问题咯'
     if (currentQuestionIndex === 0) return '想更好地了解你的梦'
     return '继续说说看'
   }
@@ -208,7 +207,7 @@ export function Questions() {
   // Trigger typewriter effect on question change
   useEffect(() => {
     setShowQuestion(false)
-    const timer = setTimeout(() => setShowQuestion(true), 50)
+    const timer = setTimeout(() => setShowQuestion(true), 500)
     return () => clearTimeout(timer)
   }, [currentQuestionIndex])
 
@@ -285,11 +284,7 @@ export function Questions() {
             <div className={styles.questionContent}>
               <p className={styles.questionTag}>追问 {currentQuestionIndex + 1}</p>
               <h2 className={styles.questionText}>
-                {showQuestion ? (
-                  <TypewriterText text={currentQuestion} speed={25} />
-                ) : (
-                  currentQuestion
-                )}
+                <TypewriterText text={currentQuestion} speed={25} delay={showQuestion ? 0 : 500} />
               </h2>
             </div>
             <div className={styles.questionHint}>
@@ -332,7 +327,7 @@ export function Questions() {
               setCurrentAnswer(e.target.value)
               setError('')
             }}
-            placeholder="在这里写下你的回答……"
+            placeholder="仔细想想，把感受到的说出来……"
             className={styles.textarea}
             error={error}
             autoFocus={!isGeneratingStory}
