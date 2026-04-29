@@ -4,9 +4,6 @@ import { useDreamStore } from '../hooks/useDreamStore'
 import { friendApi, notificationApi } from '../services/api'
 import styles from './Navbar.module.css'
 
-// Check auth token directly from localStorage
-const hasAuthToken = () => !!localStorage.getItem('yeelin_token')
-
 export function Navbar() {
   const location = useLocation()
   const { user } = useDreamStore()
@@ -15,8 +12,9 @@ export function Navbar() {
 
   useEffect(() => {
     const fetchPendingCount = async () => {
-      // Double check auth - user.openid AND token must exist
-      if (!user?.openid || !hasAuthToken()) {
+      // Check auth - user.openid AND token must exist
+      const token = localStorage.getItem('yeelin_token')
+      if (!user?.openid || !token) {
         setPendingCount(0)
         return
       }
@@ -38,8 +36,9 @@ export function Navbar() {
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
-      // Double check auth - user.openid AND token must exist
-      if (!user?.openid || !hasAuthToken()) {
+      // Check auth - user.openid AND token must exist
+      const token = localStorage.getItem('yeelin_token')
+      if (!user?.openid || !token) {
         setNotificationCount(0)
         return
       }
