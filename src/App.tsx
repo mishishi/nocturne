@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
+import { MobileHeader } from './components/MobileHeader'
 import { BottomNav } from './components/BottomNav'
 import { PageTransition } from './components/PageTransition'
 import { AchievementToast } from './components/AchievementToast'
@@ -77,6 +78,7 @@ function App() {
       <SkipLink />
       <AtmosphereEffects />
       <Navbar />
+      <MobileHeader />
       <PageTransition>
         <main id="main-content" role="main" aria-label="主内容区域">
           <GlobalErrorBoundary>

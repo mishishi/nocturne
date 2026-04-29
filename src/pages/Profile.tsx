@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
 import { ExportDataModal } from '../components/ExportDataModal'
 import { Statistics } from '../components/Statistics'
-import { AmbientPlayer } from '../components/AmbientPlayer'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
@@ -29,7 +28,6 @@ const FONT_SIZE_OPTIONS = [
 const THEME_OPTIONS = [
   { value: 'starry' as const, label: '星夜', icon: '🌙', desc: '深邃星空' },
   { value: 'aurora' as const, label: '极光', icon: '🌌', desc: '神秘极光' },
-  { value: 'highcontrast' as const, label: '高对比', icon: '☀️', desc: '清晰高对比' },
   { value: 'dark' as const, label: '暗黑', icon: '🌑', desc: '深邃静谧' }
 ]
 
@@ -42,6 +40,7 @@ export function Profile() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [shareStats, setShareStatsLocal] = useState<UserStats | null>(null)
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'history' | 'favorites' | 'settings'>('overview')
 
   const totalDreams = history.length
   const totalWords = history.reduce((acc, item) => acc + item.story.length, 0)
@@ -120,40 +119,86 @@ export function Profile() {
           <h1 className={styles.title}>梦境档案</h1>
         </header>
 
-        {/* Stats */}
-        <div className={styles.stats}>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>{totalDreams}</span>
-            <span className={styles.statLabel}>记录梦境</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>{totalWords.toLocaleString()}</span>
-            <span className={styles.statLabel}>累计文字</span>
-          </div>
+        {/* Tab Navigation */}
+        <div className={styles.tabNav} role="tablist">
+          <button
+            className={`${styles.tabBtn} ${activeTab === 'overview' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('overview')}
+            role="tab"
+            aria-selected={activeTab === 'overview'}
+          >
+            概览
+          </button>
+          <button
+            className={`${styles.tabBtn} ${activeTab === 'achievements' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('achievements')}
+            role="tab"
+            aria-selected={activeTab === 'achievements'}
+          >
+            成就
+          </button>
+          <button
+            className={`${styles.tabBtn} ${activeTab === 'settings' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('settings')}
+            role="tab"
+            aria-selected={activeTab === 'settings'}
+          >
+            设置
+          </button>
+          <button
+            className={`${styles.tabBtn} ${activeTab === 'history' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('history')}
+            role="tab"
+            aria-selected={activeTab === 'history'}
+          >
+            历史
+          </button>
+          <button
+            className={`${styles.tabBtn} ${activeTab === 'favorites' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('favorites')}
+            role="tab"
+            aria-selected={activeTab === 'favorites'}
+          >
+            收藏
+          </button>
         </div>
 
-        {/* Check-in Stats */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>每日签到</h2>
-          <div className={styles.shareStats}>
-            <div className={styles.pointsCard}>
-              <span className={styles.pointsValue}>{consecutiveDays}</span>
-              <span className={styles.pointsLabel}>连续签到</span>
-            </div>
-            <div className={styles.shareInfo}>
-              <div className={styles.streakInfo}>
-                <span className={styles.streakIcon}>{checkedInToday ? '✅' : '📅'}</span>
-                <span>{checkedInToday ? '今日已签到' : '今日未签到'}</span>
+        {/* Tab: Overview */}
+        {activeTab === 'overview' && (
+          <>
+            <div className={styles.stats}>
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{totalDreams}</span>
+                <span className={styles.statLabel}>记录梦境</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{totalWords.toLocaleString()}</span>
+                <span className={styles.statLabel}>累计文字</span>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Share Stats */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>分享积分</h2>
-          <div className={styles.shareStats}>
-            <div className={styles.pointsCard}>
+            {/* Check-in Stats */}
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>每日签到</h2>
+              <div className={styles.shareStats}>
+                <div className={styles.pointsCard}>
+                  <span className={styles.pointsValue}>{consecutiveDays}</span>
+                  <span className={styles.pointsLabel}>连续签到</span>
+                </div>
+                <div className={styles.shareInfo}>
+                  <div className={styles.streakInfo}>
+                    <span className={styles.streakIcon}>{checkedInToday ? '✅' : '📅'}</span>
+                    <span>{checkedInToday ? '今日已签到' : '今日未签到'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Share Stats */}
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>分享积分</h2>
+              <div className={styles.shareStats}>
+                <div className={styles.pointsCard}>
               <span className={styles.pointsValue}>{points}</span>
               <span className={styles.pointsLabel}>梦境积分</span>
             </div>
@@ -164,6 +209,7 @@ export function Profile() {
               </div>
             </div>
           </div>
+        </div>
 
           {/* Medals */}
           <div className={styles.medalsGrid}>
@@ -201,29 +247,27 @@ export function Profile() {
               邀请
             </Button>
           </div>
-        </div>
-
-        {/* Statistics Visualization */}
-        {history.length > 0 && (
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>记录统计</h2>
-            <Statistics history={history} />
-          </div>
+          </>
         )}
 
-        {/* Personalized Recommendations */}
-        <PersonalizedRecommendations />
+        {/* Tab: Achievements */}
+        {activeTab === 'achievements' && (
+          <>
+            {/* Statistics Visualization */}
+            {history.length > 0 && (
+              <div className={styles.section}>
+                <h2 className={styles.sectionTitle}>记录统计</h2>
+                <Statistics history={history} />
+              </div>
+            )}
 
-        {/* Ambient Player */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>氛围音乐</h2>
-          <AmbientPlayer />
-        </div>
+            {/* Personalized Recommendations */}
+            <PersonalizedRecommendations />
 
-        {/* Achievements */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>成就</h2>
-          <div className={styles.achievementsGrid}>
+            {/* Achievements */}
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>成就</h2>
+              <div className={styles.achievementsGrid}>
             {ACHIEVEMENTS.map((achievement) => {
               const isUnlocked = achievements.includes(achievement.id)
               // 计算动态提示
@@ -263,7 +307,78 @@ export function Profile() {
             })}
           </div>
         </div>
+          </>
+        )}
 
+        {/* Tab: History */}
+        {activeTab === 'history' && (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>历史记录</h2>
+            {history.length === 0 ? (
+              <div className={styles.emptyTabState}>
+                <p>暂无历史记录</p>
+                <Link to="/dream">
+                  <Button size="sm">记录你的第一个梦</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className={styles.historyList}>
+                {history.slice(0, 20).map((item) => (
+                  <Link
+                    key={item.id}
+                    to={`/story/${item.sessionId}`}
+                    state={{ fromHistory: item }}
+                    className={styles.historyItem}
+                  >
+                    <div className={styles.historyItemHeader}>
+                      <span className={styles.historyItemDate}>{item.date}</span>
+                    </div>
+                    <h3 className={styles.historyItemTitle}>{item.storyTitle}</h3>
+                    <p className={styles.historyItemSnippet}>
+                      {item.story.slice(0, 80)}...
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Favorites */}
+        {activeTab === 'favorites' && (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>我的收藏</h2>
+            {history.filter(item => item.isFavorite).length === 0 ? (
+              <div className={styles.emptyTabState}>
+                <p>暂无收藏内容</p>
+              </div>
+            ) : (
+              <div className={styles.historyList}>
+                {history.filter(item => item.isFavorite).map((item) => (
+                  <Link
+                    key={item.id}
+                    to={`/story/${item.sessionId}`}
+                    state={{ fromHistory: item }}
+                    className={styles.historyItem}
+                  >
+                    <div className={styles.historyItemHeader}>
+                      <span className={styles.historyItemDate}>{item.date}</span>
+                      <span className={styles.historyItemFavorite}>★</span>
+                    </div>
+                    <h3 className={styles.historyItemTitle}>{item.storyTitle}</h3>
+                    <p className={styles.historyItemSnippet}>
+                      {item.story.slice(0, 80)}...
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Settings */}
+        {activeTab === 'settings' && (
+          <>
         {/* Display Settings */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>显示</h2>
@@ -379,6 +494,8 @@ export function Profile() {
             <p>记录你的每一个梦境</p>
           </div>
         </div>
+          </>
+        )}
 
         {/* AI Quality Analytics (for team review) */}
         <AIQualityAnalytics />

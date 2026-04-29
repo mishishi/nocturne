@@ -3,12 +3,12 @@ import { persist } from 'zustand/middleware'
 
 interface SettingsState {
   fontSize: 'small' | 'medium' | 'large'
-  theme: 'starry' | 'aurora' | 'highcontrast' | 'dark'
+  theme: 'starry' | 'aurora' | 'dark'
   reduceMotion: boolean
   ambientSound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain'
   ambientVolume: number
   setFontSize: (size: 'small' | 'medium' | 'large') => void
-  setTheme: (theme: 'starry' | 'aurora' | 'highcontrast' | 'dark') => void
+  setTheme: (theme: 'starry' | 'aurora' | 'dark') => void
   setReduceMotion: (reduce: boolean) => void
   setAmbientSound: (sound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain') => void
   setAmbientVolume: (volume: number) => void

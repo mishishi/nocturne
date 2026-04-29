@@ -321,14 +321,14 @@ export function SharePoster({ storyTitle, story, date, onClose, onShare }: Share
         </div>
 
         <div className={styles.actions}>
-          <Button onClick={handleDownload} className={styles.downloadBtn}>
+          <Button size="lg" onClick={handleDownload} className={styles.downloadBtn}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
             </svg>
             保存图片
           </Button>
           {typeof navigator.share === 'function' && (
-            <Button variant="secondary" onClick={handleShare} className={styles.shareBtn}>
+            <Button size="lg" variant="secondary" onClick={handleShare} className={styles.shareBtn}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
                 <circle cx="18" cy="5" r="3" />
                 <circle cx="6" cy="12" r="3" />

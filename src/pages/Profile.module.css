@@ -544,4 +544,121 @@
   .statValue {
     font-size: 1.75rem;
   }
+
+  .tabNav {
+    padding: 0 var(--space-4);
+  }
+}
+
+/* Tab Navigation */
+.tabNav {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabBtn {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-silver);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-dream);
+  position: relative;
+}
+
+.tabBtn:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tabBtnActive {
+  color: var(--color-golden);
+  background: rgba(244, 211, 94, 0.1);
+}
+
+.tabBtnActive::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background: var(--color-golden);
+  border-radius: 1px;
+}
+
+/* Tab: History & Favorites */
+.emptyTabState {
+  text-align: center;
+  padding: var(--space-8) 0;
+  color: var(--color-silver);
+}
+
+.emptyTabState p {
+  margin-bottom: var(--space-4);
+  opacity: 0.7;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.historyItem {
+  display: block;
+  padding: var(--space-4);
+  background: rgba(26, 58, 92, 0.2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all 0.2s var(--ease-dream);
+}
+
+.historyItem:hover {
+  background: rgba(26, 58, 92, 0.3);
+  border-color: var(--color-border-light);
+  transform: translateY(-1px);
+}
+
+.historyItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.historyItemDate {
+  font-size: 0.75rem;
+  color: var(--color-silver);
+  opacity: 0.7;
+}
+
+.historyItemFavorite {
+  color: var(--color-golden);
+  font-size: 0.875rem;
+}
+
+.historyItemTitle {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin: 0 0 var(--space-2) 0;
+  line-height: 1.4;
+}
+
+.historyItemSnippet {
+  font-size: 0.8125rem;
+  color: var(--color-silver);
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.8;
 }

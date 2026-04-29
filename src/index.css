@@ -147,42 +147,6 @@ html[data-font-size="large"] {
 }
 
 /* ==========================================
-   THEME: High Contrast
-   ========================================== */
-[data-theme="highcontrast"] {
-  /* High contrast color overrides */
-  --color-night-deep: #000000;
-  --color-night-surface: #1A1A1A;
-  --color-night-mid: #2D2D2D;
-  --color-golden: #FFDD00;
-  --color-golden-bright: #FFFF00;
-  --color-moonlight: #FFFFFF;
-  --color-silver: #CCCCCC;
-  --color-silver-dim: #999999;
-
-  /* Stronger borders for high contrast */
-  --color-border: rgba(255, 255, 255, 0.4);
-  --color-border-subtle: rgba(255, 255, 255, 0.2);
-  --color-border-light: rgba(255, 255, 255, 0.3);
-  --color-border-hover: rgba(255, 255, 255, 0.6);
-  --color-border-strong: rgba(255, 255, 255, 0.5);
-
-  /* Stronger shadows */
-  --shadow-glow: 0 0 20px rgba(255, 221, 0, 0.6);
-  --shadow-glow-strong: 0 0 40px rgba(255, 221, 0, 0.8);
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.6);
-
-  /* Higher contrast focus */
-  --color-focus-ring: rgba(255, 221, 0, 0.8);
-}
-
-/* High contrast mode also increases text contrast */
-[data-theme="highcontrast"] body {
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
-}
-
-/* ==========================================
    THEME: Dark
    ========================================== */
 [data-theme="dark"] {

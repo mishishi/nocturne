@@ -39,16 +39,6 @@ const NAV_ITEMS = [
     )
   },
   {
-    path: '/history',
-    label: '历史',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
-    )
-  },
-  {
     path: '/profile',
     label: '我的',
     icon: (
@@ -64,7 +54,6 @@ export function BottomNav() {
   const location = useLocation()
   const { recentlyUnlocked, user } = useDreamStore()
   const [pendingCount, setPendingCount] = useState(0)
-  const [notificationCount, setNotificationCount] = useState(0)
 
   useEffect(() => {
     const fetchPendingCount = async () => {
@@ -84,32 +73,6 @@ export function BottomNav() {
 
     fetchPendingCount()
     const interval = setInterval(fetchPendingCount, 30000)
-    return () => clearInterval(interval)
-  }, [user?.openid])
-
-  useEffect(() => {
-    const fetchNotificationCount = async () => {
-      if (!user?.openid) {
-        setNotificationCount(0)
-        return
-      }
-      try {
-        const res = await fetch(`/api/notifications/unread-count`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('yeelin_token')}`
-          }
-        })
-        if (res.ok) {
-          const data = await res.json()
-          setNotificationCount(data.count || 0)
-        }
-      } catch (err) {
-        console.error('Failed to fetch notification count:', err)
-      }
-    }
-
-    fetchNotificationCount()
-    const interval = setInterval(fetchNotificationCount, 30000)
     return () => clearInterval(interval)
   }, [user?.openid])
 
@@ -135,11 +98,6 @@ export function BottomNav() {
             {item.path === '/profile' && recentlyUnlocked.length > 0 && (
               <span className={styles.badge} aria-label={`${recentlyUnlocked.length}个新成就`}>
                 {recentlyUnlocked.length}
-              </span>
-            )}
-            {item.path === '/profile' && notificationCount > 0 && (
-              <span className={styles.badge} aria-label={`${notificationCount}条未读通知`}>
-                {notificationCount}
               </span>
             )}
             {item.path === '/friends' && pendingCount > 0 && (
