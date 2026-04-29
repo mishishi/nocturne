@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { useAchievementSound } from '../hooks/useAchievementSound'
@@ -59,7 +59,17 @@ export function Story() {
   const shareMenuRef = useRef<HTMLDivElement>(null)
   const aiMenuRef = useRef<HTMLDivElement>(null)
   const fabMenuRef = useRef<HTMLDivElement>(null)
+  const fabJustClosedByOutsideRef = useRef(false)
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Memoized particle positions to avoid Math.random() on each render
+  const particlePositions = useMemo(() =>
+    Array.from({ length: 12 }, () => ({
+      left: `${8 + Math.random() * 84}%`,
+      animationDelay: `${Math.random() * 8}s`,
+      animationDuration: `${6 + Math.random() * 6}s`
+    })), []
+  )
 
   // Stable callback for toast close to prevent effect re-runs
   const handleToastClose = useCallback(() => {
@@ -100,16 +110,24 @@ export function Story() {
     }
   }, [fromHistory, fromDreamWall])
 
-  // Track reading progress
+  // Track reading progress with debounced scroll handler
   useEffect(() => {
+    let rafId: number | null = null
     const handleScroll = () => {
-      const scrollTop = window.scrollY
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight
-      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
-      setReadProgress(Math.min(100, Math.max(0, progress)))
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        const scrollTop = window.scrollY
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight
+        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
+        setReadProgress(Math.min(100, Math.max(0, progress)))
+        rafId = null
+      })
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (rafId !== null) cancelAnimationFrame(rafId)
+    }
   }, [])
 
   // Close share menu on outside click
@@ -123,6 +141,7 @@ export function Story() {
         setShowAiMenu(false)
       }
       if (showFabMenu && fabMenuRef.current && !fabMenuRef.current.contains(e.target as Node)) {
+        fabJustClosedByOutsideRef.current = true
         setShowFabMenu(false)
       }
     }
@@ -491,7 +510,7 @@ export function Story() {
     setIsInterpreting(true)
 
     try {
-      const result = await api.interpret(sessionId, openid)
+      const result = await api.interpret(sessionId)
 
       if (result.success && result.interpretation) {
         setInterpretation(result.interpretation)
@@ -745,7 +764,13 @@ export function Story() {
               <div className={styles.fabWrapper} ref={fabMenuRef}>
                 <button
                   className={styles.fab}
-                  onClick={() => setShowFabMenu(!showFabMenu)}
+                  onClick={() => {
+                    if (fabJustClosedByOutsideRef.current) {
+                      fabJustClosedByOutsideRef.current = false
+                      return
+                    }
+                    setShowFabMenu(!showFabMenu)
+                  }}
                   aria-expanded={showFabMenu}
                   aria-label="更多操作"
                 >
@@ -1046,15 +1071,11 @@ export function Story() {
 
       {/* Floating particles */}
       <div className={styles.particles}>
-        {[...Array(12)].map((_, i) => (
+        {particlePositions.map((particle, i) => (
           <span
             key={i}
             className={styles.particle}
-            style={{
-              left: `${8 + Math.random() * 84}%`,
-              animationDelay: `${Math.random() * 8}s`,
-              animationDuration: `${6 + Math.random() * 6}s`
-            }}
+            style={particle}
           />
         ))}
       </div>

@@ -693,3 +693,23 @@
   line-height: 1.5;
   opacity: 0.8;
 }
+
+/* View All */
+.viewAllSection {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-4);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.viewAllLink {
+  font-size: 0.875rem;
+  color: var(--color-golden);
+  text-decoration: none;
+  transition: opacity 0.2s var(--ease-dream);
+}
+
+.viewAllLink:hover {
+  opacity: 0.8;
+}

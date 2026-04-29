@@ -353,6 +353,13 @@ export function Profile() {
                 ))}
               </div>
             )}
+            {history.length > 20 && (
+              <div className={styles.viewAllSection}>
+                <Link to="/history" className={styles.viewAllLink}>
+                  查看全部 {history.length} 条记录
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
