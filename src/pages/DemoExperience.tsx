@@ -51,7 +51,7 @@ export function DemoExperience() {
     if (phase !== 'dream') return
     timerRef.current = setTimeout(() => {
       setPhase('questions')
-    }, 4000)
+    }, 3000)
   }, [phase])
 
   // Show question when questionIndex changes (or phase enters questions)
@@ -61,7 +61,7 @@ export function DemoExperience() {
     setShowQuestion(false)
     timerRef.current = setTimeout(() => {
       setShowQuestion(true)
-    }, 800)
+    }, 500)
   }, [phase, questionIndex])
 
   // Auto-fill answer after question appears
@@ -69,7 +69,7 @@ export function DemoExperience() {
     if (!showQuestion || phase !== 'questions') return
     timerRef.current = setTimeout(() => {
       setShowAnswer(true)
-    }, 1800)
+    }, 1500)
   }, [showQuestion, phase, questionIndex])
 
   // Move to next question or reveal after answer
@@ -96,7 +96,7 @@ export function DemoExperience() {
         // Simulate story being "ready" after a short delay
         timerRef.current = setTimeout(() => {
           setStoryReady(true)
-        }, 2000)
+        }, 1500)
       }
     }, 800)
   }, [answerDone, phase, questionIndex])
@@ -142,7 +142,7 @@ export function DemoExperience() {
             <h1 className={styles.dreamTitle}>梦境片段</h1>
             <div className={styles.dreamCard}>
               <p className={styles.dreamText}>
-                <TypewriterText text={DEMO_DREAM} speed={30} />
+                <TypewriterText text={DEMO_DREAM} speed={25} />
               </p>
             </div>
             <p className={styles.dreamHint}>正在提取梦境元素...</p>
