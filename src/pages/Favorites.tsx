@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { wallApi, DreamWallPost } from '../services/api'
 import { Button } from '../components/ui/Button'
@@ -8,8 +8,12 @@ import styles from './Favorites.module.css'
 
 export function Favorites() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user } = useDreamStore()
+  const initialTab = searchParams.get('tab') === 'story' ? 'story' : 'wall'
+  const [activeTab, setActiveTab] = useState<'wall' | 'story'>(initialTab)
   const [posts, setPosts] = useState<DreamWallPost[]>([])
+  const [storyFavorites, setStoryFavorites] = useState<Array<{ sessionId: string; storyTitle: string; story: string; createdAt: string; date: string }>>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(1)
@@ -44,6 +48,24 @@ export function Favorites() {
       fetchFavorites(1)
     }
   }, [user?.openid, fetchFavorites])
+
+  // Fetch story favorites
+  useEffect(() => {
+    if (!user?.openid) return
+
+    const fetchStoryFavorites = async () => {
+      try {
+        const res = await wallApi.getStoryFavorites()
+        if (res.success) {
+          setStoryFavorites(res.stories)
+        }
+      } catch (err) {
+        console.error('Failed to fetch story favorites:', err)
+        setStoryFavorites([])
+      }
+    }
+    fetchStoryFavorites()
+  }, [user?.openid])
 
   const handleLoadMore = () => {
     if (loadingMore || !hasMore) return
@@ -153,11 +175,37 @@ export function Favorites() {
           <span className={styles.badge}>我的收藏</span>
           <h1 className={styles.title}>收藏列表</h1>
           <p className={styles.subtitle}>
-            {posts.length > 0
-              ? `共 ${posts.length} 个收藏`
+            {posts.length > 0 || storyFavorites.length > 0
+              ? `共 ${posts.length + storyFavorites.length} 个收藏`
               : '收藏你喜欢的梦境故事'}
           </p>
         </header>
+
+        {/* Tabs */}
+        <div className={styles.tabs} role="tablist">
+          <button
+            className={`${styles.tab} ${activeTab === 'wall' ? styles.active : ''}`}
+            onClick={() => setActiveTab('wall')}
+            role="tab"
+            aria-selected={activeTab === 'wall'}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            他山之梦
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'story' ? styles.active : ''}`}
+            onClick={() => setActiveTab('story')}
+            role="tab"
+            aria-selected={activeTab === 'story'}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+            原创之梦
+          </button>
+        </div>
 
         {/* Loading */}
         {loading ? (
@@ -169,7 +217,7 @@ export function Favorites() {
             </div>
             <p>加载中...</p>
           </div>
-        ) : posts.length === 0 ? (
+        ) : activeTab === 'wall' && posts.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>
               <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -195,7 +243,7 @@ export function Favorites() {
             <p className={styles.emptyText}>去梦墙收藏你喜欢的故事吧</p>
             <Link to="/wall"><Button size="lg">探索梦墙</Button></Link>
           </div>
-        ) : (
+        ) : activeTab === 'wall' ? (
           <>
             {/* Search */}
             {posts.length > 0 && (
@@ -315,6 +363,90 @@ export function Favorites() {
                 >
                   {loadingMore ? '加载中...' : '加载更多'}
                 </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* 我的故事 */}
+            {storyFavorites.length > 0 ? (
+              <div className={styles.favoritesList}>
+                {storyFavorites.map((item) => {
+                  const isExpanded = expandedId === item.sessionId
+                  return (
+                    <article
+                      key={item.sessionId}
+                      className={`${styles.favoriteItem} ${isExpanded ? styles.expanded : ''}`}
+                    >
+                      <div className={styles.itemHeader}>
+                        <div className={styles.itemMeta}>
+                          <span className={styles.itemDate}>{item.date}</span>
+                          <h3 className={styles.itemTitle}>{item.storyTitle}</h3>
+                        </div>
+                        <div className={styles.itemSourceTag}>我的故事</div>
+                      </div>
+
+                      <p className={styles.itemPreview}>
+                        {item.story?.slice(0, 150)}...
+                      </p>
+
+                      <button
+                        className={styles.expandBtn}
+                        onClick={() => toggleExpand(item.sessionId)}
+                        aria-expanded={isExpanded}
+                      >
+                        <span>{isExpanded ? '收起' : '展开全文'}</span>
+                        <svg
+                          className={`${styles.expandIcon} ${isExpanded ? styles.expanded : ''}`}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </button>
+
+                      {isExpanded && (
+                        <div className={styles.expandedContent}>
+                          <div className={styles.storyContent}>
+                            {item.story.split('\n').map((paragraph, idx) => (
+                              paragraph.trim() && <p key={idx}>{paragraph}</p>
+                            ))}
+                          </div>
+                          <div className={styles.expandedActions}>
+                            <Button variant="secondary" size="sm" onClick={() => navigate(`/story/${item.sessionId}`, { state: { sessionId: item.sessionId } })}>
+                              在故事页查看
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </article>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="25" r="1.5" fill="currentColor" opacity="0.3" />
+                    <circle cx="95" cy="20" r="1" fill="currentColor" opacity="0.4" />
+                    <circle cx="100" cy="80" r="1.5" fill="currentColor" opacity="0.3" />
+                    <circle cx="15" cy="90" r="1" fill="currentColor" opacity="0.4" />
+                    <circle cx="50" cy="10" r="1" fill="currentColor" opacity="0.3" />
+                    <circle cx="75" cy="105" r="1.5" fill="currentColor" opacity="0.3" />
+                    <circle cx="60" cy="55" r="30" fill="url(#starGlow)" opacity="0.15" />
+                    <path d="M60 25L66.18 43.82L86 43.82L70.09 55.64L76.27 74.36L60 62.73L43.73 74.36L49.91 55.64L34 43.82L53.82 43.82L60 25Z" fill="currentColor" opacity="0.8" />
+                    <defs>
+                      <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="currentColor" />
+                        <stop offset="100%" stopColor="transparent" />
+                      </radialGradient>
+                    </defs>
+                  </svg>
+                </div>
+                <h2 className={styles.emptyTitle}>还没有原创之梦</h2>
+                <p className={styles.emptyText}>在历史记录中收藏的故事将显示在这里</p>
               </div>
             )}
           </>

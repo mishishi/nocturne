@@ -449,6 +449,12 @@
   font-size: 1.25rem;
 }
 
+.earningHint {
+  margin: var(--space-2) 0 0;
+  font-size: 0.75rem;
+  color: rgba(139, 157, 195, 0.6);
+}
+
 /* Medals */
 .medalsGrid {
   display: grid;
@@ -692,6 +698,75 @@
   margin: 0;
   line-height: 1.5;
   opacity: 0.8;
+}
+
+.historyItemSource {
+  font-size: 0.6875rem;
+  color: var(--color-silver);
+  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* Favorites sub-sections */
+.favoritesSubSection {
+  margin-bottom: var(--space-6);
+}
+
+.favoritesSubSection:last-child {
+  margin-bottom: 0;
+}
+
+.favoritesSubHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.favoritesSubTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-silver);
+  opacity: 0.7;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.favoritesViewAll {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-golden);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.favoritesViewAll:hover {
+  opacity: 0.8;
+}
+
+.emptySubState {
+  padding: var(--space-4);
+  text-align: center;
+  background: rgba(26, 58, 92, 0.1);
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-3);
+}
+
+.emptySubState p {
+  font-size: 0.8125rem;
+  color: var(--color-silver);
+  opacity: 0.6;
+  margin: 0;
 }
 
 /* View All */

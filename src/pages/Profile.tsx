@@ -41,6 +41,7 @@ export function Profile() {
   const [toastMessage, setToastMessage] = useState('')
   const [shareStats, setShareStatsLocal] = useState<UserStats | null>(null)
   const [favorites, setFavorites] = useState<DreamWallPost[]>([])
+  const [storyFavorites, setStoryFavorites] = useState<Array<{ sessionId: string; storyTitle: string; story: string; createdAt: string; date: string }>>([])
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'favorites' | 'settings'>('overview')
 
   // Initialize with local history to avoid flash of zeros, will be updated by backend sync
@@ -139,6 +140,19 @@ export function Profile() {
     }
 
     fetchFavorites()
+
+    const fetchStoryFavorites = async () => {
+      try {
+        const res = await wallApi.getStoryFavorites()
+        if (res.success) {
+          setStoryFavorites(res.stories)
+        }
+      } catch (err) {
+        console.error('Failed to fetch story favorites:', err)
+        setStoryFavorites([])
+      }
+    }
+    fetchStoryFavorites()
   }, [activeTab, user?.openid])
 
   // Fetch share stats on mount
@@ -414,32 +428,90 @@ export function Profile() {
         {activeTab === 'favorites' && (
           <div id="panel-favorites" role="tabpanel" aria-labelledby="tab-favorites" className={styles.section}>
             <h2 className={styles.sectionTitle}>我的收藏</h2>
-            {favorites.length === 0 ? (
-              <div className={styles.emptyTabState}>
-                <p>暂无收藏内容</p>
+
+            {/* 他山之梦 */}
+            <section className={styles.favoritesSubSection}>
+              <div className={styles.favoritesSubHeader}>
+                <h3 className={styles.favoritesSubTitle}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  他山之梦 ({favorites.length})
+                </h3>
+                <Link to="/favorites?tab=wall" className={styles.favoritesViewAll}>
+                  查看全部
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Link>
               </div>
-            ) : (
-              <div className={styles.historyList}>
-                {favorites.map((post) => (
-                  <Link
-                    key={post.id}
-                    to={`/wall?post=${post.id}`}
-                    className={styles.historyItem}
-                  >
-                    <div className={styles.historyItemHeader}>
-                      <span className={styles.historyItemDate}>
-                        {new Date(post.createdAt).toLocaleDateString('zh-CN')}
-                      </span>
-                      <span className={styles.historyItemFavorite}>★</span>
-                    </div>
-                    <h3 className={styles.historyItemTitle}>{post.storyTitle}</h3>
-                    <p className={styles.historyItemSnippet}>
-                      {post.storySnippet || post.storyFull?.slice(0, 80)}...
-                    </p>
-                  </Link>
-                ))}
+              {favorites.length === 0 ? (
+                <div className={styles.emptySubState}>
+                  <p>在梦墙收藏的故事会出现在这里</p>
+                </div>
+              ) : (
+                <div className={styles.historyList}>
+                  {favorites.slice(0, 3).map((post) => (
+                    <Link
+                      key={post.id}
+                      to={`/wall?post=${post.id}`}
+                      className={styles.historyItem}
+                    >
+                      <div className={styles.historyItemHeader}>
+                        <span className={styles.historyItemDate}>
+                          {new Date(post.createdAt).toLocaleDateString('zh-CN')}
+                        </span>
+                      </div>
+                      <h3 className={styles.historyItemTitle}>{post.storyTitle}</h3>
+                      <p className={styles.historyItemSnippet}>
+                        {post.storySnippet || post.storyFull?.slice(0, 80)}...
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* 原创之梦 */}
+            <section className={styles.favoritesSubSection}>
+              <div className={styles.favoritesSubHeader}>
+                <h3 className={styles.favoritesSubTitle}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}>
+                    <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+                  </svg>
+                  原创之梦 ({storyFavorites.length})
+                </h3>
+                <Link to="/favorites?tab=story" className={styles.favoritesViewAll}>
+                  查看全部
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Link>
               </div>
-            )}
+              {storyFavorites.length === 0 ? (
+                <div className={styles.emptySubState}>
+                  <p>在历史记录中点击★收藏的故事会出现在这里</p>
+                </div>
+              ) : (
+                <div className={styles.historyList}>
+                  {storyFavorites.slice(0, 3).map((item) => (
+                    <Link
+                      key={item.sessionId}
+                      to={`/story/${item.sessionId}`}
+                      className={styles.historyItem}
+                    >
+                      <div className={styles.historyItemHeader}>
+                        <span className={styles.historyItemDate}>{item.date}</span>
+                      </div>
+                      <h3 className={styles.historyItemTitle}>{item.storyTitle}</h3>
+                      <p className={styles.historyItemSnippet}>
+                        {item.story?.slice(0, 80)}...
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
         )}
 

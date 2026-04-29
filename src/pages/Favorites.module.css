@@ -347,6 +347,18 @@
   opacity: 0.85;
 }
 
+.itemSourceTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-3);
+  background: rgba(244, 211, 94, 0.15);
+  border: 1px solid rgba(244, 211, 94, 0.3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  color: var(--color-golden);
+  font-weight: 500;
+}
+
 .itemPreview {
   font-size: 0.9375rem;
   color: var(--color-silver);
@@ -563,4 +575,54 @@
 .loadMoreBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: var(--space-xs, 8px);
+  padding: var(--space-sm, 12px);
+  background: var(--color-surface, rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  margin-bottom: var(--space-lg, 24px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--space-sm, 10px) var(--space-md, 16px);
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-silver, #A8B5C9);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--color-moonlight, #E8E8E8);
+}
+
+.tab.active {
+  background: var(--color-primary, #F4D35E);
+  color: var(--color-dark, #1a1a2e);
+  box-shadow: 0 2px 8px rgba(244, 211, 94, 0.4);
+}
+
+.tab.active svg {
+  stroke: var(--color-dark, #1a1a2e);
 }
