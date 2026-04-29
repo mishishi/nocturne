@@ -296,11 +296,7 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
 
       setToastMessage('感谢反馈')
       setToastVisible(true)
-
-      // Auto-hide form after 3 seconds
-      setTimeout(() => {
-        setIsVisible(false)
-      }, 3000)
+      setIsVisible(false)
     } catch (err) {
       console.error('Failed to submit feedback:', err)
       setToastMessage('提交失败，请重试')
@@ -434,7 +430,7 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
         visible={toastVisible}
         onClose={handleToastClose}
         type={toastMessage.includes('失败') ? 'error' : 'success'}
-        duration={3000}
+        duration={2000}
       />
     </>
   )

@@ -18,9 +18,9 @@ export default async function sessionRoutes(fastify) {
   // POST /api/sessions/:sessionId/dream - 提交梦境
   fastify.post('/sessions/:sessionId/dream', async (req, res) => {
     const { sessionId } = req.params
-    const { content } = req.body
+    const { content, styleTag } = req.body
 
-    await sessionService.submitDream(sessionId, content)
+    await sessionService.submitDream(sessionId, content, styleTag)
     const questions = await questionService.generateQuestions(content)
 
     // 保存问题到会话
@@ -57,7 +57,8 @@ export default async function sessionRoutes(fastify) {
 
       const { title, content, tokens } = await storyService.generateStory(
         session.dreamFragment,
-        answers.map(a => ({ question: a.questionText, answer: a.answerText }))
+        answers.map(a => ({ question: a.questionText, answer: a.answerText })),
+        session.styleTag
       )
 
       await sessionService.saveStory(sessionId, title, content, tokens)

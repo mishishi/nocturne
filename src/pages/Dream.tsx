@@ -312,7 +312,7 @@ export function Dream() {
       // Store elements in session
       setDreamElements(dreamElements)
 
-      const { questions } = await api.submitDream(sessionId, currentSession.dreamText)
+      const { questions } = await api.submitDream(sessionId, currentSession.dreamText, selectedEmotion || '')
       clearDraft()
       setQuestions(questions)
       setStatus('questions')

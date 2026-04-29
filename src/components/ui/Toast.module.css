@@ -1,18 +1,18 @@
 .toast {
   position: fixed;
-  bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-4) var(--space-6);
   background: var(--color-overlay);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(10px);
   z-index: var(--z-toast);
-  animation: slideUp var(--duration-slow) var(--ease-dream);
+  animation: fadeIn var(--duration-slow) var(--ease-dream);
   box-shadow: var(--shadow-elevated);
   max-width: calc(100vw - var(--space-8));
 }
@@ -88,13 +88,13 @@
   height: 14px;
 }
 
-@keyframes slideUp {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(20px);
+    transform: translate(-50%, -50%) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translate(-50%, -50%) scale(1);
   }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -7,13 +7,48 @@ import { AchievementCenter } from '../components/AchievementCenter'
 import { useDreamStore, ACHIEVEMENTS, type DreamSession } from '../hooks/useDreamStore'
 import styles from './Home.module.css'
 
+const LAST_VISIT_KEY = 'yeelin_last_visit'
+
 export function Home() {
-  const { achievements, history, user } = useDreamStore()
+  const { achievements, history, user, currentSession } = useDreamStore()
   const [showAchievementCenter, setShowAchievementCenter] = useState(false)
+  const [isReturningUser, setIsReturningUser] = useState(false)
   const handleOnboardingComplete = useCallback(() => {}, [])
+
+  // Detect returning user (has visited before, not same day)
+  useEffect(() => {
+    const lastVisit = localStorage.getItem(LAST_VISIT_KEY)
+    const today = new Date().toDateString()
+    if (lastVisit && lastVisit !== today && history.length > 0) {
+      setIsReturningUser(true)
+    }
+    localStorage.setItem(LAST_VISIT_KEY, today)
+  }, [history.length])
 
   const isNewUser = history.length === 0
   const lastDreamDate = history.length > 0 ? history[0].date : null
+
+  // Compute "left off" message from currentSession
+  const getLeftOffMessage = () => {
+    const { status, questions, currentQuestionIndex, dreamText } = currentSession
+
+    if (status === 'idle' || status === 'completed') return null
+
+    if (status === 'dream_submitted' || (dreamText && questions.length === 0)) {
+      return '上次停在了：等待生成问题'
+    }
+
+    if (status === 'questions' || status === 'answering' || status === 'story_generating') {
+      if (questions.length > 0) {
+        return `上次停在了：追问 ${currentQuestionIndex + 1}/${questions.length}`
+      }
+      return '上次停在了：追问中'
+    }
+
+    return null
+  }
+
+  const leftOffMessage = getLeftOffMessage()
 
   // Sample stories for new users
   const sampleStories = [
@@ -95,6 +130,11 @@ export function Home() {
               <span className={styles.heroTitleLine}>每一篇梦</span>
               <span className={styles.heroTitleAccent}>都是你自己</span>
             </>
+          ) : isReturningUser && leftOffMessage ? (
+            <>
+              <span className={styles.heroTitleLine}>欢迎回来</span>
+              <span className={styles.heroTitleAccent}>继续你的旅程</span>
+            </>
           ) : (
             <>
               <span className={styles.heroTitleLine}>昨晚做了什么梦？</span>
@@ -106,9 +146,11 @@ export function Home() {
         <p className={styles.heroSubtitle}>
           {isNewUser
             ? '把醒来就忘的梦，变成能留住的文字'
-            : lastDreamDate
-              ? `上次记录：${lastDreamDate}`
-              : '继续记录你的梦境'}
+            : isReturningUser && leftOffMessage
+              ? leftOffMessage
+              : lastDreamDate
+                ? `上次记录：${lastDreamDate}`
+                : '继续记录你的梦境'}
         </p>
 
         <div className={styles.heroCta}>

@@ -517,10 +517,10 @@ export function Story() {
         setInterpretation(result.interpretation)
         setShowInterpretation(true)
 
-        // Show points used toast
+        // Show points used toast with earning hint
         if (result.pointsUsed) {
           setToastType('info')
-          setToastMessage(`解读消耗 ${result.pointsUsed} 积分`)
+          setToastMessage(`解读消耗 ${result.pointsUsed} 积分，签到可获得更多`)
           setToastVisible(true)
         }
       } else if (result.reason) {
@@ -758,7 +758,7 @@ export function Story() {
         <div className={styles.actions}>
           {!fromHistory && !fromDreamWall && (
             <Button onClick={handleDone} size="lg" className={styles.doneBtn}>
-              保存并返回
+              保存到我的故事
             </Button>
           )}
 

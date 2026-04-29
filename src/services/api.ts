@@ -104,11 +104,11 @@ export const api = {
   },
 
   // Submit dream and get all questions
-  async submitDream(sessionId: string, content: string): Promise<{ success: boolean; questions: string[]; questionIndex: number }> {
+  async submitDream(sessionId: string, content: string, styleTag: string): Promise<{ success: boolean; questions: string[]; questionIndex: number }> {
     const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/dream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ content, styleTag })
     })
     if (!res.ok) throw new Error(`提交梦境失败: ${res.status}`)
     return res.json()

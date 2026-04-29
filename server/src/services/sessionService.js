@@ -24,11 +24,12 @@ export const sessionService = {
     return prisma.session.findUnique({ where: { id: sessionId } })
   },
 
-  async submitDream(sessionId, dreamText) {
+  async submitDream(sessionId, dreamText, styleTag) {
     const session = await prisma.session.update({
       where: { id: sessionId },
       data: {
         dreamFragment: dreamText,
+        styleTag: styleTag || '',
         status: 'Q1',
         questions: [],
         currentQuestionIndex: 0

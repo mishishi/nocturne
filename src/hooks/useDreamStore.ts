@@ -279,6 +279,9 @@ export const useDreamStore = create<DreamState>()(
             ...state.currentSession,
             questions,
             answers: new Array(questions.length).fill(''),
+            currentQuestionIndex: 0,
+            story: '',
+            storyTitle: '',
             status: 'questions'
           }
         })),

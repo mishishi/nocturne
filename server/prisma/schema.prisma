@@ -57,6 +57,7 @@ model Session {
   openid               String
   status               String    @default("PENDING") // PENDING, Q1-Q5, COLLECTING, COMPLETED
   dreamFragment        String    @default("")
+  styleTag             String    @default("")
   questions            String[]  @default([])
   currentQuestionIndex Int       @default(0)
   createdAt            DateTime  @default(now())

@@ -9,7 +9,7 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
 import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
-import { shareApi, UserStats, checkInApi, api } from '../services/api'
+import { shareApi, UserStats, checkInApi, api, wallApi, type DreamWallPost } from '../services/api'
 import styles from './Profile.module.css'
 
 // Medal definitions (mirrors server-side MEDALS)
@@ -40,7 +40,8 @@ export function Profile() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [shareStats, setShareStatsLocal] = useState<UserStats | null>(null)
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'history' | 'favorites' | 'settings'>('overview')
+  const [favorites, setFavorites] = useState<DreamWallPost[]>([])
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'favorites' | 'settings'>('overview')
 
   // Initialize with local history to avoid flash of zeros, will be updated by backend sync
   const [totalDreams, setTotalDreams] = useState(history.length)
@@ -120,6 +121,25 @@ export function Profile() {
     syncHistory()
     return () => { isMounted = false }
   }, [user?.openid])
+
+  // Fetch favorites when tab is active
+  useEffect(() => {
+    if (activeTab !== 'favorites') return
+    const openid = localStorage.getItem('yeelin_openid') || user?.openid
+    if (!openid) return
+
+    const fetchFavorites = async () => {
+      try {
+        const res = await wallApi.getFavorites({ page: 1, limit: 50 })
+        setFavorites(res.posts)
+      } catch (err) {
+        console.error('Failed to fetch favorites:', err)
+        setFavorites([])
+      }
+    }
+
+    fetchFavorites()
+  }, [activeTab, user?.openid])
 
   // Fetch share stats on mount
   useEffect(() => {
@@ -228,16 +248,6 @@ export function Profile() {
             设置
           </button>
           <button
-            id="tab-history"
-            className={`${styles.tabBtn} ${activeTab === 'history' ? styles.tabBtnActive : ''}`}
-            onClick={() => setActiveTab('history')}
-            role="tab"
-            aria-selected={activeTab === 'history'}
-            aria-controls="panel-history"
-          >
-            历史
-          </button>
-          <button
             id="tab-favorites"
             className={`${styles.tabBtn} ${activeTab === 'favorites' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('favorites')}
@@ -294,6 +304,7 @@ export function Profile() {
                 <span className={styles.streakIcon}>🔥</span>
                 <span>连续分享 <strong>{consecutiveShares}</strong> 天</span>
               </div>
+              <p className={styles.earningHint}>发朋友圈 +5 · 发链接 +2 · 好友完成 +10</p>
             </div>
           </div>
         </div>
@@ -399,71 +410,31 @@ export function Profile() {
           </div>
         )}
 
-        {/* Tab: History */}
-        {activeTab === 'history' && (
-          <div id="panel-history" role="tabpanel" aria-labelledby="tab-history" className={styles.section}>
-            <h2 className={styles.sectionTitle}>历史记录</h2>
-            {history.length === 0 ? (
-              <div className={styles.emptyTabState}>
-                <p>暂无历史记录</p>
-                <Link to="/dream">
-                  <Button size="sm">记录你的第一个梦</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className={styles.historyList}>
-                {history.slice(0, 20).map((item) => (
-                  <Link
-                    key={item.id}
-                    to={`/story/${item.sessionId}`}
-                    state={{ fromHistory: item }}
-                    className={styles.historyItem}
-                  >
-                    <div className={styles.historyItemHeader}>
-                      <span className={styles.historyItemDate}>{item.date}</span>
-                    </div>
-                    <h3 className={styles.historyItemTitle}>{item.storyTitle}</h3>
-                    <p className={styles.historyItemSnippet}>
-                      {item.story.slice(0, 80)}...
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            )}
-            {history.length > 20 && (
-              <div className={styles.viewAllSection}>
-                <Link to="/history" className={styles.viewAllLink}>
-                  查看全部 {history.length} 条记录
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Tab: Favorites */}
         {activeTab === 'favorites' && (
           <div id="panel-favorites" role="tabpanel" aria-labelledby="tab-favorites" className={styles.section}>
             <h2 className={styles.sectionTitle}>我的收藏</h2>
-            {history.filter(item => item.isFavorite).length === 0 ? (
+            {favorites.length === 0 ? (
               <div className={styles.emptyTabState}>
                 <p>暂无收藏内容</p>
               </div>
             ) : (
               <div className={styles.historyList}>
-                {history.filter(item => item.isFavorite).map((item) => (
+                {favorites.map((post) => (
                   <Link
-                    key={item.id}
-                    to={`/story/${item.sessionId}`}
-                    state={{ fromHistory: item }}
+                    key={post.id}
+                    to={`/wall?post=${post.id}`}
                     className={styles.historyItem}
                   >
                     <div className={styles.historyItemHeader}>
-                      <span className={styles.historyItemDate}>{item.date}</span>
+                      <span className={styles.historyItemDate}>
+                        {new Date(post.createdAt).toLocaleDateString('zh-CN')}
+                      </span>
                       <span className={styles.historyItemFavorite}>★</span>
                     </div>
-                    <h3 className={styles.historyItemTitle}>{item.storyTitle}</h3>
+                    <h3 className={styles.historyItemTitle}>{post.storyTitle}</h3>
                     <p className={styles.historyItemSnippet}>
-                      {item.story.slice(0, 80)}...
+                      {post.storySnippet || post.storyFull?.slice(0, 80)}...
                     </p>
                   </Link>
                 ))}
