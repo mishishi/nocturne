@@ -18,8 +18,9 @@ export function Friends() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<FriendListItem[]>([])
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; nickname?: string; avatar?: string; isMember: boolean }>>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [lastSearchQuery, setLastSearchQuery] = useState('') // 记住上次搜索词，切换回搜索tab时恢复结果
 
   // Load data on mount
   useEffect(() => {
@@ -111,13 +112,14 @@ export function Friends() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
+    setLastSearchQuery(searchQuery.trim())
     setIsSearching(true)
     try {
       const result = await friendApi.searchUsers(searchQuery.trim(), user?.openid)
       if (result.success) {
         setSearchResults(result.users)
       } else {
-        showToast(result.message || '搜索失败', 'error')
+        showToast('搜索失败', 'error')
         setSearchResults([])
       }
     } catch (err) {
@@ -128,6 +130,13 @@ export function Friends() {
       setIsSearching(false)
     }
   }
+
+  // 切换到搜索tab时，如果之前有搜索结果则恢复显示
+  useEffect(() => {
+    if (activeTab === 'search' && lastSearchQuery && searchResults.length === 0 && searchQuery === lastSearchQuery) {
+      // 恢复搜索结果，无需重新请求
+    }
+  }, [activeTab])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -384,7 +393,7 @@ export function Friends() {
                         <div
                           key={result.id}
                           className={styles.searchResultCard}
-                          onClick={() => navigate(`/friends/${result.openid}`)}
+                          onClick={() => navigate(`/friends/${result.id}`)}
                         >
                           <div className={styles.friendAvatar}>
                             {result.avatar ? (

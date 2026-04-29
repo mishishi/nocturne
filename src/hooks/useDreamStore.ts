@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { checkInApi } from '../services/api'
+import { checkInApi, wallApi } from '../services/api'
 import { useAuthStore } from './useAuthStore'
 
 export interface DreamSession {
@@ -421,12 +421,23 @@ export const useDreamStore = create<DreamState>()(
           history: [item, ...state.history]
         })),
 
-      toggleFavorite: (id) =>
-        set((state) => ({
-          history: state.history.map((item) =>
-            item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
-          )
-        })),
+      toggleFavorite: (id) => {
+        let sessionId: string | undefined
+        set((state) => {
+          const item = state.history.find((item) => item.id === id)
+          sessionId = item?.sessionId
+          return {
+            history: state.history.map((item) =>
+              item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+            )
+          }
+        })
+        if (sessionId) {
+          wallApi.toggleStoryFavorite(sessionId).catch(err => {
+            console.error('Failed to sync favorite to backend:', err)
+          })
+        }
+      },
 
       updatePrivateNote: (id, note) =>
         set((state) => ({

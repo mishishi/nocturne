@@ -484,6 +484,7 @@ export interface DreamWallPost {
   storySnippet: string
   storyFull?: string // Full story content for direct navigation
   isAnonymous: boolean
+  isOwnStory?: boolean
   nickname?: string
   avatar?: string
   likeCount: number
@@ -569,6 +570,8 @@ export const wallApi = {
       storySnippet: string
       storyFull?: string
       isAnonymous: boolean
+      isOwnStory: boolean
+      nickname?: string
       likeCount: number
       commentCount: number
       status: string
@@ -602,6 +605,34 @@ export const wallApi = {
       body: JSON.stringify({ openid })
     })
     if (!res.ok) throw new Error(`收藏失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Toggle story favorite (需登录)
+  async toggleStoryFavorite(sessionId: string): Promise<{ success: boolean; favorited: boolean }> {
+    const res = await fetchWithTimeout(`${API_BASE}/wall/favorites/story/${sessionId}`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`收藏故事失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get story favorites (需登录)
+  async getStoryFavorites(): Promise<{
+    success: boolean
+    stories: Array<{
+      sessionId: string
+      storyTitle: string
+      story: string
+      createdAt: string
+      date: string
+    }>
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/wall/favorites/story`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取收藏故事失败: ${res.status}`)
     return res.json()
   },
 

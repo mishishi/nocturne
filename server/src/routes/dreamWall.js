@@ -136,6 +136,19 @@ export default async function dreamWallRoutes(fastify) {
         }
       }
 
+      // Check if posts are in current user's story favorites
+      const ownStorySessionIds = new Set()
+      if (userOpenid && posts.length > 0) {
+        const sessionIds = posts.map(p => p.sessionId).filter(Boolean)
+        const storyFavs = await prisma.storyFavorite.findMany({
+          where: { openid: userOpenid, sessionId: { in: sessionIds } },
+          select: { sessionId: true }
+        })
+        storyFavs.forEach(sf => ownStorySessionIds.add(sf.sessionId))
+      }
+
+      const isOwnPost = (post) => post.openid === userOpenid
+
       const items = posts.map(post => ({
         id: post.id,
         sessionId: post.sessionId,
@@ -144,7 +157,8 @@ export default async function dreamWallRoutes(fastify) {
         storySnippet: post.storySnippet,
         storyFull: post.storyFull,
         isAnonymous: post.isAnonymous,
-        nickname: post.isAnonymous ? '匿名用户' : post.nickname,
+        isOwnStory: isOwnPost(post),
+        nickname: isOwnPost(post) ? '我的故事' : (post.isAnonymous ? '匿名用户' : post.nickname),
         avatar: post.isAnonymous ? null : post.avatar,
         likeCount: post.likeCount,
         commentCount: post.commentCount,
@@ -221,6 +235,19 @@ export default async function dreamWallRoutes(fastify) {
       }
     }
 
+    // Check if posts are in current user's story favorites
+    const ownStorySessionIds = new Set()
+    if (userOpenid && posts.length > 0) {
+      const sessionIds = posts.map(p => p.sessionId).filter(Boolean)
+      const storyFavs = await prisma.storyFavorite.findMany({
+        where: { openid: userOpenid, sessionId: { in: sessionIds } },
+        select: { sessionId: true }
+      })
+      storyFavs.forEach(sf => ownStorySessionIds.add(sf.sessionId))
+    }
+
+    const isOwnPost = (post) => post.openid === userOpenid
+
     // Transform response
     const items = posts.map(post => ({
       id: post.id,
@@ -230,7 +257,8 @@ export default async function dreamWallRoutes(fastify) {
       storySnippet: post.storySnippet,
       storyFull: post.storyFull, // Include full story for direct navigation
       isAnonymous: post.isAnonymous,
-      nickname: post.isAnonymous ? '匿名用户' : post.nickname,
+      isOwnStory: isOwnPost(post),
+      nickname: isOwnPost(post) ? '我的故事' : (post.isAnonymous ? '匿名用户' : post.nickname),
       avatar: post.isAnonymous ? null : post.avatar,
       likeCount: post.likeCount,
       commentCount: post.commentCount,
@@ -465,6 +493,8 @@ export default async function dreamWallRoutes(fastify) {
         storySnippet: p.storySnippet,
         storyFull: p.storyFull,
         isAnonymous: p.isAnonymous,
+        isOwnStory: true,
+        nickname: '我的故事',
         likeCount: p.likeCount,
         commentCount: p.commentCount,
         status: p.status,
@@ -836,5 +866,87 @@ export default async function dreamWallRoutes(fastify) {
       console.error('Error fetching favorites:', error)
       return res.status(500).send({ success: false, reason: '服务器错误' })
     }
+  })
+
+  // POST /api/wall/favorites/story/:sessionId - 收藏/取消收藏自己的故事（需登录）
+  fastify.post('/wall/favorites/story/:sessionId', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { sessionId } = req.params
+
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
+    }
+
+    // Check if already favorited
+    const existing = await prisma.storyFavorite.findUnique({
+      where: {
+        sessionId_openid: {
+          sessionId,
+          openid: tokenUser.openid
+        }
+      }
+    })
+
+    if (existing) {
+      // Remove favorite
+      await prisma.storyFavorite.delete({
+        where: { id: existing.id }
+      })
+      return { success: true, favorited: false }
+    } else {
+      // Add favorite
+      await prisma.storyFavorite.create({
+        data: {
+          sessionId,
+          openid: tokenUser.openid
+        }
+      })
+      return { success: true, favorited: true }
+    }
+  })
+
+  // GET /api/wall/favorites/story - 获取我收藏的故事列表（需登录）
+  fastify.get('/wall/favorites/story', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
+    }
+
+    const favorites = await prisma.storyFavorite.findMany({
+      where: { openid: tokenUser.openid },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        session: {
+          include: {
+            story: {
+              select: {
+                title: true,
+                content: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    const stories = favorites
+      .filter(f => f.session?.story)
+      .map(f => ({
+        sessionId: f.sessionId,
+        storyTitle: f.session.story.title,
+        story: f.session.story.content,
+        createdAt: f.createdAt.toISOString(),
+        date: f.session.completedAt?.toISOString() || f.session.updatedAt.toISOString()
+      }))
+
+    return { success: true, stories }
   })
 }

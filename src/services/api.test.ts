@@ -71,7 +71,7 @@ describe('api', () => {
       }
       mockFetch.mockResolvedValueOnce(createMockResponse(mockData))
 
-      const result = await api.submitDream('sess_123', 'I dreamed of flying')
+      const result = await api.submitDream('sess_123', 'I dreamed of flying', '')
 
       expect(result).toEqual(mockData)
       expect(mockFetch).toHaveBeenCalledWith(
@@ -79,7 +79,7 @@ describe('api', () => {
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: 'I dreamed of flying' }),
+          body: JSON.stringify({ content: 'I dreamed of flying', styleTag: '' }),
         })
       )
     })
@@ -88,7 +88,7 @@ describe('api', () => {
       const { api } = await import('./api')
       mockFetch.mockResolvedValueOnce(createMockResponse(null, false, 400))
 
-      await expect(api.submitDream('sess_123', 'dream')).rejects.toThrow('提交梦境失败: 400')
+      await expect(api.submitDream('sess_123', 'dream', '')).rejects.toThrow('提交梦境失败: 400')
     })
   })
 

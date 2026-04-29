@@ -36,6 +36,7 @@ model User {
   dreamWallLikes   DreamWallLike[]
   dreamWallComments DreamWallComment[]
   dreamWallFavorites DreamWallFavorite[]
+  storyFavorites    StoryFavorite[]
   notificationsFrom Notification[] @relation("NotificationFrom")
   checkIns      CheckIn[]
 }
@@ -69,6 +70,7 @@ model Session {
   story                Story?
   storyFeedback        StoryFeedback[]
   wallPost             DreamWall?
+  storyFavorites      StoryFavorite[]
 }
 
 model Message {
@@ -200,6 +202,20 @@ model DreamWallFavorite {
 
   @@unique([wallId, openid])
   @@index([wallId])
+}
+
+// 收藏自己历史里的故事（未发布到梦墙的 session）
+model StoryFavorite {
+  id        String   @id @default(cuid())
+  sessionId String
+  openid    String
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [openid], references: [openid])
+  session Session  @relation(fields: [sessionId], references: [id])
+
+  @@unique([sessionId, openid])
+  @@index([sessionId])
 }
 
 model StoryFeedback {

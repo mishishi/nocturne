@@ -377,6 +377,8 @@ export function History() {
       ? currentTags.filter(t => t !== tagId)
       : [...currentTags, tagId]
     useDreamStore.getState().updateTags(itemId, newTags)
+    // 关闭编辑模式，与筛选栏交互一致（无需点"完成"）
+    setEditingTagsId(null)
   }
 
   const handleSaveTags = () => {

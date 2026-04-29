@@ -2,13 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { api } from '../services/api'
-import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
 import { Toast } from '../components/ui/Toast'
-import { TypewriterText } from '../components/ui/TypewriterText'
-import { Breadcrumb } from '../components/Breadcrumb'
 import { RevealScreen } from '../components/RevealScreen'
 import styles from './Questions.module.css'
+
+// Prevent concurrent submissions
+let isSubmittingRef = false
 
 export function Questions() {
   const navigate = useNavigate()
@@ -20,10 +20,9 @@ export function Questions() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
-  const [showQuestion, setShowQuestion] = useState(false)
+  const [showInput, setShowInput] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [storyReady, setStoryReady] = useState(false)
-  const [thinkingDots, setThinkingDots] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { questions, answers, currentQuestionIndex, sessionId } = currentSession
@@ -32,18 +31,44 @@ export function Questions() {
   const isFirstQuestion = currentQuestionIndex === 0
   const isLastQuestion = currentQuestionIndex === questions.length - 1
 
+  // 计算已回答数量
+  const answeredCount = answers.filter(a => a && a.trim() !== '' && a !== '（未回答）').length
+
+  // 计算进度
+  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0
+
+  // AI persona context based on question type
+  const getAIContext = () => {
+    if (currentQuestionIndex === 0) return '想更好地了解你的梦'
+    return '继续说说看'
+  }
+
+  const aiContext = getAIContext()
+
+  // 触发输入框显示动画
+  useEffect(() => {
+    setShowInput(false)
+    const timer = setTimeout(() => setShowInput(true), 500)
+    return () => clearTimeout(timer)
+  }, [currentQuestionIndex])
+
   const handleNext = async () => {
+    if (isSubmittingRef || loading) return
     if (!currentAnswer.trim()) return
 
-    // Dismiss keyboard
+    if (currentQuestionIndex < 0 || currentQuestionIndex >= questions.length) {
+      console.error('Invalid question index:', currentQuestionIndex)
+      return
+    }
+
     if (textareaRef.current) {
       textareaRef.current.blur()
     }
 
+    isSubmittingRef = true
     setLoading(true)
     setError('')
 
-    // Timeout warning after 30 seconds
     const timeoutId = setTimeout(() => {
       setToastType('info')
       setToastMessage('请求较慢，请稍候...')
@@ -57,9 +82,8 @@ export function Questions() {
       clearTimeout(timeoutId)
       if (result.story) {
         setStory(result.story.title, result.story.content)
-        // Show reveal ceremony instead of navigating directly
         setShowReveal(true)
-        setLoading(false) // Reset loading immediately since we're showing reveal
+        setLoading(false)
         return
       } else if (result.nextQuestion) {
         setAnswer(currentQuestionIndex + 1, '')
@@ -74,26 +98,24 @@ export function Questions() {
       setToastMessage(errorMsg)
       setToastVisible(true)
     } finally {
-      // Keep loading true during reveal animation
       if (!showReveal) {
         setLoading(false)
       }
+      isSubmittingRef = false
     }
   }
 
   const handlePrev = () => {
-    if (!isFirstQuestion) {
-      const prevAnswer = answers[currentQuestionIndex - 1] || ''
-      setCurrentAnswer(prevAnswer === '（未回答）' ? '' : prevAnswer)
-      prevQuestion()
-    }
+    if (isFirstQuestion) return
+    const prevAnswer = answers[currentQuestionIndex - 1] || ''
+    setCurrentAnswer(prevAnswer === '（未回答）' ? '' : prevAnswer)
+    prevQuestion()
   }
 
   const handleSkip = () => {
     setAnswer(currentQuestionIndex, '（未回答）')
     setCurrentAnswer('')
     if (isLastQuestion) {
-      // Skip to story generation
       handleFinalSubmit()
     } else {
       nextQuestion()
@@ -101,11 +123,11 @@ export function Questions() {
   }
 
   const handleFinalSubmit = async () => {
-    // Build complete answers array including current answer
+    if (isSubmittingRef || loading) return
+
     const allAnswers = [...answers]
     allAnswers[currentQuestionIndex] = currentAnswer
 
-    // Check if all questions were skipped
     const hasValidAnswer = allAnswers.some(a => a && a.trim() !== '' && a !== '（未回答）')
     if (!hasValidAnswer && currentQuestionIndex === questions.length - 1) {
       setToastType('error')
@@ -114,17 +136,15 @@ export function Questions() {
       return
     }
 
-    // Save all answers to store first
     allAnswers.forEach((answer, idx) => {
       setAnswer(idx, answer || '')
     })
 
-    // Immediately show reveal ceremony animation
     setShowReveal(true)
     setLoading(true)
     setError('')
+    isSubmittingRef = true
 
-    // Timeout warning after 30 seconds
     let timeoutId = setTimeout(() => {
       setToastType('info')
       setToastMessage('生成中，请稍候...')
@@ -132,8 +152,7 @@ export function Questions() {
     }, 30000)
 
     try {
-      // Submit all answers in sequence (including skipped ones)
-      let currentIdx = 0
+      let currentIdx = currentQuestionIndex
       let result
 
       while (currentIdx < questions.length) {
@@ -143,15 +162,13 @@ export function Questions() {
 
         if (result.story) {
           setStory(result.story.title, result.story.content)
-          setStoryReady(true) // Tell RevealScreen story is ready
-          setLoading(false) // Loading stops, RevealScreen continues to countdown
+          setStoryReady(true)
+          setLoading(false)
           return
         }
 
-        // Move to next question
         currentIdx = result.nextIndex ?? currentIdx + 1
 
-        // Update timeout for next request
         timeoutId = setTimeout(() => {
           setToastType('info')
           setToastMessage('生成中，请稍候...')
@@ -168,17 +185,11 @@ export function Questions() {
       setToastType('error')
       setToastMessage(errorMsg)
       setToastVisible(true)
+    } finally {
+      isSubmittingRef = false
     }
   }
 
-  // Retry story generation after failure
-  const handleRetry = () => {
-    setHasFailed(false)
-    setError('')
-    handleFinalSubmit()
-  }
-
-  // Handle story reveal completion
   const handleReveal = () => {
     setLoading(false)
     setShowReveal(false)
@@ -191,41 +202,8 @@ export function Questions() {
     return null
   }
 
-  const answeredCount = answers.filter(a => a && a.trim() !== '' && a !== '（未回答）').length
-
-  // Ceremonial loading for story generation
-  const isGeneratingStory = loading && isLastQuestion
-
-  // AI persona context based on question type
-  const getAIContext = () => {
-    if (currentQuestionIndex === 0) return '想更好地了解你的梦'
-    return '继续说说看'
-  }
-
-  const aiContext = getAIContext()
-
-  // Trigger typewriter effect on question change
-  useEffect(() => {
-    setShowQuestion(false)
-    const timer = setTimeout(() => setShowQuestion(true), 500)
-    return () => clearTimeout(timer)
-  }, [currentQuestionIndex])
-
-  // Animate thinking dots while loading
-  useEffect(() => {
-    if (loading) {
-      const interval = setInterval(() => {
-        setThinkingDots(prev => prev.length >= 3 ? '' : prev + '.')
-      }, 600)
-      return () => clearInterval(interval)
-    } else {
-      setThinkingDots('')
-    }
-  }, [loading])
-
   return (
     <div className={styles.page}>
-      {/* Story reveal ceremony screen */}
       {showReveal && (
         <RevealScreen
           storyTitle={currentSession.storyTitle || '你的梦境'}
@@ -235,41 +213,48 @@ export function Questions() {
       )}
 
       <div className={styles.container}>
-        {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: '首页', href: '/' },
-            { label: '记录梦境', href: '/dream' },
-            { label: '回答问题' }
-          ]}
-        />
-
-        {/* Back button */}
-        <button className={styles.backBtn} onClick={() => navigate('/dream')} aria-label="返回上一步">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          <span>返回</span>
-        </button>
-
-        {/* Progress */}
-        <div className={styles.progress}>
-          <div className={styles.progressDots}>
-            {questions.map((_, idx) => (
-              <div
-                key={idx}
-                className={`${styles.dot} ${idx === currentQuestionIndex ? styles.active : ''} ${idx < currentQuestionIndex ? styles.completed : ''}`}
-              />
-            ))}
+        {/* 顶部进度条 */}
+        <div className={styles.progressSection}>
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} style={{ width: `${progress}%` }} />
           </div>
-          <span className={styles.progressText}>
-            追问 {currentQuestionIndex + 1} / 共 {questions.length} 题
-          </span>
+          <div className={styles.progressInfo}>
+            <span className={styles.progressText}>
+              {isLastQuestion ? (
+                <span className={styles.lastLabel}>最后一题 ✨</span>
+              ) : (
+                `追问 ${currentQuestionIndex + 1} / ${questions.length}`
+              )}
+            </span>
+            <span className={styles.answeredCount}>已答 {answeredCount}</span>
+          </div>
         </div>
 
-        {/* Chat-style Question Bubble */}
-        <div className={styles.chatContainer}>
-          <div className={styles.chatBubble}>
+        {/* 问题区域 */}
+        <div className={styles.questionArea}>
+
+          {/* 已完成答案 - 折叠显示 */}
+          {currentQuestionIndex > 0 && (
+            <div className={styles.completedSection}>
+              {answers.map((answer, index) => {
+                if (index >= currentQuestionIndex || !answer?.trim() || answer === '（未回答）') return null
+                return (
+                  <div key={index} className={styles.completedCard}>
+                    <div className={styles.completedHeader}>
+                      <span className={styles.completedNum}>追问 {index + 1}</span>
+                      <svg className={styles.checkIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                    </div>
+                    <p className={styles.completedText}>{answer}</p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* 问题气泡 */}
+          <div className={styles.questionBubble}>
             <div className={styles.aiHeader}>
               <div className={styles.aiAvatar}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -281,12 +266,14 @@ export function Questions() {
                 <span className={styles.aiContext}>{aiContext}</span>
               </div>
             </div>
+
             <div className={styles.questionContent}>
-              <p className={styles.questionTag}>追问 {currentQuestionIndex + 1}</p>
+              <span className={styles.questionTag}>追问 {currentQuestionIndex + 1}</span>
               <h2 className={styles.questionText}>
-                <TypewriterText text={currentQuestion} speed={25} delay={showQuestion ? 0 : 500} />
+                {showInput ? currentQuestion : <span className={styles.placeholder}>...</span>}
               </h2>
             </div>
+
             <div className={styles.questionHint}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M12 8v4M12 16h.01" />
@@ -294,100 +281,76 @@ export function Questions() {
               说说看，越详细越好
             </div>
           </div>
-        </div>
 
-        {/* Previous Answers */}
-        {answeredCount > 0 && (
-          <div className={styles.previousAnswers}>
-            <div className={styles.previousHeader}>
-              <svg className={styles.previousIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className={styles.previousTitle}>已回答</p>
+          {/* 输入区域 - 紧跟问题 */}
+          <div className={styles.inputArea}>
+            <div className={styles.inputCard}>
+              <Textarea
+                ref={textareaRef}
+                value={currentAnswer}
+                onChange={(e) => {
+                  setCurrentAnswer(e.target.value)
+                  setError('')
+                }}
+                placeholder="仔细想想，把感受到的说出来……"
+                className={styles.textarea}
+                error={error}
+                disabled={!showInput}
+                showCount
+                maxLength={500}
+              />
             </div>
-            <div className={styles.answersList}>
-              {answers.map((answer, index) => (
-                answer && answer.trim() !== '' && answer !== '（未回答）' && index < currentQuestionIndex && (
-                  <div key={index} className={styles.answerItem}>
-                    <span className={styles.answerNum}>{index + 1}</span>
-                    <p className={styles.answerText}>{answer}</p>
-                  </div>
-                )
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Input */}
-        <div className={styles.inputSection}>
-          <Textarea
-            ref={textareaRef}
-            value={currentAnswer}
-            onChange={(e) => {
-              setCurrentAnswer(e.target.value)
-              setError('')
-            }}
-            placeholder="仔细想想，把感受到的说出来……"
-            className={styles.textarea}
-            error={error}
-            autoFocus={!isGeneratingStory}
-            showCount
-            maxLength={500}
-          />
-
-          {/* Retry button on story generation failure */}
-          {hasFailed && isLastQuestion && (
-            <div className={styles.retrySection}>
-              <Button
-                onClick={handleRetry}
-                size="lg"
-                className={styles.retryBtn}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                  <path d="M1 4v6h6M23 20v-6h-6" />
-                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-                </svg>
-                重试生成故事
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className={styles.actions}>
-          <div className={styles.navButtons}>
-            {!isFirstQuestion && (
-              <Button
-                variant="secondary"
-                onClick={handlePrev}
-                className={styles.prevBtn}
-                disabled={loading}
-              >
-                上一题
-              </Button>
+            {/* 失败重试提示 */}
+            {hasFailed && isLastQuestion && (
+              <div className={styles.retryHint}>
+                故事生成失败，请稍后重试
+              </div>
             )}
-            <Button
-              onClick={isLastQuestion ? handleFinalSubmit : handleNext}
-              loading={loading && !isLastQuestion}
-              disabled={isGeneratingStory || (!isLastQuestion && !currentAnswer.trim())}
-              size="lg"
-            >
-              {loading && !isLastQuestion ? (
-                <span className={styles.thinkingText}>
-                  正在回忆梦境{thinkingDots}
-                </span>
-              ) : isLastQuestion ? '生成故事' : '下一题'}
-            </Button>
-          </div>
 
-          <div className={styles.secondaryActions}>
-            <Button variant="ghost" onClick={handleSkip} className={styles.skipBtn} disabled={isGeneratingStory} aria-label={isLastQuestion ? '跳过直接生成' : '跳过此题'}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-              {isLastQuestion ? '跳过直接生成' : '跳过此题'}
-            </Button>
+            {/* 操作按钮 */}
+            <div className={styles.actions}>
+              <button
+                className={styles.skipBtn}
+                onClick={handleSkip}
+                disabled={loading || !showInput}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+                {isLastQuestion ? '跳过生成' : '跳过此题'}
+              </button>
+
+              <div className={styles.primaryActions}>
+                {!isFirstQuestion && (
+                  <button className={styles.prevBtn} onClick={handlePrev} disabled={loading}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  className={styles.nextBtn}
+                  onClick={isLastQuestion ? handleFinalSubmit : handleNext}
+                  disabled={loading || (!isLastQuestion && !currentAnswer.trim()) || !showInput}
+                >
+                  {loading && !isLastQuestion ? (
+                    <span className={styles.loadingText}>回忆中...</span>
+                  ) : isLastQuestion ? '生成故事' : '下一题'}
+                  {!loading && (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* 底部提示 */}
+        <div className={styles.footer}>
+          <p className={styles.tip}>✨ 回答越详细，故事越精彩</p>
         </div>
       </div>
 

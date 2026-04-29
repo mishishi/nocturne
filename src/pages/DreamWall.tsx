@@ -85,7 +85,8 @@ export function DreamWall() {
           storySnippet: p.storySnippet,
           storyFull: p.storyFull,
           isAnonymous: p.isAnonymous,
-          nickname: p.isAnonymous ? '匿名用户' : user?.nickname,
+          isOwnStory: p.isOwnStory,
+          nickname: p.nickname || user?.nickname,
           avatar: p.isAnonymous ? undefined : user?.avatar,
           openid: openid,
           likeCount: p.likeCount,
@@ -456,7 +457,7 @@ export function DreamWall() {
 
         {/* Content */}
         <div className={styles.content}>
-          {loading ? (
+          {loading && !(activeTab === 'friends' && !user?.openid) ? (
             <div className={styles.loading}>
               <div className={styles.loadingMoon}>
                 <svg viewBox="0 0 60 60" fill="none">
