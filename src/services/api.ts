@@ -164,7 +164,8 @@ export const api = {
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders()
-      }
+      },
+      body: JSON.stringify({})
     })
     if (!res.ok) throw new Error(`请求解读失败: ${res.status}`)
     return res.json()

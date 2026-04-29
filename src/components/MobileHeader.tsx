@@ -1,33 +1,9 @@
-import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useDreamStore } from '../hooks/useDreamStore'
-import { notificationApi } from '../services/api'
+import { useNotificationCount } from '../hooks/useNotificationCount'
 import styles from './MobileHeader.module.css'
 
 export function MobileHeader() {
-  const { user } = useDreamStore()
-  const [notificationCount, setNotificationCount] = useState(0)
-
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!user?.openid) {
-        setNotificationCount(0)
-        return
-      }
-      try {
-        const data = await notificationApi.getUnreadCount()
-        if (data.success) {
-          setNotificationCount(data.unreadCount)
-        }
-      } catch {
-        // Silently ignore
-      }
-    }
-
-    fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 60000)
-    return () => clearInterval(interval)
-  }, [user?.openid])
+  const notificationCount = useNotificationCount()
 
   return (
     <header className={styles.mobileHeader}>

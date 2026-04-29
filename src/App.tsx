@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { MobileHeader } from './components/MobileHeader'
@@ -10,6 +10,7 @@ import { SkipLink } from './components/SkipLink'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary'
 import { PageErrorBoundary } from './components/PageErrorBoundary'
+import { ConfirmModal } from './components/ui/ConfirmModal'
 import { useDreamStore, ACHIEVEMENTS } from './hooks/useDreamStore'
 import { useAchievementSound } from './hooks/useAchievementSound'
 import { Home } from './pages/Home'
@@ -33,6 +34,13 @@ function App() {
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement } = useDreamStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
+  const [showDraftConfirm, setShowDraftConfirm] = useState(false)
+
+  const handleDraftConfirm = () => {
+    localStorage.removeItem('yeelin_draft')
+    setShowDraftConfirm(false)
+    window.location.href = '/dream?new=1'
+  }
 
   // Sync fontSize and theme to documentElement for CSS selectors
   useEffect(() => {
@@ -113,7 +121,18 @@ function App() {
         </main>
       </PageTransition>
 
-      <BottomNav />
+      <BottomNav onDraftConfirm={() => setShowDraftConfirm(true)} />
+
+      <ConfirmModal
+        isOpen={showDraftConfirm}
+        title="放弃当前草稿？"
+        message="你有一段未完成的梦境记录，开始新记录将丢失当前内容。"
+        confirmText="开始新记录"
+        cancelText="继续编辑"
+        onConfirm={handleDraftConfirm}
+        onCancel={() => setShowDraftConfirm(false)}
+        danger
+      />
 
       <AchievementToast
         achievement={currentAchievement}

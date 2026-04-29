@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
-import { friendApi } from '../services/api'
-import { ConfirmModal } from './ui/ConfirmModal'
+import { useFriendRequestCount } from '../hooks/useFriendRequestCount'
 import styles from './BottomNav.module.css'
 
 const DRAFT_KEY = 'yeelin_draft'
@@ -73,33 +72,15 @@ const NAV_ITEMS = [
   }
 ]
 
-export function BottomNav() {
+interface BottomNavProps {
+  onDraftConfirm?: () => void
+}
+
+export function BottomNav({ onDraftConfirm }: BottomNavProps) {
   const location = useLocation()
-  const { recentlyUnlocked, user } = useDreamStore()
-  const [pendingCount, setPendingCount] = useState(0)
-  const [showDraftConfirm, setShowDraftConfirm] = useState(false)
+  const { recentlyUnlocked } = useDreamStore()
+  const friendRequests = useFriendRequestCount()
   const hasDraft = useHasDraft()
-
-  useEffect(() => {
-    const fetchPendingCount = async () => {
-      if (!user?.openid) {
-        setPendingCount(0)
-        return
-      }
-      try {
-        const res = await friendApi.getFriendRequests()
-        if (res.success) {
-          setPendingCount(res.requests.length)
-        }
-      } catch (err) {
-        console.error('Failed to fetch pending requests:', err)
-      }
-    }
-
-    fetchPendingCount()
-    const interval = setInterval(fetchPendingCount, 30000)
-    return () => clearInterval(interval)
-  }, [user?.openid])
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
@@ -125,9 +106,9 @@ export function BottomNav() {
                 {recentlyUnlocked.length}
               </span>
             )}
-            {item.path === '/friends' && pendingCount > 0 && (
-              <span className={styles.badge} aria-label={`${pendingCount}个待处理好友请求`}>
-                {pendingCount}
+            {item.path === '/friends' && friendRequests.length > 0 && (
+              <span className={styles.badge} aria-label={`${friendRequests.length}个待处理好友请求`}>
+                {friendRequests.length}
               </span>
             )}
           </Link>
@@ -140,7 +121,7 @@ export function BottomNav() {
         aria-label={hasDraft ? '继续编辑梦境草稿' : '记录梦境'}
         onClick={() => {
           if (hasDraft) {
-            setShowDraftConfirm(true)
+            onDraftConfirm?.()
           }
         }}
       >
@@ -160,20 +141,6 @@ export function BottomNav() {
         {hasDraft && <span className={styles.draftIndicator} />}
       </button>
 
-      <ConfirmModal
-        isOpen={showDraftConfirm}
-        title="放弃当前草稿？"
-        message="你有一段未完成的梦境记录，开始新记录将丢失当前内容。"
-        confirmText="开始新记录"
-        cancelText="继续编辑"
-        onConfirm={() => {
-          localStorage.removeItem(DRAFT_KEY)
-          setShowDraftConfirm(false)
-          window.location.href = '/dream?new=1'
-        }}
-        onCancel={() => setShowDraftConfirm(false)}
-        danger
-      />
     </nav>
   )
 }

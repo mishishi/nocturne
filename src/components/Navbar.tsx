@@ -1,61 +1,14 @@
-import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
-import { friendApi, notificationApi } from '../services/api'
+import { useNotificationCount } from '../hooks/useNotificationCount'
+import { useFriendRequestCount } from '../hooks/useFriendRequestCount'
 import styles from './Navbar.module.css'
 
 export function Navbar() {
   const location = useLocation()
   const { user } = useDreamStore()
-  const [pendingCount, setPendingCount] = useState(0)
-  const [notificationCount, setNotificationCount] = useState(0)
-
-  useEffect(() => {
-    const fetchPendingCount = async () => {
-      // Check auth - user.openid AND token must exist
-      const token = localStorage.getItem('yeelin_token')
-      if (!user?.openid || !token) {
-        setPendingCount(0)
-        return
-      }
-      try {
-        const res = await friendApi.getFriendRequests()
-        if (res.success) {
-          setPendingCount(res.requests.length)
-        }
-      } catch (err) {
-        console.error('Failed to fetch pending requests:', err)
-      }
-    }
-
-    fetchPendingCount()
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchPendingCount, 30000)
-    return () => clearInterval(interval)
-  }, [user?.openid])
-
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      // Check auth - user.openid AND token must exist
-      const token = localStorage.getItem('yeelin_token')
-      if (!user?.openid || !token) {
-        setNotificationCount(0)
-        return
-      }
-      try {
-        const data = await notificationApi.getUnreadCount()
-        if (data.success) {
-          setNotificationCount(data.unreadCount)
-        }
-      } catch (e) {
-        console.error('Failed to fetch notification count', e)
-      }
-    }
-
-    fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 60000) // 60s
-    return () => clearInterval(interval)
-  }, [user?.openid])
+  const notificationCount = useNotificationCount()
+  const friendRequests = useFriendRequestCount()
 
   const isActive = (path: string) => location.pathname === path
 
@@ -90,7 +43,7 @@ export function Navbar() {
           <li>
             <Link to="/friends" aria-current={isActive('/friends') ? 'page' : undefined} className={`${styles.link} ${isActive('/friends') ? styles.active : ''}`}>
               好友
-              {pendingCount > 0 && <span className={styles.badge}>{pendingCount}</span>}
+              {friendRequests.length > 0 && <span className={styles.badge}>{friendRequests.length}</span>}
             </Link>
           </li>
           <li>
