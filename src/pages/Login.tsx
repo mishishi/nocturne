@@ -212,9 +212,9 @@ export function Login() {
 
               <p className={styles.loginHint}>
                 登录即表示同意
-                <a href="#" className={styles.link}>《用户协议》</a>
+                <span className={styles.link}>《用户协议》</span>
                 和
-                <a href="#" className={styles.link}>《隐私政策》</a>
+                <span className={styles.link}>《隐私政策》</span>
               </p>
             </div>
           ) : (
@@ -295,7 +295,7 @@ export function Login() {
                 </button>
 
                 <div className={styles.formFooter}>
-                  <a href="#" className={styles.link}>忘记密码？</a>
+                  <span className={styles.link}>忘记密码？</span>
                   <span className={styles.separator}>|</span>
                   <a href="/register" className={styles.link}>注册账号</a>
                 </div>

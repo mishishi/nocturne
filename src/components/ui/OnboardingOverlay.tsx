@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from './Button'
+import { ConfirmModal } from './ConfirmModal'
 import styles from './OnboardingOverlay.module.css'
 
 const ONBOARDING_KEY = 'yeelin_onboarding_shown'
@@ -27,6 +28,10 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   const [showContent, setShowContent] = useState(false)
   const [moonPhase, setMoonPhase] = useState<' exhale' | 'inhale'>(' exhale')
   const [isVisible, setIsVisible] = useState(false)
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean
+    onConfirm: () => void
+  }>({ open: false, onConfirm: () => {} })
   const isTransitioningRef = useRef(false)
 
   // Breathing moon animation
@@ -141,9 +146,13 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
           {/* Skip hint */}
           <button className={styles.skipHint} onClick={() => {
-            if (window.confirm('确定要跳过介绍吗？')) {
-              handleDismiss()
-            }
+            setConfirmModal({
+              open: true,
+              onConfirm: () => {
+                handleDismiss()
+                setConfirmModal(prev => ({ ...prev, open: false }))
+              }
+            })
           }}>
             跳过
           </button>
@@ -191,6 +200,16 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
           </button>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title="跳过介绍"
+        message="确定要跳过介绍吗？"
+        confirmText="跳过"
+        cancelText="继续"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+      />
     </div>
   )
 }

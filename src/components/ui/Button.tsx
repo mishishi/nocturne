@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ReactNode, useState, useRef } from 'react'
+import { ButtonHTMLAttributes, ReactNode, useState, useRef, useEffect } from 'react'
 import styles from './Button.module.css'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -28,6 +28,13 @@ export function Button({
   const [ripples, setRipples] = useState<Ripple[]>([])
   const buttonRef = useRef<HTMLButtonElement>(null)
 
+  // Clean up ripples on unmount
+  useEffect(() => {
+    return () => {
+      setRipples([])
+    }
+  }, [])
+
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (disabled || loading) return
 
@@ -47,11 +54,6 @@ export function Button({
     }
 
     setRipples((prev) => [...prev, newRipple])
-
-    // Clean up ripple after animation
-    setTimeout(() => {
-      setRipples((prev) => prev.filter((r) => r.key !== newRipple.key))
-    }, 600)
 
     onClick?.(e)
   }

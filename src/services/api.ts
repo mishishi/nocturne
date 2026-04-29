@@ -151,7 +151,7 @@ export const api = {
   },
 
   // Request dream interpretation
-  async interpret(sessionId: string, openid: string): Promise<{
+  async interpret(sessionId: string): Promise<{
     success: boolean
     interpretation?: string
     pointsUsed?: number
@@ -361,7 +361,7 @@ export const authApi = {
 // Friend API
 export const friendApi = {
   // Send friend request
-  async sendFriendRequest(friendOpenid: string): Promise<{ success: boolean; message: string }> {
+  async sendFriendRequest(friendOpenid: string): Promise<{ success: boolean; message: string; reason?: string }> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },

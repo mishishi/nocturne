@@ -203,7 +203,7 @@ describe('api', () => {
       }
       mockFetch.mockResolvedValueOnce(createMockResponse(mockData))
 
-      const result = await api.interpret('sess_123', 'openid_abc')
+      const result = await api.interpret('sess_123')
 
       expect(result).toEqual(mockData)
       expect(mockFetch).toHaveBeenCalledWith(
@@ -211,7 +211,6 @@ describe('api', () => {
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ openid: 'openid_abc' }),
         })
       )
     })
@@ -225,7 +224,7 @@ describe('api', () => {
       }
       mockFetch.mockResolvedValueOnce(createMockResponse(mockData))
 
-      const result = await api.interpret('sess_123', 'openid_abc')
+      const result = await api.interpret('sess_123')
 
       expect(result).toEqual(mockData)
     })
@@ -234,7 +233,7 @@ describe('api', () => {
       const { api } = await import('./api')
       mockFetch.mockResolvedValueOnce(createMockResponse(null, false, 500))
 
-      await expect(api.interpret('sess_123', 'openid_abc')).rejects.toThrow('请求解读失败: 500')
+      await expect(api.interpret('sess_123')).rejects.toThrow('请求解读失败: 500')
     })
   })
 
@@ -278,7 +277,7 @@ describe('api', () => {
       const mockData = { success: true, migrated: 3, sessionIds: ['s1', 's2', 's3'] }
       mockFetch.mockResolvedValueOnce(createMockResponse(mockData))
 
-      const result = await api.migrateSession('guest_openid', 'user_openid')
+      const result = await api.migrateSession('guest_openid')
 
       expect(result).toEqual(mockData)
       expect(mockFetch).toHaveBeenCalledWith(
@@ -299,7 +298,7 @@ describe('api', () => {
       localStorageMock.removeItem('yeelin_token')
       mockFetch.mockResolvedValueOnce(createMockResponse(null, false, 401))
 
-      await expect(api.migrateSession('guest', 'user')).rejects.toThrow('迁移会话失败: 401')
+      await expect(api.migrateSession('guest')).rejects.toThrow('迁移会话失败: 401')
     })
 
     it('should throw error on failure', async () => {
@@ -307,7 +306,7 @@ describe('api', () => {
       localStorageMock.setItem('yeelin_token', 'test_token')
       mockFetch.mockResolvedValueOnce(createMockResponse(null, false, 400))
 
-      await expect(api.migrateSession('guest', 'user')).rejects.toThrow('迁移会话失败: 400')
+      await expect(api.migrateSession('guest')).rejects.toThrow('迁移会话失败: 400')
     })
   })
 

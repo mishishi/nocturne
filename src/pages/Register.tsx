@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { authApi, api } from '../services/api'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 import styles from './Register.module.css'
 
 export function Register() {
@@ -10,6 +11,11 @@ export function Register() {
   const [step, setStep] = useState<'credentials' | 'nickname'>('credentials')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean
+    message: string
+    onConfirm: () => void
+  }>({ open: false, message: '', onConfirm: () => {} })
 
   // Form data
   const [phone, setPhone] = useState('')
@@ -200,9 +206,9 @@ export function Register() {
                 />
                 <span className={styles.checkboxLabel}>
                   我已阅读并同意
-                  <a href="#" className={styles.link}>《用户协议》</a>
+                  <span className={styles.link}>《用户协议》</span>
                   和
-                  <a href="#" className={styles.link}>《隐私政策》</a>
+                  <span className={styles.link}>《隐私政策》</span>
                 </span>
               </label>
 
@@ -284,10 +290,15 @@ export function Register() {
                 type="button"
                 className={styles.backButton}
                 onClick={() => {
-                  if (window.confirm('返回将丢失已填写的信息，确定要返回吗？')) {
-                    setStep('credentials')
-                    setError('')
-                  }
+                  setConfirmModal({
+                    open: true,
+                    message: '返回将丢失已填写的信息，确定要返回吗？',
+                    onConfirm: () => {
+                      setStep('credentials')
+                      setError('')
+                      setConfirmModal(prev => ({ ...prev, open: false }))
+                    }
+                  })
                 }}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -298,9 +309,9 @@ export function Register() {
 
               <p className={styles.terms}>
                 注册即表示同意
-                <a href="#" className={styles.link}>《用户协议》</a>
+                <span className={styles.link}>《用户协议》</span>
                 和
-                <a href="#" className={styles.link}>《隐私政策》</a>
+                <span className={styles.link}>《隐私政策》</span>
               </p>
             </form>
           )}
@@ -324,6 +335,16 @@ export function Register() {
           <path d="M30 0 L30 120" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.2"/>
         </svg>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title="确认返回"
+        message={confirmModal.message}
+        confirmText="确定返回"
+        cancelText="取消"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+      />
     </div>
   )
 }
