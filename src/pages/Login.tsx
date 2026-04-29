@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { authApi, api } from '../services/api'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 import styles from './Login.module.css'
 
 export function Login() {
@@ -16,6 +17,26 @@ export function Login() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean
+    message: string
+    onConfirm: () => void
+  }>({ open: false, message: '', onConfirm: () => {} })
+
+  // Generate star positions once, not on each render
+  const stars = useMemo(() =>
+    Array.from({ length: 80 }, (_, i) => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 4}s`,
+      animationDuration: `${2 + Math.random() * 3}s`,
+      width: `${1 + Math.random() * 2}px`,
+      height: `${1 + Math.random() * 2}px`,
+      key: i
+    })), []
+  )
 
   // Check if user is already logged in
   useEffect(() => {
@@ -87,17 +108,17 @@ export function Login() {
     <div className={styles.page}>
       {/* Animated star field background */}
       <div className={styles.starfield}>
-        {[...Array(80)].map((_, i) => (
+        {stars.map((star) => (
           <div
-            key={i}
+            key={star.key}
             className={styles.star}
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 4}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
-              width: `${1 + Math.random() * 2}px`,
-              height: `${1 + Math.random() * 2}px`
+              left: star.left,
+              top: star.top,
+              animationDelay: star.animationDelay,
+              animationDuration: star.animationDuration,
+              width: star.width,
+              height: star.height
             }}
           />
         ))}
@@ -171,9 +192,17 @@ export function Login() {
                 className={styles.phoneToggle}
                 onClick={() => {
                   if (phone || password) {
-                    if (!window.confirm('切换登录方式将清空已填写的信息，确定继续吗？')) {
-                      return
-                    }
+                    setConfirmModal({
+                      open: true,
+                      message: '切换登录方式将清空已填写的信息，确定继续吗？',
+                      onConfirm: () => {
+                        setPhone('')
+                        setPassword('')
+                        setShowPhoneLogin(true)
+                        setConfirmModal(prev => ({ ...prev, open: false }))
+                      }
+                    })
+                    return
                   }
                   setShowPhoneLogin(true)
                 }}
@@ -195,11 +224,18 @@ export function Login() {
                 className={styles.backButton}
                 onClick={() => {
                   if (phone || password) {
-                    if (!window.confirm('切换登录方式将清空已填写的信息，确定继续吗？')) {
-                      return
-                    }
-                    setPhone('')
-                    setPassword('')
+                    setConfirmModal({
+                      open: true,
+                      message: '切换登录方式将清空已填写的信息，确定继续吗？',
+                      onConfirm: () => {
+                        setPhone('')
+                        setPassword('')
+                        setShowPhoneLogin(false)
+                        setError('')
+                        setConfirmModal(prev => ({ ...prev, open: false }))
+                      }
+                    })
+                    return
                   }
                   setShowPhoneLogin(false)
                   setError('')
@@ -272,6 +308,17 @@ export function Login() {
       {/* Floating celestial elements */}
       <div className={styles.celestialRing} />
       <div className={styles.moonGlow} />
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title="确认"
+        message={confirmModal.message}
+        confirmText="确定"
+        cancelText="取消"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+      />
     </div>
   )
 }

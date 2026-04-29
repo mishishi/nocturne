@@ -16,11 +16,12 @@ interface ToastProps {
 }
 
 export function Toast({ message, visible, onClose, duration, type = 'success', action }: ToastProps) {
-  const defaultDuration = type === 'error' ? 3500 : type === 'info' ? 5000 : 2000
+  const defaultDuration = type === 'error' ? 0 : type === 'info' ? 5000 : 2000
   const effectiveDuration = duration ?? defaultDuration
 
   useEffect(() => {
-    if (visible && !action) {
+    // Error toasts persist until explicitly dismissed
+    if (visible && !action && effectiveDuration > 0) {
       const timer = setTimeout(onClose, effectiveDuration)
       return () => clearTimeout(timer)
     }
@@ -52,6 +53,14 @@ export function Toast({ message, visible, onClose, duration, type = 'success', a
       {action && (
         <button className={styles.actionBtn} onClick={action.onClick}>
           {action.label}
+        </button>
+      )}
+      {type === 'error' && (
+        <button className={styles.closeBtn} onClick={onClose} aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
       )}
     </div>

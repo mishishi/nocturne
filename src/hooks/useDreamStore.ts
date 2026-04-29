@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { checkInApi } from '../services/api'
+import { useAuthStore } from './useAuthStore'
+import { useSettingsStore } from './useSettingsStore'
+import { useFriendsStore } from './useFriendsStore'
 
 export interface DreamSession {
   id: string
@@ -516,15 +519,19 @@ export const useDreamStore = create<DreamState>()(
         if (token) {
           localStorage.setItem('yeelin_token', token)
         }
+        // Also update the auth store
+        useAuthStore.getState().setUser(user, token)
         set({ user, token: token ?? null })
       },
 
       logout: () => {
         localStorage.removeItem('yeelin_openid')
         localStorage.removeItem('yeelin_token')
+        // Also clear the auth store
+        useAuthStore.getState().logout()
+        useFriendsStore.getState().setFriends([])
+        useFriendsStore.getState().setPendingRequests([], [])
         set({
-          user: null,
-          token: null,
           friends: [],
           pendingRequests: { received: [], sent: [] },
           currentSession: {

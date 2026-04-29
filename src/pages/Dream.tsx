@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore, DREAM_TAGS } from '../hooks/useDreamStore'
 import { useVoiceWaveform } from '../hooks/useVoiceWaveform'
@@ -92,6 +92,17 @@ export function Dream() {
   const finalTranscriptRef = useRef<string>('')
   const { startWaveform, stopWaveform, canvasRef } = useVoiceWaveform()
   const [searchParams] = useSearchParams()
+
+  // Generate decorative star positions once
+  const decorStars = useMemo(() =>
+    Array.from({ length: 6 }, (_, i) => ({
+      left: `${15 + Math.random() * 70}%`,
+      top: `${10 + Math.random() * 60}%`,
+      animationDelay: `${Math.random() * 3}s`,
+      animationDuration: `${2 + Math.random() * 2}s`,
+      key: i
+    })), []
+  )
 
   // Check if this is a new dream request - clear old draft if so
   useEffect(() => {
@@ -566,15 +577,15 @@ export function Dream() {
 
         {/* Decorative elements */}
         <div className={styles.decorStars}>
-          {[...Array(6)].map((_, i) => (
+          {decorStars.map((star) => (
             <span
-              key={i}
+              key={star.key}
               className={styles.star}
               style={{
-                left: `${15 + Math.random() * 70}%`,
-                top: `${10 + Math.random() * 60}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 2}s`
+                left: star.left,
+                top: star.top,
+                animationDelay: star.animationDelay,
+                animationDuration: star.animationDuration
               }}
             />
           ))}

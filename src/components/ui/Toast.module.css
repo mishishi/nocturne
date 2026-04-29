@@ -65,6 +65,29 @@
   background: rgba(244, 211, 94, 0.25);
 }
 
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.closeBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
 @keyframes slideUp {
   from {
     opacity: 0;
