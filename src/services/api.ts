@@ -161,8 +161,10 @@ export const api = {
   }> {
     const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/interpret`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ openid })
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      }
     })
     if (!res.ok) throw new Error(`请求解读失败: ${res.status}`)
     return res.json()
@@ -176,7 +178,7 @@ export const api = {
   },
 
   // Migrate guest sessions to logged-in user
-  async migrateSession(guestOpenid: string, userOpenid: string): Promise<{
+  async migrateSession(guestOpenid: string): Promise<{
     success: boolean
     migrated: number
     sessionIds?: string[]
@@ -185,7 +187,7 @@ export const api = {
     const res = await fetchWithTimeout(`${API_BASE}/sessions/migrate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ guestOpenid, userOpenid })
+      body: JSON.stringify({ guestOpenid })
     })
     if (!res.ok) throw new Error(`迁移会话失败: ${res.status}`)
     return res.json()

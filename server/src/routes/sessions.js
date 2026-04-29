@@ -90,10 +90,19 @@ export default async function sessionRoutes(fastify) {
     return result
   })
 
-  // POST /api/sessions/:sessionId/interpret - 生成梦境解读
-  fastify.post('/sessions/:sessionId/interpret', async (req, res) => {
+  // POST /api/sessions/:sessionId/interpret - 生成梦境解读 (需登录)
+  fastify.post('/sessions/:sessionId/interpret', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
     const { sessionId } = req.params
-    const { openid } = req.body
+
+    // Get authenticated user from token
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
+    }
 
     // Get session with story and answers
     const session = await sessionService.getSession(sessionId)
@@ -108,7 +117,7 @@ export default async function sessionRoutes(fastify) {
     }
 
     // Check user points (interpretation costs 10 points)
-    const user = await prisma.user.findUnique({ where: { openid } })
+    const user = await prisma.user.findUnique({ where: { openid: tokenUser.openid } })
     if (!user) return res.status(404).send({ error: 'User not found' })
 
     const COST = 10
@@ -132,7 +141,7 @@ export default async function sessionRoutes(fastify) {
 
     // Deduct points and save interpretation
     await prisma.user.update({
-      where: { openid },
+      where: { openid: tokenUser.openid },
       data: { points: { decrement: COST } }
     })
 
@@ -167,17 +176,32 @@ export default async function sessionRoutes(fastify) {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { guestOpenid, userOpenid } = req.body
+    const { guestOpenid } = req.body
 
-    if (!guestOpenid || !userOpenid) {
-      return res.status(400).send({ success: false, reason: '缺少参数' })
+    if (!guestOpenid) {
+      return res.status(400).send({ success: false, reason: '缺少 guestOpenid 参数' })
     }
 
-    // Verify the token user matches the userOpenid
+    // Get authenticated user from token
     const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser || tokenUser.openid !== userOpenid) {
+    if (!tokenUser) {
+      return res.status(401).send({ success: false, reason: '用户未找到' })
+    }
+
+    // The token user's openid is the destination (userOpenid)
+    // guestOpenid is the source - only allow migrating if the token user is the owner
+    // or if guestOpenid doesn't have a registered user account
+    const guestUser = await prisma.user.findUnique({
+      where: { openid: guestOpenid }
+    })
+
+    // If guestOpenid belongs to a registered user, the token user must be that user
+    if (guestUser && guestUser.openid !== tokenUser.openid) {
       return res.status(403).send({ success: false, reason: '无权操作' })
     }
+
+    // If guestOpenid doesn't exist as a user, allow migration
+    // (this is a true guest session with no account)
 
     // 查找该游客的所有session
     const sessions = await prisma.session.findMany({
@@ -191,7 +215,7 @@ export default async function sessionRoutes(fastify) {
     // 迁移所有session到新用户
     await prisma.session.updateMany({
       where: { openid: guestOpenid },
-      data: { openid: userOpenid }
+      data: { openid: tokenUser.openid }
     })
 
     return {
