@@ -23,8 +23,12 @@ export function Friends() {
 
   // Load data on mount
   useEffect(() => {
+    if (!user?.openid) {
+      navigate('/login')
+      return
+    }
     loadData()
-  }, [])
+  }, [user, navigate])
 
   const loadData = async () => {
     setLoading(true)
