@@ -222,6 +222,20 @@
   opacity: 0;
 }
 
+.sampleBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-silver);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(139, 157, 195, 0.1);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-8);
+  animation: fadeInUp 0.6s var(--ease-dream) 0.15s forwards;
+  opacity: 0;
+}
+
 .sampleGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

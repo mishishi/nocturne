@@ -288,8 +288,9 @@ export function Profile() {
                   return history.length === 0 ? '记录你的第一个梦境即可解锁' : null
                 }
                 if (achievement.id === 'story_collector') {
-                  const remaining = 10 - history.length
-                  return remaining > 0 ? `再保存 ${remaining} 个故事` : null
+                  const current = history.length
+                  const total = 10
+                  return current < total ? `${current}/${total} 故事` : null
                 }
                 return null
               }

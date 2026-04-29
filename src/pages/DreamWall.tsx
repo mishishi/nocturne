@@ -486,13 +486,15 @@ export function DreamWall() {
                 </svg>
               </div>
               <h2 className={styles.emptyTitle}>
-                {searchQuery ? '没有找到匹配的梦境' : activeTab === 'my' ? '还没有发布' : activeTab === 'friends' ? '关注的人还没有发布故事' : '暂无内容'}
+                {searchQuery ? '没有找到匹配的梦境' : activeTab === 'my' ? '还没有发布' : activeTab === 'friends' && !user?.openid ? '登录后查看' : activeTab === 'friends' ? '关注的人还没有发布故事' : '暂无内容'}
               </h2>
               <p className={styles.emptyText}>
                 {searchQuery
                   ? '换个关键词试试吧'
                   : activeTab === 'my'
                   ? '记录梦境后可以发布到这里'
+                  : activeTab === 'friends' && !user?.openid
+                  ? '登录后可查看关注好友的梦境'
                   : activeTab === 'friends'
                   ? '快去关注一些好友吧'
                   : '成为第一个分享梦境的人'}
@@ -500,6 +502,11 @@ export function DreamWall() {
               {activeTab === 'my' && (
                 <Button onClick={() => navigate('/dream')}>
                   记录梦境
+                </Button>
+              )}
+              {activeTab === 'friends' && !user?.openid && (
+                <Button onClick={() => navigate('/login')}>
+                  登录
                 </Button>
               )}
             </div>

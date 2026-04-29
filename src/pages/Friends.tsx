@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { friendApi, FriendListItem, FriendRequestItem } from '../services/api'
+import { useDreamStore } from '../hooks/useDreamStore'
 import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Friends.module.css'
 
 export function Friends() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'list' | 'requests' | 'sent'>('list')
+  const { user } = useDreamStore()
+  const [activeTab, setActiveTab] = useState<'list' | 'requests' | 'sent' | 'search'>('list')
   const [friends, setFriends] = useState<FriendListItem[]>([])
   const [requests, setRequests] = useState<FriendRequestItem[]>([])
   const [sentRequests, setSentRequests] = useState<FriendRequestItem[]>([])
@@ -15,6 +17,9 @@ export function Friends() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<FriendListItem[]>([])
+  const [isSearching, setIsSearching] = useState(false)
 
   // Load data on mount
   useEffect(() => {
@@ -100,6 +105,26 @@ export function Friends() {
     }
   }
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return
+    setIsSearching(true)
+    try {
+      const result = await friendApi.searchUsers(searchQuery.trim(), user?.openid)
+      if (result.success) {
+        setSearchResults(result.users)
+      } else {
+        showToast(result.message || '搜索失败', 'error')
+        setSearchResults([])
+      }
+    } catch (err) {
+      console.error('Failed to search users:', err)
+      showToast('网络错误', 'error')
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('zh-CN', {
@@ -171,6 +196,14 @@ export function Friends() {
             {sentRequests.length > 0 && (
               <span className={styles.badge}>{sentRequests.length}</span>
             )}
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'search' ? styles.active : ''}`}
+            onClick={() => setActiveTab('search')}
+            role="tab"
+            aria-selected={activeTab === 'search'}
+          >
+            搜索用户
           </button>
         </div>
 
@@ -311,6 +344,65 @@ export function Friends() {
                       </div>
                     ))
                   )}
+                </div>
+              )}
+
+              {/* Search Users */}
+              {activeTab === 'search' && (
+                <div className={styles.searchSection}>
+                  <div className={styles.searchWrapper}>
+                    <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8"/>
+                      <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input
+                      type="text"
+                      className={styles.searchInput}
+                      placeholder="输入昵称搜索用户..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && searchQuery.trim()) {
+                          handleSearch()
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {isSearching ? (
+                    <div className={styles.searching}>
+                      <div className={styles.spinner} />
+                      <span>搜索中...</span>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div className={styles.searchResults}>
+                      {searchResults.map((result) => (
+                        <div
+                          key={result.id}
+                          className={styles.searchResultCard}
+                          onClick={() => navigate(`/friends/${result.openid}`)}
+                        >
+                          <div className={styles.friendAvatar}>
+                            {result.avatar ? (
+                              <img src={result.avatar} alt={result.nickname} />
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                              </svg>
+                            )}
+                          </div>
+                          <div className={styles.friendInfo}>
+                            <span className={styles.friendName}>
+                              {result.nickname || '匿名旅人'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : searchQuery && !isSearching ? (
+                    <p className={styles.noRequests}>没有找到匹配的用户</p>
+                  ) : null}
                 </div>
               )}
             </>

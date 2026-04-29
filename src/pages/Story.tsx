@@ -42,6 +42,7 @@ export function Story() {
   const [isGeneratingImage] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [isPublished, setIsPublished] = useState(false)
+  const [publishedPostId, setPublishedPostId] = useState<string | null>(null)
   const [dreamWallStory, setDreamWallStory] = useState<string | null>(null)
 
   // Unified Dream Wall context - handles location.state vs sessionStorage automatically
@@ -566,6 +567,9 @@ export function Story() {
 
       if (result.success) {
         setIsPublished(true)
+        if (result.post?.id) {
+          setPublishedPostId(result.post.id)
+        }
         // Save to localStorage to persist across page refreshes
         const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
         if (!publishedSessions.includes(sessionId)) {
@@ -820,12 +824,21 @@ export function Story() {
                       </button>
                     )}
                     {isPublished && (
-                      <span className={styles.fabMenuItemDisabled}>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 18, height: 18 }}>
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                        已在梦墙
-                      </span>
+                      publishedPostId ? (
+                        <Link to={`/wall?post=${publishedPostId}`} className={styles.fabMenuLink} onClick={() => setShowFabMenu(false)}>
+                          <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 18, height: 18 }}>
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                          在梦墙查看
+                        </Link>
+                      ) : (
+                        <span className={styles.fabMenuItemDisabled}>
+                          <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 18, height: 18 }}>
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                          已在梦墙
+                        </span>
+                      )
                     )}
                     <Link to="/dream" className={styles.fabMenuLink} onClick={() => setShowFabMenu(false)}>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
@@ -958,6 +971,11 @@ export function Story() {
                             {voice.name.length > 18 ? voice.name.substring(0, 18) + '...' : voice.name}
                           </button>
                         ))}
+                    </div>
+                  )}
+                  {user && (
+                    <div className={styles.pointsHint}>
+                      剩余积分: <strong>{user.points ?? 0}</strong> | 解读需 <strong>10</strong> 积分
                     </div>
                   )}
                   <button

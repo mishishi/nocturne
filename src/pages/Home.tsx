@@ -130,6 +130,7 @@ export function Home() {
         <section className={styles.sampleSection}>
           <h2 className={styles.sampleTitle}>别人的梦境</h2>
           <p className={styles.sampleSubtitle}>每一次记录，都是一场独特的冒险</p>
+          <div className={styles.sampleBadge}>以下为示例</div>
           <div className={styles.sampleGrid}>
             {sampleStories.map((story, index) => (
               <div key={index} className={styles.sampleCard}>
