@@ -19,9 +19,54 @@ const TEMPLATES: { id: TemplateType; name: string; icon: string; desc: string }[
   { id: 'starTrail', name: '星迹', icon: '✨', desc: '流光轨迹' },
 ]
 
+// Memoized star trail positions for consistency
+const TRAIL_LINE_SEED = 12345
+function seededRandom(seed: number, index: number): number {
+  const x = Math.sin(seed + index) * 10000
+  return x - Math.floor(x)
+}
+
 export function SharePoster({ storyTitle, story, date, onClose, onShare }: SharePosterProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('nightSky')
+
+  // Focus management for modal
+  useEffect(() => {
+    // Save current focus
+    previousFocusRef.current = document.activeElement as HTMLElement
+
+    // Focus the close button when modal opens
+    closeButtonRef.current?.focus()
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      // Restore focus when modal closes
+      previousFocusRef.current?.focus()
+    }
+  }, [])
 
   const generatePoster = useCallback(() => {
     const canvas = canvasRef.current
@@ -119,14 +164,14 @@ export function SharePoster({ storyTitle, story, date, onClose, onShare }: Share
       ctx.fillStyle = bg
       ctx.fillRect(0, 0, width, height)
 
-      // Trail lines
+      // Trail lines (using seeded random for consistency)
       ctx.strokeStyle = 'rgba(244, 211, 94, 0.15)'
       ctx.lineWidth = 1
       for (let i = 0; i < 20; i++) {
-        const x = Math.random() * width
+        const x = seededRandom(TRAIL_LINE_SEED, i) * width
         ctx.beginPath()
         ctx.moveTo(x, 0)
-        ctx.lineTo(x + (Math.random() - 0.5) * 100, height)
+        ctx.lineTo(x + (seededRandom(TRAIL_LINE_SEED, i + 20) - 0.5) * 100, height)
         ctx.stroke()
       }
 
@@ -276,10 +321,10 @@ export function SharePoster({ storyTitle, story, date, onClose, onShare }: Share
 
   return createPortal(
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.modal} ref={modalRef} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="poster-title">
         <div className={styles.header}>
-          <h3 className={styles.title}>生成海报</h3>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="关闭">
+          <h3 className={styles.title} id="poster-title">生成海报</h3>
+          <button ref={closeButtonRef} className={styles.closeBtn} onClick={onClose} aria-label="关闭">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
@@ -295,6 +340,8 @@ export function SharePoster({ storyTitle, story, date, onClose, onShare }: Share
                 key={tpl.id}
                 className={`${styles.templateCard} ${selectedTemplate === tpl.id ? styles.templateActive : ''}`}
                 onClick={() => setSelectedTemplate(tpl.id)}
+                aria-label={`${tpl.name}风格: ${tpl.desc}`}
+                aria-pressed={selectedTemplate === tpl.id}
               >
                 <span className={styles.templateIcon}>{tpl.icon}</span>
                 <span className={styles.templateName}>{tpl.name}</span>

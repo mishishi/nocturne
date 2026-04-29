@@ -10,6 +10,7 @@ import { api } from '../services/api'
 import styles from './History.module.css'
 
 const SWIPE_THRESHOLD = 100
+const MIN_SWIPE_DISTANCE = 20
 const UNDO_TIMEOUT = 5000
 
 export function History() {
@@ -144,7 +145,8 @@ export function History() {
     const deltaY = e.touches[0].clientY - touchStartY.current
 
     // Only track horizontal swipe if it's more horizontal than vertical
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    // AND has moved beyond minimum threshold
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > MIN_SWIPE_DISTANCE) {
       e.preventDefault()
       const offset = Math.max(-120, Math.min(0, deltaX))
       setSwipeOffset(offset)
@@ -348,19 +350,6 @@ export function History() {
 
     return true
   })
-
-  // Debug: check for duplicate IDs in filteredHistory
-  useEffect(() => {
-    const ids = filteredHistory.map(item => item.id)
-    const uniqueIds = new Set(ids)
-    if (ids.length !== uniqueIds.size) {
-      console.error('DUPLICATE IDs in filteredHistory!', {
-        total: ids.length,
-        unique: uniqueIds.size,
-        duplicates: ids.filter((id, i) => ids.indexOf(id) !== i)
-      })
-    }
-  }, [filteredHistory])
 
   // Tag filter handlers
   const toggleTag = (tagId: string) => {
@@ -624,6 +613,13 @@ export function History() {
                     onTouchStart={(e) => handleTouchStart(e, item.id!)}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Delete' || e.key === 'Backspace') {
+                        e.preventDefault()
+                        handleSwipeDelete(item)
+                      }
+                    }}
+                    tabIndex={0}
                   >
                     <div
                       className={styles.itemHeader}

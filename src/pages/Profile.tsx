@@ -122,42 +122,52 @@ export function Profile() {
         {/* Tab Navigation */}
         <div className={styles.tabNav} role="tablist">
           <button
+            id="tab-overview"
             className={`${styles.tabBtn} ${activeTab === 'overview' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('overview')}
             role="tab"
             aria-selected={activeTab === 'overview'}
+            aria-controls="panel-overview"
           >
             概览
           </button>
           <button
+            id="tab-achievements"
             className={`${styles.tabBtn} ${activeTab === 'achievements' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('achievements')}
             role="tab"
             aria-selected={activeTab === 'achievements'}
+            aria-controls="panel-achievements"
           >
             成就
           </button>
           <button
+            id="tab-settings"
             className={`${styles.tabBtn} ${activeTab === 'settings' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('settings')}
             role="tab"
             aria-selected={activeTab === 'settings'}
+            aria-controls="panel-settings"
           >
             设置
           </button>
           <button
+            id="tab-history"
             className={`${styles.tabBtn} ${activeTab === 'history' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('history')}
             role="tab"
             aria-selected={activeTab === 'history'}
+            aria-controls="panel-history"
           >
             历史
           </button>
           <button
+            id="tab-favorites"
             className={`${styles.tabBtn} ${activeTab === 'favorites' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('favorites')}
             role="tab"
             aria-selected={activeTab === 'favorites'}
+            aria-controls="panel-favorites"
           >
             收藏
           </button>
@@ -165,6 +175,7 @@ export function Profile() {
 
         {/* Tab: Overview */}
         {activeTab === 'overview' && (
+          <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
           <>
             <div className={styles.stats}>
               <div className={styles.statCard}>
@@ -248,11 +259,12 @@ export function Profile() {
             </Button>
           </div>
           </>
+          </div>
         )}
 
         {/* Tab: Achievements */}
         {activeTab === 'achievements' && (
-          <>
+          <div id="panel-achievements" role="tabpanel" aria-labelledby="tab-achievements">
             {/* Statistics Visualization */}
             {history.length > 0 && (
               <div className={styles.section}>
@@ -307,12 +319,12 @@ export function Profile() {
             })}
           </div>
         </div>
-          </>
+          </div>
         )}
 
         {/* Tab: History */}
         {activeTab === 'history' && (
-          <div className={styles.section}>
+          <div id="panel-history" role="tabpanel" aria-labelledby="tab-history" className={styles.section}>
             <h2 className={styles.sectionTitle}>历史记录</h2>
             {history.length === 0 ? (
               <div className={styles.emptyTabState}>
@@ -346,7 +358,7 @@ export function Profile() {
 
         {/* Tab: Favorites */}
         {activeTab === 'favorites' && (
-          <div className={styles.section}>
+          <div id="panel-favorites" role="tabpanel" aria-labelledby="tab-favorites" className={styles.section}>
             <h2 className={styles.sectionTitle}>我的收藏</h2>
             {history.filter(item => item.isFavorite).length === 0 ? (
               <div className={styles.emptyTabState}>
@@ -378,7 +390,7 @@ export function Profile() {
 
         {/* Tab: Settings */}
         {activeTab === 'settings' && (
-          <>
+          <div id="panel-settings" role="tabpanel" aria-labelledby="tab-settings">
         {/* Display Settings */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>显示</h2>
@@ -464,9 +476,15 @@ export function Profile() {
                 <span className={styles.settingLabel}>导出我的数据</span>
                 <span className={styles.settingDesc}>将导出所有个人信息</span>
               </div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.chevron} onClick={() => setShowExportModal(true)}>
-                <path d="M9 18l6-6-6-6" />
-              </svg>
+              <button
+                className={styles.exportBtn}
+                onClick={() => setShowExportModal(true)}
+                aria-label="导出我的数据"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
             </div>
             {user && (
               <div className={styles.settingItem}>
@@ -494,7 +512,7 @@ export function Profile() {
             <p>记录你的每一个梦境</p>
           </div>
         </div>
-          </>
+          </div>
         )}
 
         {/* AI Quality Analytics (for team review) */}

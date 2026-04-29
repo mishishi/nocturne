@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { friendApi } from '../services/api'
+import { ConfirmModal } from './ui/ConfirmModal'
 import styles from './BottomNav.module.css'
+
+const DRAFT_KEY = 'yeelin_draft'
 
 const NAV_ITEMS = [
   {
@@ -54,6 +57,7 @@ export function BottomNav() {
   const location = useLocation()
   const { recentlyUnlocked, user } = useDreamStore()
   const [pendingCount, setPendingCount] = useState(0)
+  const [showDraftConfirm, setShowDraftConfirm] = useState(false)
 
   useEffect(() => {
     const fetchPendingCount = async () => {
@@ -110,12 +114,38 @@ export function BottomNav() {
       </div>
 
       {/* Floating Action Button for recording */}
-      <Link to="/dream?new=1" className={styles.fab} aria-label="记录梦境">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </Link>
+      <button
+        className={styles.fab}
+        aria-label="记录梦境"
+        onClick={() => {
+          const hasDraft = localStorage.getItem(DRAFT_KEY)
+          if (hasDraft) {
+            setShowDraftConfirm(true)
+          }
+        }}
+      >
+        <Link to="/dream?new=1" className={styles.fabLink}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </Link>
+      </button>
+
+      <ConfirmModal
+        isOpen={showDraftConfirm}
+        title="放弃当前草稿？"
+        message="你有一段未完成的梦境记录，开始新记录将丢失当前内容。"
+        confirmText="开始新记录"
+        cancelText="继续编辑"
+        onConfirm={() => {
+          localStorage.removeItem(DRAFT_KEY)
+          setShowDraftConfirm(false)
+          window.location.href = '/dream?new=1'
+        }}
+        onCancel={() => setShowDraftConfirm(false)}
+        danger
+      />
     </nav>
   )
 }

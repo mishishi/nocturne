@@ -258,11 +258,12 @@ export function Dream() {
   }
 
   const handleEmotionSelect = (emotionId: string) => {
+    if (step === 'emotionTransition') return
     setSelectedEmotion(emotionId)
   }
 
   const handleEmotionNext = () => {
-    if (selectedEmotion) {
+    if (selectedEmotion && step === 'emotion') {
       const tag = DREAM_TAGS.find(t => t.id === selectedEmotion)
       setTransitionEmotion(tag?.label || selectedEmotion)
       setStep('emotionTransition')
@@ -380,6 +381,7 @@ export function Dream() {
                   key={tag.id}
                   className={`${styles.emotionCard} ${selectedEmotion === tag.id ? styles.selected : ''}`}
                   onClick={() => handleEmotionSelect(tag.id)}
+                  disabled={transitionEmotion !== null}
                   style={{
                     '--tag-color': tag.color,
                     animationDelay: `${index * 0.05}s`
@@ -395,12 +397,16 @@ export function Dream() {
               <Button
                 onClick={handleEmotionNext}
                 size="lg"
-                disabled={!selectedEmotion}
+                disabled={!selectedEmotion || transitionEmotion !== null}
                 className={styles.nextBtn}
               >
                 继续
               </Button>
-              <button className={styles.skipBtn} onClick={handleSkipEmotion}>
+              <button
+                className={styles.skipBtn}
+                onClick={handleSkipEmotion}
+                disabled={transitionEmotion !== null}
+              >
                 直接描述 →
               </button>
             </div>
