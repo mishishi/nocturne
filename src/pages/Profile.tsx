@@ -9,7 +9,7 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
 import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
-import { shareApi, UserStats, checkInApi } from '../services/api'
+import { shareApi, UserStats, checkInApi, api } from '../services/api'
 import styles from './Profile.module.css'
 
 // Medal definitions (mirrors server-side MEDALS)
@@ -33,7 +33,7 @@ const THEME_OPTIONS = [
 
 export function Profile() {
   const navigate = useNavigate()
-  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus } = useDreamStore()
+  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus, setHistory } = useDreamStore()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
@@ -44,6 +44,43 @@ export function Profile() {
 
   const totalDreams = history.length
   const totalWords = history.reduce((acc, item) => acc + item.story.length, 0)
+
+  // Sync history from backend when user is logged in
+  useEffect(() => {
+    const openid = localStorage.getItem('yeelin_openid') || user?.openid
+    if (!openid) return
+
+    const syncHistory = async () => {
+      try {
+        const res = await api.session.getHistory(openid)
+        if (res.sessions && res.sessions.length > 0) {
+          // Map backend fields to local DreamSession format
+          const backendHistory: any[] = res.sessions.map(s => ({
+            id: s.id,
+            sessionId: s.id,
+            date: s.date,
+            dreamSnippet: s.dreamFragment || '',
+            storyTitle: s.storyTitle || '',
+            story: s.story || '',
+            questions: [],
+            answers: [],
+            tags: []
+          }))
+          // Merge with local history, avoiding duplicates by sessionId
+          const currentHistory = useDreamStore.getState().history
+          const localIds = new Set(currentHistory.map(h => h.sessionId))
+          const newItems = backendHistory.filter(h => !localIds.has(h.sessionId))
+          if (newItems.length > 0) {
+            setHistory([...newItems, ...currentHistory])
+          }
+        }
+      } catch (err) {
+        console.error('Failed to sync history from backend:', err)
+      }
+    }
+
+    syncHistory()
+  }, [user?.openid])
 
   // Fetch share stats on mount
   useEffect(() => {
