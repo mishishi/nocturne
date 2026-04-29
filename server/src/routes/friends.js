@@ -1,27 +1,7 @@
 import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
-
-// Helper to create notifications (fire-and-forget)
-async function createNotification(prisma, { openid, type, fromOpenid, fromNickname, targetId, targetTitle, message }) {
-  // Skip self-notification
-  if (openid === fromOpenid) return null
-
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-
-  return prisma.notification.create({
-    data: {
-      openid,
-      type,
-      fromOpenid,
-      fromNickname,
-      targetId,
-      targetTitle,
-      message,
-      expiresAt
-    }
-  })
-}
+import { createNotification } from '../services/notificationService.js'
 
 export default async function friendRoutes(fastify) {
   // POST /api/friends/request - 发送好友请求 (需登录)

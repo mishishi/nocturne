@@ -1,6 +1,7 @@
 import { shareService } from '../services/shareService.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { authService } from '../services/authService.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 export default async function shareRoutes(fastify) {
   // POST /api/share/log - 记录分享 (需登录)
@@ -14,16 +15,16 @@ export default async function shareRoutes(fastify) {
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'UNAUTHORIZED'))
     }
 
     if (!openid || !type) {
-      return res.status(400).send({ error: 'openid and type are required' })
+      return res.status(400).send(errorResponse('缺少必要参数', 'MISSING_PARAMS'))
     }
 
     const validTypes = ['poster', 'moment', 'link', 'friend']
     if (!validTypes.includes(type)) {
-      return res.status(400).send({ error: 'Invalid share type' })
+      return res.status(400).send(errorResponse('无效的分享类型', 'INVALID_TYPE'))
     }
 
     // 获取客户端IP（用于防刷）
@@ -31,10 +32,10 @@ export default async function shareRoutes(fastify) {
 
     try {
       const result = await shareService.logShare(openid, type, clientIp)
-      return result
+      return successResponse(result)
     } catch (error) {
       console.error('Share log error:', error)
-      return res.status(500).send({ error: 'Failed to log share' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -49,19 +50,19 @@ export default async function shareRoutes(fastify) {
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'UNAUTHORIZED'))
     }
 
     if (!openid) {
-      return res.status(400).send({ error: 'openid is required' })
+      return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
     }
 
     try {
       const stats = await shareService.getStats(openid)
-      return stats
+      return successResponse(stats)
     } catch (error) {
       console.error('Get stats error:', error)
-      return res.status(500).send({ error: 'Failed to get stats' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -76,23 +77,22 @@ export default async function shareRoutes(fastify) {
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'UNAUTHORIZED'))
     }
 
     if (!openid) {
-      return res.status(400).send({ error: 'openid is required' })
+      return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
     }
 
     try {
       const invite = await shareService.createInvite(openid)
-      return {
-        success: true,
+      return successResponse({
         inviteCode: invite.inviteCode,
         inviteUrl: `https://yeelin.app/invite/${invite.inviteCode}`
-      }
+      })
     } catch (error) {
       console.error('Create invite error:', error)
-      return res.status(500).send({ error: 'Failed to create invite' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -107,19 +107,19 @@ export default async function shareRoutes(fastify) {
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'UNAUTHORIZED'))
     }
 
     if (!inviteCode || !openid) {
-      return res.status(400).send({ error: 'inviteCode and openid are required' })
+      return res.status(400).send(errorResponse('缺少必要参数', 'MISSING_PARAMS'))
     }
 
     try {
       const result = await shareService.useInvite(inviteCode, openid)
-      return result
+      return successResponse(result)
     } catch (error) {
       console.error('Use invite error:', error)
-      return res.status(500).send({ error: 'Failed to use invite' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 }

@@ -1,27 +1,7 @@
 import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
-
-// Notification creation helper
-async function createNotification(prisma, { openid, type, fromOpenid, fromNickname, targetId, targetTitle, message }) {
-  // Skip self-notification
-  if (openid === fromOpenid) return null
-
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-
-  return prisma.notification.create({
-    data: {
-      openid,
-      type,
-      fromOpenid,
-      fromNickname,
-      targetId,
-      targetTitle,
-      message,
-      expiresAt
-    }
-  })
-}
+import { createNotification } from '../services/notificationService.js'
 
 // Content moderation check (simplified - in production use a proper service)
 function checkContentSafety(text) {
