@@ -203,25 +203,24 @@ export default async function sessionRoutes(fastify) {
     // If guestOpenid doesn't exist as a user, allow migration
     // (this is a true guest session with no account)
 
-    // 查找该游客的所有session
-    const sessions = await prisma.session.findMany({
-      where: { openid: guestOpenid }
+    // 迁移所有session到新用户（使用事务确保原子性）
+    const result = await prisma.$transaction(async (tx) => {
+      const sessions = await tx.session.findMany({
+        where: { openid: guestOpenid }
+      })
+
+      if (sessions.length === 0) {
+        return { migrated: 0, sessionIds: [] }
+      }
+
+      await tx.session.updateMany({
+        where: { openid: guestOpenid },
+        data: { openid: tokenUser.openid }
+      })
+
+      return { migrated: sessions.length, sessionIds: sessions.map(s => s.id) }
     })
 
-    if (sessions.length === 0) {
-      return { success: true, migrated: 0 }
-    }
-
-    // 迁移所有session到新用户
-    await prisma.session.updateMany({
-      where: { openid: guestOpenid },
-      data: { openid: tokenUser.openid }
-    })
-
-    return {
-      success: true,
-      migrated: sessions.length,
-      sessionIds: sessions.map(s => s.id)
-    }
+    return { success: true, ...result }
   })
 }
