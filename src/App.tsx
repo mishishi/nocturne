@@ -27,6 +27,7 @@ import { DreamWall } from './pages/DreamWall'
 import { WeChatCallback } from './pages/WeChatCallback'
 import { Notifications } from './pages/Notifications'
 import { Chat } from './pages/Chat'
+import { DemoExperience } from './pages/DemoExperience'
 
 function App() {
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement } = useDreamStore()
@@ -85,6 +86,7 @@ function App() {
             <Routes>
             <Route path="/" element={<PageErrorBoundary><Home /></PageErrorBoundary>} />
             <Route path="/dream" element={<PageErrorBoundary><Dream /></PageErrorBoundary>} />
+            <Route path="/demo" element={<PageErrorBoundary><DemoExperience /></PageErrorBoundary>} />
             <Route path="/questions" element={<PageErrorBoundary><Questions /></PageErrorBoundary>} />
             <Route path="/story/:sessionId" element={<PageErrorBoundary><Story /></PageErrorBoundary>} />
             <Route path="/history" element={<PageErrorBoundary><History /></PageErrorBoundary>} />

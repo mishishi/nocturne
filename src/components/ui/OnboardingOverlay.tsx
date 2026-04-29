@@ -85,7 +85,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
       navigator.vibrate(10)
     }
     handleDismiss()
-    navigate('/dream')
+    navigate('/demo')
   }
 
   const handleBack = () => {
