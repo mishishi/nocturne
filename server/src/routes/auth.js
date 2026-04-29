@@ -1,6 +1,7 @@
 import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 export default async function authRoutes(fastify) {
   // GET /api/auth/wechat/authorize - 生成微信授权链接并跳转
@@ -8,7 +9,7 @@ export default async function authRoutes(fastify) {
     const { redirect_uri } = req.query
 
     if (!redirect_uri) {
-      return res.status(400).send({ error: 'redirect_uri is required' })
+      return res.status(400).send(errorResponse('缺少 redirect_uri', 'MISSING_PARAMS'))
     }
 
     // 回调地址是后端的 callback 接口
@@ -25,7 +26,7 @@ export default async function authRoutes(fastify) {
     const { code, state } = req.query
 
     if (!code) {
-      return res.status(400).send({ error: 'code is required' })
+      return res.status(400).send(errorResponse('缺少 code', 'MISSING_PARAMS'))
     }
 
     try {
@@ -66,18 +67,15 @@ export default async function authRoutes(fastify) {
     const { openid } = req.body
 
     if (!openid) {
-      return res.status(400).send({ error: 'openid is required' })
+      return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
     }
 
     try {
       const result = await authService.wechatLogin(openid)
-      return {
-        success: true,
-        ...result
-      }
+      return successResponse(result)
     } catch (error) {
       console.error('WeChat login error:', error)
-      return res.status(500).send({ error: '微信登录失败' })
+      return res.status(500).send(errorResponse('微信登录失败', 'SERVER_ERROR'))
     }
   })
 
@@ -86,18 +84,18 @@ export default async function authRoutes(fastify) {
     const { phone, password } = req.body
 
     if (!phone || !password) {
-      return res.status(400).send({ error: '手机号和密码不能为空' })
+      return res.status(400).send(errorResponse('手机号和密码不能为空', 'MISSING_PARAMS'))
     }
 
     try {
       const result = await authService.phoneLogin(phone, password)
       if (!result.success) {
-        return res.status(401).send(result)
+        return res.status(401).send(errorResponse(result.reason || '登录失败', 'AUTH_FAILED'))
       }
-      return { success: true, ...result }
+      return successResponse(result)
     } catch (error) {
       console.error('Phone login error:', error)
-      return res.status(500).send({ error: '登录失败' })
+      return res.status(500).send(errorResponse('登录失败', 'SERVER_ERROR'))
     }
   })
 
@@ -106,22 +104,22 @@ export default async function authRoutes(fastify) {
     const { phone, password, nickname, inviteCode } = req.body
 
     if (!phone || !password) {
-      return res.status(400).send({ error: '手机号和密码不能为空' })
+      return res.status(400).send(errorResponse('手机号和密码不能为空', 'MISSING_PARAMS'))
     }
 
     if (password.length < 6) {
-      return res.status(400).send({ success: false, reason: '密码至少6位' })
+      return res.status(400).send(errorResponse('密码至少6位', 'VALIDATION_ERROR'))
     }
 
     try {
       const result = await authService.register(phone, password, nickname)
       if (!result.success) {
-        return res.status(400).send(result)
+        return res.status(400).send(errorResponse(result.reason || '注册失败', 'REGISTER_FAILED'))
       }
-      return { success: true, ...result }
+      return successResponse(result)
     } catch (error) {
       console.error('Register error:', error)
-      return res.status(500).send({ error: '注册失败' })
+      return res.status(500).send(errorResponse('注册失败', 'SERVER_ERROR'))
     }
   })
 
@@ -134,21 +132,21 @@ export default async function authRoutes(fastify) {
     const { openid, nickname, avatar } = req.body
 
     if (!openid) {
-      return res.status(400).send({ error: 'openid is required' })
+      return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
     }
 
     // Verify the token user matches the openid being updated
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'UNAUTHORIZED'))
     }
 
     try {
       const user = await authService.updateProfile(openid, { nickname, avatar })
-      return { success: true, user }
+      return successResponse({ user })
     } catch (error) {
       console.error('Update profile error:', error)
-      return res.status(500).send({ error: '更新资料失败' })
+      return res.status(500).send(errorResponse('更新资料失败', 'SERVER_ERROR'))
     }
   })
 
@@ -157,18 +155,18 @@ export default async function authRoutes(fastify) {
     const { openid } = req.params
 
     if (!openid) {
-      return res.status(400).send({ error: 'openid is required' })
+      return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
     }
 
     try {
       const user = await authService.getUserByOpenid(openid)
       if (!user) {
-        return res.status(404).send({ error: '用户不存在' })
+        return res.status(404).send(errorResponse('用户不存在', 'NOT_FOUND'))
       }
-      return { success: true, user }
+      return successResponse({ user })
     } catch (error) {
       console.error('Get user error:', error)
-      return res.status(500).send({ error: '获取用户信息失败' })
+      return res.status(500).send(errorResponse('获取用户信息失败', 'SERVER_ERROR'))
     }
   })
 
@@ -177,18 +175,18 @@ export default async function authRoutes(fastify) {
     const { token } = req.body
 
     if (!token) {
-      return res.status(400).send({ error: 'token is required' })
+      return res.status(400).send(errorResponse('缺少 token', 'MISSING_PARAMS'))
     }
 
     try {
       const user = await authService.verifyToken(token)
       if (!user) {
-        return res.status(401).send({ success: false, reason: 'Token无效或已过期' })
+        return res.status(401).send(errorResponse('Token无效或已过期', 'TOKEN_INVALID'))
       }
-      return { success: true, user }
+      return successResponse({ user })
     } catch (error) {
       console.error('Verify token error:', error)
-      return res.status(500).send({ error: '验证失败' })
+      return res.status(500).send(errorResponse('验证失败', 'SERVER_ERROR'))
     }
   })
 
@@ -202,7 +200,7 @@ export default async function authRoutes(fastify) {
       // 1. Get user info via authService to get openid
       const user = await authService.getUser(req.userId)
       if (!user) {
-        return res.status(401).send({ error: '用户不存在' })
+        return res.status(401).send(errorResponse('用户不存在', 'USER_NOT_FOUND'))
       }
       const { openid } = user
 
@@ -296,7 +294,7 @@ export default async function authRoutes(fastify) {
       return res.send(json)
     } catch (error) {
       console.error('Export data error:', error)
-      return res.status(500).send({ error: '导出失败' })
+      return res.status(500).send(errorResponse('导出失败', 'SERVER_ERROR'))
     }
   })
 }
