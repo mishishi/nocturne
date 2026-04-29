@@ -54,16 +54,14 @@ export function DemoExperience() {
     }, 4000)
   }, [phase])
 
-  // Auto-advance through questions
+  // Show question when questionIndex changes (or phase enters questions)
   useEffect(() => {
     if (phase !== 'questions') return
-
-    if (questionIndex === 0) {
-      // Show first question after a short delay
-      timerRef.current = setTimeout(() => {
-        setShowQuestion(true)
-      }, 800)
-    }
+    // Reset visibility when index changes so typewriter re-triggers
+    setShowQuestion(false)
+    timerRef.current = setTimeout(() => {
+      setShowQuestion(true)
+    }, 800)
   }, [phase, questionIndex])
 
   // Auto-fill answer after question appears
