@@ -138,14 +138,14 @@ export const api = {
   },
 
   // Get user history
-  async getHistory(openid: string): Promise<{ sessions: Array<{
+  async getHistory(openid: string, page = 1, limit = 20): Promise<{ sessions: Array<{
     id: string
     date: string
     dreamFragment: string
     storyTitle: string
     story: string
-  }> }> {
-    const res = await fetchWithTimeout(`${API_BASE}/sessions/users/${openid}/history`)
+  }>; pagination: { page: number; limit: number; total: number; hasMore: boolean } }> {
+    const res = await fetchWithTimeout(`${API_BASE}/sessions/users/${openid}/history?page=${page}&limit=${limit}`)
     if (!res.ok) throw new Error(`获取历史失败: ${res.status}`)
     return res.json()
   },
@@ -963,7 +963,7 @@ export const checkInApi = {
   }> {
     const res = await fetchWithTimeout(`${API_BASE}/checkin`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() }
+      headers: authHeaders()
     })
     if (!res.ok) throw new Error(`签到失败: ${res.status}`)
     return res.json()

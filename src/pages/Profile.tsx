@@ -42,44 +42,83 @@ export function Profile() {
   const [shareStats, setShareStatsLocal] = useState<UserStats | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'history' | 'favorites' | 'settings'>('overview')
 
-  const totalDreams = history.length
-  const totalWords = history.reduce((acc, item) => acc + item.story.length, 0)
+  // Initialize with local history to avoid flash of zeros, will be updated by backend sync
+  const [totalDreams, setTotalDreams] = useState(history.length)
+  const [totalWords, setTotalWords] = useState(history.reduce((acc, item) => acc + item.story.length, 0))
 
   // Sync history from backend when user is logged in
   useEffect(() => {
+    let isMounted = true
     const openid = localStorage.getItem('yeelin_openid') || user?.openid
     if (!openid) return
 
     const syncHistory = async () => {
       try {
-        const res = await api.session.getHistory(openid)
+        const res = await api.getHistory(openid, 1, 100) // Fetch more items for stats
+        if (!isMounted) return
+
+        // Update total stats from backend pagination
+        if (res.pagination) {
+          setTotalDreams(res.pagination.total)
+        }
+
         if (res.sessions && res.sessions.length > 0) {
-          // Map backend fields to local DreamSession format
-          const backendHistory: any[] = res.sessions.map(s => ({
-            id: s.id,
-            sessionId: s.id,
-            date: s.date,
-            dreamSnippet: s.dreamFragment || '',
-            storyTitle: s.storyTitle || '',
-            story: s.story || '',
-            questions: [],
-            answers: [],
-            tags: []
-          }))
-          // Merge with local history, avoiding duplicates by sessionId
+          // Calculate total words from backend sessions
+          const words = res.sessions.reduce((acc: number, s: any) => acc + (s.story?.length || 0), 0)
+          setTotalWords(words)
+
+          // Build backend map for merging (same logic as History.tsx)
+          const backendMap = new Map(res.sessions.map((s: any) => [s.id, s]))
+
+          // Use backend data for authoritative fields, preserve local-only fields
           const currentHistory = useDreamStore.getState().history
-          const localIds = new Set(currentHistory.map(h => h.sessionId))
-          const newItems = backendHistory.filter(h => !localIds.has(h.sessionId))
-          if (newItems.length > 0) {
-            setHistory([...newItems, ...currentHistory])
-          }
+          const merged = currentHistory.map((item: any) => {
+            const backend = backendMap.get(item.id)
+            if (!backend) return item // Local-only item (e.g., draft), keep it
+            return {
+              ...item,
+              storyTitle: backend.storyTitle,
+              story: backend.story,
+              dreamSnippet: backend.dreamFragment?.slice(0, 100) + (backend.dreamFragment?.length > 100 ? '...' : '') || '',
+              sessionId: backend.sessionId || item.sessionId,
+            }
+          })
+
+          // Add new items from backend that don't exist locally
+          res.sessions.forEach((s: any) => {
+            if (!merged.find((item: any) => item.id === s.id || item.sessionId === s.sessionId)) {
+              merged.push({
+                id: s.id,
+                sessionId: s.sessionId || s.id,
+                date: s.date,
+                dreamSnippet: s.dreamFragment?.slice(0, 100) + (s.dreamFragment?.length > 100 ? '...' : '') || '',
+                storyTitle: s.storyTitle || '',
+                story: s.story || '',
+                questions: [],
+                answers: [],
+                tags: []
+              })
+            }
+          })
+
+          setHistory(merged)
+        } else {
+          // No sessions from backend, still update totals
+          setTotalDreams(0)
+          setTotalWords(0)
         }
       } catch (err) {
         console.error('Failed to sync history from backend:', err)
+        // Fallback to local history for display
+        if (isMounted) {
+          setTotalDreams(history.length)
+          setTotalWords(history.reduce((acc, item) => acc + item.story.length, 0))
+        }
       }
     }
 
     syncHistory()
+    return () => { isMounted = false }
   }, [user?.openid])
 
   // Fetch share stats on mount
