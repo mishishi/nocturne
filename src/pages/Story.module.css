@@ -85,6 +85,45 @@
   to { opacity: 1; }
 }
 
+/* Error state */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.errorMoon {
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(244, 211, 94, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  margin-bottom: var(--space-8);
+  animation: errorMoonPulse 3s ease-in-out infinite;
+}
+
+@keyframes errorMoonPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.errorText {
+  font-size: 1.125rem;
+  color: var(--color-moonlight);
+  margin: 0 0 var(--space-3);
+  letter-spacing: 0.05em;
+}
+
+.errorSubtext {
+  font-size: 0.875rem;
+  color: var(--color-silver);
+  margin: 0 0 var(--space-8);
+  opacity: 0.8;
+}
+
 /* Reveal glow effect */
 .revealGlow {
   position: fixed;

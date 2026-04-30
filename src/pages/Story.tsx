@@ -629,10 +629,14 @@ export function Story() {
     return (
       <div className={styles.page}>
         <div className={styles.container}>
-          <p>无法加载故事，请返回重试</p>
-          <Link to="/">
-            <Button>返回首页</Button>
-          </Link>
+          <div className={styles.errorState}>
+            <div className={styles.errorMoon} />
+            <p className={styles.errorText}>梦境暂时无法浮现</p>
+            <p className={styles.errorSubtext}>请稍后再试，或者返回首页重新记录</p>
+            <Link to="/">
+              <Button variant="secondary">返回首页</Button>
+            </Link>
+          </div>
         </div>
       </div>
     )
