@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { authApi, api } from '../services/api'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
+import { Toast } from '../components/ui/Toast'
 import styles from './Login.module.css'
 
 export function Login() {
@@ -24,6 +25,12 @@ export function Login() {
     message: string
     onConfirm: () => void
   }>({ open: false, message: '', onConfirm: () => {} })
+
+  // Toast state
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ visible: true, message, type })
+  }, [])
 
   // Generate star positions once, not on each render
   const stars = useMemo(() =>
@@ -90,7 +97,16 @@ export function Login() {
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
         if (guestOpenid && guestOpenid !== user.openid) {
-          await api.migrateSession(guestOpenid)
+          try {
+            const result = await api.migrateSession(guestOpenid)
+            if (result.success && result.migrated > 0) {
+              showToast('检测到您有未完成的梦境，已为您保留')
+              // Clear guest localStorage data after successful merge
+              localStorage.removeItem('yeelin_guest_openid')
+            }
+          } catch (err) {
+            console.error('Session migration failed:', err)
+          }
         }
 
         setUser(user, token)
@@ -320,6 +336,14 @@ export function Login() {
         cancelText="取消"
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+      />
+
+      {/* Toast */}
+      <Toast
+        message={toast.message}
+        visible={toast.visible}
+        type={toast.type}
+        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
       />
     </div>
   )
