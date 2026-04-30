@@ -101,8 +101,6 @@ export function Login() {
             const result = await api.migrateSession(guestOpenid)
             if (result.success && result.migrated > 0) {
               showToast('检测到您有未完成的梦境，已为您保留')
-              // Clear guest localStorage data after successful merge
-              localStorage.removeItem('yeelin_guest_openid')
             }
           } catch (err) {
             console.error('Session migration failed:', err)
