@@ -25,6 +25,7 @@ export interface User {
   avatar?: string
   phone?: string
   isMember: boolean
+  isAdmin?: boolean
   memberSince?: string
   points: number
   medals: string[]

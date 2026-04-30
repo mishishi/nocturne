@@ -37,8 +37,8 @@ export function WeChatCallback() {
         // Set user in store
         setUser(user, token)
 
-        // 跳转到首页
-        navigate('/', { replace: true })
+        // 跳转到首页或admin页
+        navigate(user.isAdmin ? '/admin' : '/', { replace: true })
       } catch (err) {
         console.error('WeChat callback error:', err)
         navigate('/login', { replace: true })

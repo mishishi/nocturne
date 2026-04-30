@@ -42,7 +42,7 @@ export function Login() {
   useEffect(() => {
     const { user, token } = useDreamStore.getState()
     if (user && token) {
-      navigate('/')
+      navigate(user.isAdmin ? '/admin' : '/')
     }
   }, [navigate])
 
@@ -95,7 +95,7 @@ export function Login() {
 
         setUser(user, token)
         localStorage.setItem('yeelin_openid', user.openid)
-        navigate(from, { replace: true })
+        navigate(user.isAdmin ? '/admin' : from, { replace: true })
       } else {
         setError(result.data?.reason || result.reason || '登录失败')
       }
