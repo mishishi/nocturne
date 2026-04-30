@@ -1,5 +1,6 @@
 import { prisma } from '../config/database.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 // Helper: get today's date in YYYY-MM-DD format
 function getTodayDate() {
@@ -80,7 +81,7 @@ export default async function checkInRoutes(fastify) {
     const openid = req.userId // From auth middleware
 
     if (!openid) {
-      return res.status(401).send({ success: false, reason: '未授权' })
+      return res.status(401).send(errorResponse('未授权', 'UNAUTHORIZED'))
     }
 
     const today = getTodayDate()
@@ -99,11 +100,10 @@ export default async function checkInRoutes(fastify) {
       if (existingCheckIn) {
         // Already checked in today, return existing record
         const consecutiveDays = await calculateConsecutiveDays(openid)
-        return {
-          success: true,
+        return res.send(successResponse({
           consecutiveDays,
           alreadyCheckedIn: true
-        }
+        }))
       }
 
       // Create new check-in record
@@ -116,14 +116,13 @@ export default async function checkInRoutes(fastify) {
 
       const consecutiveDays = await calculateConsecutiveDays(openid)
 
-      return {
-        success: true,
+      return res.send(successResponse({
         consecutiveDays,
         alreadyCheckedIn: false
-      }
+      }))
     } catch (error) {
       console.error('Check-in error:', error)
-      return res.status(500).send({ success: false, reason: '签到失败' })
+      return res.status(500).send(errorResponse('签到失败', 'SERVER_ERROR'))
     }
   })
 
@@ -136,7 +135,7 @@ export default async function checkInRoutes(fastify) {
     const openid = req.userId // From auth middleware
 
     if (!openid) {
-      return res.status(401).send({ success: false, reason: '未授权' })
+      return res.status(401).send(errorResponse('未授权', 'UNAUTHORIZED'))
     }
 
     const today = getTodayDate()
@@ -154,14 +153,13 @@ export default async function checkInRoutes(fastify) {
 
       const consecutiveDays = await calculateConsecutiveDays(openid)
 
-      return {
-        success: true,
+      return res.send(successResponse({
         checkedInToday: !!todayCheckIn,
         consecutiveDays
-      }
+      }))
     } catch (error) {
       console.error('Get check-in status error:', error)
-      return res.status(500).send({ success: false, reason: '获取签到状态失败' })
+      return res.status(500).send(errorResponse('获取签到状态失败', 'SERVER_ERROR'))
     }
   })
 
@@ -174,7 +172,7 @@ export default async function checkInRoutes(fastify) {
     const openid = req.userId // From auth middleware
 
     if (!openid) {
-      return res.status(401).send({ success: false, reason: '未授权' })
+      return res.status(401).send(errorResponse('未授权', 'UNAUTHORIZED'))
     }
 
     try {
@@ -185,16 +183,14 @@ export default async function checkInRoutes(fastify) {
           id: true,
           date: true,
           createdAt: true
-        }
+        },
+        take: 365
       })
 
-      return {
-        success: true,
-        records: checkIns
-      }
+      return res.send(successResponse({ records: checkIns }))
     } catch (error) {
       console.error('Get check-in history error:', error)
-      return res.status(500).send({ success: false, reason: '获取签到记录失败' })
+      return res.status(500).send(errorResponse('获取签到记录失败', 'SERVER_ERROR'))
     }
   })
 }

@@ -32,10 +32,12 @@ export function StoryFeedbackPanel({ sessionId }: StoryFeedbackPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
+    if (!isExpanded) return
+
     async function load() {
       try {
         const result = await storyFeedbackApi.getAll(sessionId)
-        setStats(result.stats)
+        setStats(result.data?.stats ?? null)
       } catch (err) {
         console.error('Failed to load feedback stats:', err)
       } finally {
@@ -43,7 +45,7 @@ export function StoryFeedbackPanel({ sessionId }: StoryFeedbackPanelProps) {
       }
     }
     load()
-  }, [sessionId])
+  }, [sessionId, isExpanded])
 
   if (loading) {
     return <div className={styles.loading}>加载中...</div>

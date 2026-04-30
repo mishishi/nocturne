@@ -21,8 +21,8 @@ export function Notifications() {
     setLoading(true)
     try {
       const result = await notificationApi.getNotifications()
-      if (result.success) {
-        setNotifications(result.notifications)
+      if (result.success && result.data?.notifications) {
+        setNotifications(result.data.notifications)
       }
     } catch (err) {
       console.error('Failed to load notifications:', err)

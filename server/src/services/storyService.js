@@ -51,12 +51,17 @@ const INTERPRETATION_PROMPT = `你是一个梦境分析师。请根据以下梦�
 
 export const storyService = {
   async generateStory(dreamFragment, answers, styleTag) {
+    console.time('generateStory')
     const apiKey = process.env.MINIMAX_API_KEY
     if (!apiKey) throw new Error('MINIMAX_API_KEY not configured')
 
     const styleHint = styleTag && STYLE_HINTS[styleTag] ? STYLE_HINTS[styleTag] : ''
     const detailsText = answers.map((a, i) => `问题${i+1}: ${a.question}\n回答: ${a.answer}`).join('\n')
 
+    const prompt = STORY_PROMPT + dreamFragment + '\n\n风格倾向：' + styleHint + '\n\n用户补充细节：\n' + detailsText
+    console.log('[StoryService] prompt length:', prompt.length, 'chars')
+
+    console.time('generateStory - API call')
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -66,14 +71,17 @@ export const storyService = {
       body: JSON.stringify({
         model: 'MiniMax-M2.7-highspeed',
         messages: [
-          { role: 'user', content: STORY_PROMPT + dreamFragment + '\n\n风格倾向：' + styleHint + '\n\n用户补充细节：\n' + detailsText }
+          { role: 'user', content: prompt }
         ],
+        max_tokens: 1200,
         temperature: 0.8
       })
     })
+    console.timeEnd('generateStory - API call')
 
+    console.time('generateStory - parse response')
     const data = await response.json()
-    console.log('Story API response:', JSON.stringify(data, null, 2))
+    console.log('[StoryService] API response status:', response.status, 'usage:', JSON.stringify(data.usage))
     let content = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : ''
 
     // Remove thinking content
@@ -82,6 +90,8 @@ export const storyService = {
     if (idx !== -1) {
       content = content.substring(idx + thinkEnd.length)
     }
+    console.log('[StoryService] content length after parsing:', content.length, 'chars')
+    console.timeEnd('generateStory - parse response')
 
     // Extract title from 《》
     const titleMatch = content.match(/《([^》]+)》/)
@@ -94,6 +104,7 @@ export const storyService = {
       storyContent = content.replace(/《[^》]+》\s*/, '').trim()
     }
 
+    console.timeEnd('generateStory')
     return {
       title: '《' + title + '》',
       content: storyContent,
@@ -122,6 +133,7 @@ export const storyService = {
         messages: [
           { role: 'user', content: INTERPRETATION_PROMPT + `\n\n故事标题：${storyTitle}\n\n${storyContent}\n\n用户梦境碎片：${dreamFragment}\n\n用户补充细节：\n${detailsText}` }
         ],
+        max_tokens: 600,
         temperature: 0.7
       })
     })

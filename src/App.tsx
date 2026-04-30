@@ -28,6 +28,7 @@ import { DreamWall } from './pages/DreamWall'
 import { WeChatCallback } from './pages/WeChatCallback'
 import { Notifications } from './pages/Notifications'
 import { Chat } from './pages/Chat'
+import { Admin } from './pages/Admin'
 import { DemoExperience } from './pages/DemoExperience'
 
 function App() {
@@ -115,6 +116,9 @@ function App() {
             <Route path="/notifications" element={<PageErrorBoundary><Notifications /></PageErrorBoundary>} />
             <Route path="/chat" element={
               <PageErrorBoundary><ProtectedRoute><Chat /></ProtectedRoute></PageErrorBoundary>
+            } />
+            <Route path="/admin" element={
+              <PageErrorBoundary><ProtectedRoute><Admin /></ProtectedRoute></PageErrorBoundary>
             } />
           </Routes>
           </GlobalErrorBoundary>

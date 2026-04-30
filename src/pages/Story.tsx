@@ -255,8 +255,8 @@ export function Story() {
       try {
         const result = await api.getStory(targetSessionId)
         if (!cancelled) {
-          if (result.story) {
-            setDreamWallStory(result.story.content)
+          if (result.data?.story) {
+            setDreamWallStory(result.data.story.content)
           }
           setIsLoadingDreamWallStory(false)
         }
@@ -386,16 +386,16 @@ export function Story() {
       // Share sheet opened successfully - now record the share
       try {
         const result = await shareApi.logShare(openid, type)
-        if (result.success) {
+        if (result.success && result.data) {
           const parts: string[] = ['分享成功']
-          if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
-          if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
+          if (result.data.pointsEarned) parts.push(`+${result.data.pointsEarned} 积分`)
+          if (result.data.medalsUnlocked?.length) parts.push(`${result.data.medalsUnlocked.join(',')} 已解锁`)
           setToastType('success')
           setToastMessage(parts.join(' '))
           setToastVisible(true)
-        } else if (result.reason) {
+        } else if (result.data?.reason) {
           setToastType('info')
-          setToastMessage(result.reason)
+          setToastMessage(result.data.reason)
           setToastVisible(true)
         }
       } catch {
@@ -429,10 +429,10 @@ export function Story() {
       if (isAuthor && openid) {
         try {
           const result = await shareApi.logShare(openid, 'link')
-          if (result.success) {
+          if (result.data?.success) {
             const parts: string[] = []
-            if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
-            if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
+            if (result.data.pointsEarned) parts.push(`+${result.data.pointsEarned} 积分`)
+            if (result.data.medalsUnlocked?.length) parts.push(`${result.data.medalsUnlocked.join(',')} 已解锁`)
             if (parts.length) {
               // Clear any existing timeout
               if (copyTimeoutRef.current) {
@@ -445,6 +445,10 @@ export function Story() {
                 copyTimeoutRef.current = null
               }, 1000)
             }
+          } else if (result.data?.reason) {
+            setToastType('error')
+            setToastMessage(result.data.reason)
+            setToastVisible(true)
           }
         } catch {
           // Silently fail - already showed copy confirmation
@@ -513,19 +517,19 @@ export function Story() {
     try {
       const result = await api.interpret(sessionId)
 
-      if (result.success && result.interpretation) {
-        setInterpretation(result.interpretation)
+      if (result.success && result.data?.interpretation) {
+        setInterpretation(result.data.interpretation)
         setShowInterpretation(true)
 
         // Show points used toast with earning hint
-        if (result.pointsUsed) {
+        if (result.data.pointsUsed) {
           setToastType('info')
-          setToastMessage(`解读消耗 ${result.pointsUsed} 积分，签到可获得更多`)
+          setToastMessage(`解读消耗 ${result.data.pointsUsed} 积分，签到可获得更多`)
           setToastVisible(true)
         }
-      } else if (result.reason) {
+      } else if (result.data?.reason) {
         setToastType('error')
-        setToastMessage(result.reason)
+        setToastMessage(result.data.reason)
         setToastVisible(true)
       }
     } catch {
@@ -1070,15 +1074,19 @@ export function Story() {
             if (openid) {
               try {
                 const result = await shareApi.logShare(openid, type)
-                if (result.success) {
+                if (result.data?.success) {
                   const parts: string[] = []
-                  if (result.pointsEarned) parts.push(`+${result.pointsEarned} 积分`)
-                  if (result.medalsUnlocked?.length) parts.push(`${result.medalsUnlocked.join(',')} 已解锁`)
+                  if (result.data.pointsEarned) parts.push(`+${result.data.pointsEarned} 积分`)
+                  if (result.data.medalsUnlocked?.length) parts.push(`${result.data.medalsUnlocked.join(',')} 已解锁`)
                   if (parts.length) {
                     setToastType('success')
                     setToastMessage(parts.join(' '))
                     setToastVisible(true)
                   }
+                } else if (result.data?.reason) {
+                  setToastType('error')
+                  setToastMessage(result.data.reason)
+                  setToastVisible(true)
                 }
               } catch {
                 // Silently fail - already showed initial toast

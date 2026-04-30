@@ -82,12 +82,12 @@ export function Questions() {
 
       const result = await api.submitAnswer(sessionId, currentAnswer)
       clearTimeout(timeoutId)
-      if (result.story) {
-        setStory(result.story.title, result.story.content)
+      if (result.data?.story) {
+        setStory(result.data.story.title, result.data.story.content)
         setShowReveal(true)
         setLoading(false)
         return
-      } else if (result.nextQuestion) {
+      } else if (result.data?.nextQuestion) {
         setAnswer(currentQuestionIndex + 1, '')
         nextQuestion()
         setCurrentAnswer('')
@@ -162,14 +162,14 @@ export function Questions() {
         result = await api.submitAnswer(sessionId, answerToSubmit)
         clearTimeout(timeoutId)
 
-        if (result.story) {
-          setStory(result.story.title, result.story.content)
+        if (result.data?.story) {
+          setStory(result.data.story.title, result.data.story.content)
           setStoryReady(true)
           setLoading(false)
           return
         }
 
-        currentIdx = result.nextIndex ?? currentIdx + 1
+        currentIdx = result.data?.nextIndex ?? currentIdx + 1
 
         timeoutId = setTimeout(() => {
           setToastType('info')

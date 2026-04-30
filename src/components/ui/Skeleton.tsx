@@ -37,3 +37,48 @@ export function DreamFormSkeleton() {
     </div>
   )
 }
+
+export function DreamWallSkeleton() {
+  return (
+    <div className={styles.wallSkeleton} role="status" aria-live="polite" aria-label="正在加载梦境">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className={styles.wallCard}>
+          <div className={styles.wallCardHeader}>
+            <Skeleton variant="avatar" className={styles.wallAvatar} />
+            <div className={styles.wallCardContent}>
+              <Skeleton variant="title" className={styles.wallCardTitle} />
+              <Skeleton variant="text" className={styles.wallCardMeta} />
+            </div>
+          </div>
+          <Skeleton variant="title" className={styles.wallCardStoryTitle} />
+          <div className={styles.wallCardBody}>
+            <Skeleton variant="line" />
+            <Skeleton variant="line" />
+            <Skeleton variant="line" />
+          </div>
+          <div className={styles.wallCardActions}>
+            <Skeleton variant="line" className={styles.wallActionBtn} />
+            <Skeleton variant="line" className={styles.wallActionBtn} />
+            <Skeleton variant="line" className={styles.wallActionBtn} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function FriendsSkeleton() {
+  return (
+    <div className={styles.friendsSkeleton} role="status" aria-live="polite" aria-label="正在加载好友">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className={styles.friendCardSkeleton}>
+          <Skeleton variant="avatar" className={styles.friendAvatar} />
+          <div className={styles.friendCardContent}>
+            <Skeleton variant="title" className={styles.friendCardName} />
+            <Skeleton variant="text" className={styles.friendCardMeta} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}

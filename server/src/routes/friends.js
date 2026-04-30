@@ -306,7 +306,8 @@ export default async function friendRoutes(fastify) {
               avatar: true
             }
           }
-        }
+        },
+        take: 100
       })
 
       // Return list with friendSince date
@@ -352,7 +353,8 @@ export default async function friendRoutes(fastify) {
               avatar: true
             }
           }
-        }
+        },
+        take: 50
       })
 
       // Return list with createdAt
@@ -398,7 +400,8 @@ export default async function friendRoutes(fastify) {
               avatar: true
             }
           }
-        }
+        },
+        take: 50
       })
 
       // Return list with createdAt

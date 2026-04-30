@@ -44,20 +44,17 @@ export function StoryCommentList({ sessionId }: StoryCommentListProps) {
     let cancelled = false
 
     async function load() {
-      if (!sessionId || loadedRef.current) return
+      if (!sessionId) return
 
       try {
         const result = await storyFeedbackApi.getAll(sessionId)
         if (cancelled) return
 
-        loadedRef.current = true
-        const filtered = result.feedbacks.filter(f => f.comment)
+        const feedbacks = result.data?.feedbacks ?? []
+        const filtered = feedbacks.filter((f: any) => f.comment)
         setComments(filtered)
       } catch (err) {
         console.error('[StoryCommentList] Failed to load comments:', err)
-        if (!cancelled) {
-          loadedRef.current = true
-        }
       } finally {
         if (!cancelled) {
           setLoading(false)

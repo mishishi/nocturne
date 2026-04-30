@@ -65,33 +65,35 @@ export function Register() {
     try {
       const result = await authApi.register(phone, password, nickname || undefined)
 
-      if (result.success && result.user) {
+      if (result.success && result.data?.user) {
+        const user = result.data.user
+        const token = result.data.token
         // Store token first so migrateSession can use it
-        if (result.token) {
-          localStorage.setItem('yeelin_token', result.token)
+        if (token) {
+          localStorage.setItem('yeelin_token', token)
         }
 
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
-        if (guestOpenid && guestOpenid !== result.user.openid) {
+        if (guestOpenid && guestOpenid !== user.openid) {
           await api.migrateSession(guestOpenid)
         }
 
         // If there's an invite code, use it
         if (inviteCode) {
           try {
-            await authApi.verifyToken(result.token!)
+            await authApi.verifyToken(token!)
             // Use invite code - invite functionality would be called here
           } catch {
             // Ignore invite errors
           }
         }
 
-        setUser(result.user, result.token)
-        localStorage.setItem('yeelin_openid', result.user.openid)
+        setUser(user, token)
+        localStorage.setItem('yeelin_openid', user.openid)
         navigate('/')
       } else {
-        setError(result.reason || '注册失败')
+        setError(result.data?.reason || result.reason || '注册失败')
         setStep('credentials')
       }
     } catch (err) {

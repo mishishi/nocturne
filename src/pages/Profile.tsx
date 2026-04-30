@@ -163,12 +163,12 @@ export function Profile() {
     const fetchStats = async () => {
       try {
         const stats = await shareApi.getStats(openid)
-        setShareStatsLocal(stats)
+        setShareStatsLocal(stats.data || stats)
         setShareStats({
-          points: stats.points,
-          medals: stats.medals,
-          consecutiveShares: stats.consecutiveShares,
-          lastShareDate: stats.lastShareDate
+          points: stats.data?.points ?? stats.points,
+          medals: stats.data?.medals ?? stats.medals,
+          consecutiveShares: stats.data?.consecutiveShares ?? stats.consecutiveShares,
+          lastShareDate: stats.data?.lastShareDate ?? stats.lastShareDate
         })
       } catch (err) {
         console.error('Failed to fetch share stats:', err)
@@ -180,8 +180,8 @@ export function Profile() {
     const fetchCheckInStatus = async () => {
       try {
         const status = await checkInApi.getStatus()
-        if (status.success) {
-          setCheckInStatus(status.checkedInToday, status.consecutiveDays)
+        if (status.success && status.data) {
+          setCheckInStatus(status.data.checkedInToday, status.data.consecutiveDays)
         }
       } catch (err) {
         console.error('Failed to fetch check-in status:', err)
@@ -196,8 +196,8 @@ export function Profile() {
 
     try {
       const result = await shareApi.createInvite(openid)
-      if (result.success) {
-        await navigator.clipboard.writeText(result.inviteUrl)
+      if (result.success && result.data?.inviteUrl) {
+        await navigator.clipboard.writeText(result.data.inviteUrl)
         setToastMessage('邀请链接已复制到剪贴板')
         setToastVisible(true)
       }

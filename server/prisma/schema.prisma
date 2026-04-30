@@ -19,6 +19,7 @@ model User {
   totalDreams      Int       @default(0)
   isMember         Boolean   @default(false)
   memberSince      DateTime?
+  isAdmin          Boolean   @default(false) // 管理员标识
   points           Int       @default(0)     // 梦境积分
   medals           String[]  @default([])   // 已解锁勋章
   consecutiveShares Int      @default(0)    // 连续分享天数

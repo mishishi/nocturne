@@ -979,6 +979,110 @@ export const messageApi = {
   }
 }
 
+// Admin API
+export interface AdminStats {
+  pendingPosts: number
+  totalPosts: number
+  totalComments: number
+}
+
+export interface PendingPost {
+  id: string
+  sessionId: string
+  openid: string
+  nickname: string
+  avatar: string | null
+  storyTitle: string
+  storySnippet: string
+  isAnonymous: boolean
+  createdAt: string
+}
+
+export interface AdminComment {
+  id: string
+  wallId: string
+  openid: string
+  nickname: string
+  content: string
+  createdAt: string
+  wallTitle: string
+}
+
+export const adminApi = {
+  // Get admin stats
+  async getStats(): Promise<{ success: boolean; data: AdminStats }> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/stats`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取统计数据失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get pending posts
+  async getPendingPosts(page = 1, limit = 20): Promise<{
+    success: boolean
+    data: {
+      posts: PendingPost[]
+      pagination: { page: number; limit: number; total: number; hasMore: boolean }
+    }
+  }> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/posts/pending?page=${page}&limit=${limit}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取待审核帖子失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Approve post
+  async approvePost(postId: string): Promise<{ success: boolean; data: { approved: boolean } }> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/posts/${postId}/approve`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`通过审核失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Reject post
+  async rejectPost(postId: string, reason: string): Promise<{ success: boolean; data: { rejected: boolean } }> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/posts/${postId}/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ reason })
+    })
+    if (!res.ok) throw new Error(`拒绝审核失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get all comments
+  async getComments(params: { page?: number; limit?: number; wallId?: string }): Promise<{
+    success: boolean
+    data: {
+      comments: AdminComment[]
+      pagination: { page: number; limit: number; total: number; hasMore: boolean }
+    }
+  }> {
+    const { page = 1, limit = 50, wallId } = params
+    const queryParams = new URLSearchParams({ page: String(page), limit: String(limit) })
+    if (wallId) queryParams.set('wallId', wallId)
+    const res = await fetchWithTimeout(`${API_BASE}/admin/comments?${queryParams}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取评论列表失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Delete comment
+  async deleteComment(commentId: string): Promise<{ success: boolean; data: { deleted: boolean } }> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`删除评论失败: ${res.status}`)
+    return res.json()
+  }
+}
+
 // CheckIn API
 export interface CheckInRecord {
   id: string

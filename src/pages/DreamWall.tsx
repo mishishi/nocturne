@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { FriendRequestButton } from '../components/FriendRequestButton'
+import { DreamWallSkeleton } from '../components/ui/Skeleton'
 import styles from './DreamWall.module.css'
 
 type TabType = 'all' | 'featured' | 'my' | 'friends'
@@ -207,8 +208,9 @@ export function DreamWall() {
   const handleLike = async (postId: string) => {
     if (!user?.openid) {
       setToastType('info')
-      setToastMessage('请先登录')
+      setToastMessage('登录后可点赞收藏故事')
       setToastVisible(true)
+      setTimeout(() => navigate('/login'), 1500)
       return
     }
 
@@ -252,8 +254,9 @@ export function DreamWall() {
   const handleFavorite = async (postId: string) => {
     if (!user?.openid) {
       setToastType('info')
-      setToastMessage('请先登录')
+      setToastMessage('登录后可点赞收藏故事')
       setToastVisible(true)
+      setTimeout(() => navigate('/login'), 1500)
       return
     }
 
@@ -458,20 +461,7 @@ export function DreamWall() {
         {/* Content */}
         <div className={styles.content}>
           {loading && !(activeTab === 'friends' && !user?.openid) ? (
-            <div className={styles.loading}>
-              <div className={styles.loadingMoon}>
-                <svg viewBox="0 0 60 60" fill="none">
-                  <circle cx="30" cy="30" r="25" fill="url(#loadingMoonGrad)" />
-                  <defs>
-                    <radialGradient id="loadingMoonGrad" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#FFD666" />
-                      <stop offset="100%" stopColor="#F4D35E" />
-                    </radialGradient>
-                  </defs>
-                </svg>
-              </div>
-              <p>梦境加载中...</p>
-            </div>
+            <DreamWallSkeleton />
           ) : posts.length === 0 ? (
             <div className={styles.empty}>
               <div className={styles.emptyIcon}>

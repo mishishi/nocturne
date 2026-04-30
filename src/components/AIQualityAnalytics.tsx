@@ -35,8 +35,8 @@ export function AIQualityAnalytics() {
     async function load() {
       try {
         const result = await storyFeedbackApi.getAnalytics()
-        if (result.success) {
-          setAnalytics(result.analytics)
+        if (result.success && result.data?.analytics) {
+          setAnalytics(result.data.analytics)
         }
       } catch (err) {
         setError('加载分析数据失败')

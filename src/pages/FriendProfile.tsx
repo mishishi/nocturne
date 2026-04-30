@@ -47,12 +47,13 @@ export function FriendProfile() {
     const loadFriendInfo = async () => {
       try {
         const result = await authApi.getUser(openid)
-        if (result.success && result.user) {
+        if (result.success && result.data?.user) {
+          const user = result.data.user
           setFriend({
-            nickname: result.user.nickname,
-            avatar: result.user.avatar,
-            isMember: result.user.isMember,
-            memberSince: result.user.memberSince
+            nickname: user.nickname,
+            avatar: user.avatar,
+            isMember: user.isMember,
+            memberSince: user.memberSince
           })
         } else {
           console.error('Failed to load friend info:', result)

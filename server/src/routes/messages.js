@@ -41,7 +41,8 @@ export default async function messageRoutes(fastify) {
               avatar: true
             }
           }
-        }
+        },
+        take: 50
       })
 
       const conversations = await Promise.all(

@@ -1,0 +1,73 @@
+{
+  "blocked": {
+    "description": "明确违规，直接拒绝并通知用户",
+    "categories": {
+      "political": {
+        "name": "政治敏感",
+        "words": []
+      },
+      "pornographic": {
+        "name": "色情低俗",
+        "words": []
+      },
+      "violence": {
+        "name": "暴力恐怖",
+        "words": []
+      },
+      "illegal": {
+        "name": "违法违规",
+        "words": []
+      }
+    }
+  },
+  "review": {
+    "description": "疑似违规，提交人工审核",
+    "categories": {
+      "personal_info": {
+        "name": "个人信息",
+        "patterns": [
+          "1[3-9]\\d{9}",
+          "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+          "微信[：:]?\\w+",
+          "手机[：:]?\\d+",
+          "qq[：:]?\\d+",
+          "群[：:]?\\d+"
+        ]
+      },
+      "external_links": {
+        "name": "外部链接",
+        "patterns": [
+          "http[s]?://",
+          "www\\.",
+          "\\.com",
+          "\\.cn",
+          "\\.org"
+        ]
+      },
+      "advertisement": {
+        "name": "广告内容",
+        "patterns": [
+          "加我",
+          "联系我",
+          "代刷",
+          "兼职",
+          "赚钱",
+          "返利",
+          "优惠券",
+          "淘宝",
+          "京东"
+        ]
+      },
+      "extreme_emotion": {
+        "name": "极端情绪",
+        "words": [
+          "想死",
+          "不想活",
+          "恨死",
+          "杀死",
+          "去死"
+        ]
+      }
+    }
+  }
+}

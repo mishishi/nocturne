@@ -30,8 +30,8 @@ export function PersonalizedRecommendations() {
     async function load() {
       try {
         const result = await storyFeedbackApi.getRecommendations(openid!)
-        if (result.success) {
-          setRecommendations(result.recommendations)
+        if (result.success && result.data?.recommendations) {
+          setRecommendations(result.data.recommendations)
         }
       } catch (err) {
         setError('加载推荐失败')

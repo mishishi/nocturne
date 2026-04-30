@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
+    "dev:verbose": "node --enable-source-maps src/index.js",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "db:seed-admin": "node prisma/seed-admin.js"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.0",

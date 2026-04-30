@@ -15,6 +15,7 @@
 | 通知 | [notifications.md](./notifications.md) | 通知中心、点赞、评论、好友请求 |
 | 签到 | [checkin.md](./checkin.md) | 每日签到、连续签到 |
 | 私信 | [message.md](./message.md) | 好友私信、消息历史、已读标记 |
+| 管理后台 | [admin.md](./admin.md) | 帖子审核、评论管理、内容安全 |
 
 ---
 
@@ -30,6 +31,7 @@
 | 2026-04-28 | 完成 checkin.md 签到模块文档 |
 | 2026-04-28 | 完成 message.md 私信模块文档 |
 | 2026-04-28 | GET /api/wall/friends 新增关注的人动态接口 |
+| 2026-04-30 | 完成 admin.md 管理后台 API 文档 |
 
 ---
 
@@ -130,6 +132,17 @@
 | `/api/messages` | POST | 发送消息 | **是** |
 | `/api/messages/:messageId/read` | POST | 标记已读 | **是** |
 
+### 管理后台
+
+| 端点 | 方法 | 功能 | 需要认证 |
+|------|------|------|----------|
+| `/api/admin/stats` | GET | 获取审核统计 | **是（管理员）** |
+| `/api/admin/posts/pending` | GET | 获取待审核帖子 | **是（管理员）** |
+| `/api/admin/posts/:postId/approve` | POST | 通过审核 | **是（管理员）** |
+| `/api/admin/posts/:postId/reject` | POST | 拒绝审核 | **是（管理员）** |
+| `/api/admin/comments` | GET | 获取评论列表 | **是（管理员）** |
+| `/api/admin/comments/:commentId` | DELETE | 删除评论 | **是（管理员）** |
+
 ---
 
 ## 认证机制
@@ -213,6 +226,7 @@ User
 | 好友主页 | `/friends/:openid` | 好友个人页 |
 | 通知 | `/notifications` | 通知中心 |
 | 聊天 | `/chat` | 私信聊天 |
+| 管理后台 | `/admin` | 帖子审核、评论管理 |
 
 ---
 

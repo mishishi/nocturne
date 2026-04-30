@@ -22,7 +22,7 @@ async function fetchUnreadCount(openid: string): Promise<number> {
   fetchPromise = (async () => {
     try {
       const data = await notificationApi.getUnreadCount()
-      const count = data.success ? data.unreadCount : 0
+      const count = data.success && data.data ? data.data.unreadCount : 0
       cachedCount = count
       cacheUserOpenid = openid
       return count

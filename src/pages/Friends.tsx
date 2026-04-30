@@ -4,6 +4,7 @@ import { friendApi, FriendListItem, FriendRequestItem } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { FriendsSkeleton } from '../components/ui/Skeleton'
 import styles from './Friends.module.css'
 
 export function Friends() {
@@ -223,10 +224,7 @@ export function Friends() {
         {/* Tab Content */}
         <div className={styles.content}>
           {loading ? (
-            <div className={styles.loading}>
-              <div className={styles.spinner} />
-              <span>加载中...</span>
-            </div>
+            <FriendsSkeleton />
           ) : (
             <>
               {/* Friends List */}

@@ -399,10 +399,10 @@ export const useDreamStore = create<DreamState>()(
         if (token) {
           try {
             const checkInResult = await checkInApi.checkIn()
-            if (checkInResult.success) {
+            if (checkInResult.success && checkInResult.data) {
               set({
                 checkedInToday: true,
-                consecutiveDays: checkInResult.consecutiveDays
+                consecutiveDays: checkInResult.data.consecutiveDays
               })
             }
           } catch (error) {
@@ -503,7 +503,7 @@ export const useDreamStore = create<DreamState>()(
       setShareStats: (stats) =>
         set(() => ({
           points: stats.points,
-          medals: stats.medals,
+          medals: stats.medals || [],
           consecutiveShares: stats.consecutiveShares,
           lastShareDate: stats.lastShareDate
         })),

@@ -2,23 +2,7 @@ import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { createNotification } from '../services/notificationService.js'
-
-// Content moderation check (simplified - in production use a proper service)
-function checkContentSafety(text) {
-  // Basic checks - in production use AI-based moderation
-  const blockedPatterns = [
-    /[0-9]{11,}/, // Phone numbers
-    /[0-9]{15,}/, // ID numbers
-  ]
-
-  for (const pattern of blockedPatterns) {
-    if (pattern.test(text)) {
-      return { safe: false, reason: '内容包含敏感信息' }
-    }
-  }
-
-  return { safe: true }
-}
+import { checkContentSafety } from '../services/contentSafety.js'
 
 export default async function dreamWallRoutes(fastify) {
   // GET /api/wall - 获取梦墙列表 (公开)
@@ -304,9 +288,22 @@ export default async function dreamWallRoutes(fastify) {
 
     // Content safety check
     const contentToCheck = story.title + ' ' + story.content
-    const safety = checkContentSafety(contentToCheck)
+    const safety = await checkContentSafety(contentToCheck)
 
-    const status = safety.safe ? 'approved' : 'pending'
+    let status
+    let rejectReason = null
+
+    if (safety.verdict === 'blocked') {
+      // Blocked: rejected immediately, notify user
+      status = 'rejected'
+      rejectReason = safety.reason || '内容包含违规信息'
+    } else if (safety.verdict === 'review') {
+      // Review: pending, needs admin approval
+      status = 'pending'
+    } else {
+      // Safe: auto-approve
+      status = 'approved'
+    }
 
     // Get user info for snapshot
     const user = await prisma.user.findUnique({
@@ -331,10 +328,30 @@ export default async function dreamWallRoutes(fastify) {
       }
     })
 
-    if (status === 'approved') {
-      return { success: true, post: { id: post.id }, message: '发布成功' }
+    if (status === 'rejected') {
+      // Notify user their post was rejected
+      await createNotification(prisma, {
+        openid,
+        type: 'POST_REJECTED',
+        fromOpenid: 'system',
+        fromNickname: '系统',
+        targetId: post.id,
+        targetTitle: story.title,
+        message: `您的帖子「${story.title}」因【${rejectReason}】已被撤回`
+      }).catch(err => req.log.error({ err }, 'Failed to create rejection notification'))
+
+      return {
+        success: false,
+        reason: '内容审核未通过：' + rejectReason
+      }
+    } else if (status === 'pending') {
+      return {
+        success: true,
+        post: { id: post.id },
+        message: '内容待审核，审核通过后将显示在梦墙'
+      }
     } else {
-      return { success: true, post: { id: post.id }, message: '内容待审核，审核通过后将显示在梦墙' }
+      return { success: true, post: { id: post.id }, message: '发布成功' }
     }
   })
 
@@ -671,9 +688,10 @@ export default async function dreamWallRoutes(fastify) {
     }
 
     // Content safety check
-    const safety = checkContentSafety(content)
-    if (!safety.safe) {
-      return res.status(400).send({ success: false, reason: safety.reason })
+    const safety = await checkContentSafety(content)
+    if (safety.verdict !== 'safe') {
+      const reason = safety.reason || '内容包含敏感信息'
+      return res.status(400).send({ success: false, reason })
     }
 
     // Get user info

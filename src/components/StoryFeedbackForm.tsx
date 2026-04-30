@@ -146,11 +146,11 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
       if (user?.openid) {
         try {
           const result = await storyFeedbackApi.check(sessionId, user.openid)
-          if (result.hasSubmitted && result.feedback) {
+          if (result.success && result.data?.hasSubmitted && result.data?.feedback) {
             // Update localStorage with server state
             setSessionFeedback(sessionId, {
               status: 'submitted',
-              timestamp: new Date(result.feedback.createdAt).getTime()
+              timestamp: new Date(result.data.feedback.createdAt).getTime()
             })
             setHasCheckedStorage(true)
             return
@@ -222,10 +222,10 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
           try {
             const result = await storyFeedbackApi.check(sessionId, user.openid)
             if (cancelled) return
-            if (result.hasSubmitted && result.feedback) {
+            if (result.success && result.data?.hasSubmitted && result.data?.feedback) {
               setSessionFeedback(sessionId, {
                 status: 'submitted',
-                timestamp: new Date(result.feedback.createdAt).getTime()
+                timestamp: new Date(result.data.feedback.createdAt).getTime()
               })
               return // Don't show if already submitted on server
             }

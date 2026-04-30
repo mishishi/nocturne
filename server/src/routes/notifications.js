@@ -1,6 +1,7 @@
 import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -19,7 +20,7 @@ export default async function notificationRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Calculate date 30 days ago
@@ -64,8 +65,7 @@ export default async function notificationRoutes(fastify) {
       // Compute isRead per notification using lastViewedNotificationsAt snapshot
       // (lastViewedNotificationsAt marks the cutoff: notifications after this are "unread")
       const lastViewed = user?.lastViewedNotificationsAt
-      return res.status(200).send({
-        success: true,
+      return res.send(successResponse({
         notifications: notifications.map(n => ({
           id: n.id,
           type: n.type,
@@ -84,9 +84,9 @@ export default async function notificationRoutes(fastify) {
           total,
           hasMore: skip + notifications.length < total
         }
-      })
+      }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -100,7 +100,7 @@ export default async function notificationRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Calculate date 30 days ago
@@ -123,12 +123,9 @@ export default async function notificationRoutes(fastify) {
         }
       })
 
-      return res.status(200).send({
-        success: true,
-        unreadCount
-      })
+      return res.send(successResponse({ unreadCount }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -142,7 +139,7 @@ export default async function notificationRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Update User.lastViewedNotificationsAt = now()
@@ -151,11 +148,9 @@ export default async function notificationRoutes(fastify) {
         data: { lastViewedNotificationsAt: new Date() }
       })
 
-      return res.status(200).send({
-        success: true
-      })
+      return res.send(successResponse())
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -171,7 +166,7 @@ export default async function notificationRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Find notification
@@ -183,7 +178,7 @@ export default async function notificationRoutes(fastify) {
       })
 
       if (!notification) {
-        return res.status(404).send({ success: false, reason: '通知不存在' })
+        return res.status(404).send(errorResponse('通知不存在', 'NOT_FOUND'))
       }
 
       // Mark as read
@@ -192,11 +187,9 @@ export default async function notificationRoutes(fastify) {
         data: { isRead: true }
       })
 
-      return res.status(200).send({
-        success: true
-      })
+      return res.send(successResponse())
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 }

@@ -79,23 +79,25 @@ export function Login() {
 
     try {
       const result = await authApi.phoneLogin(phone, password)
-      if (result.success && result.user) {
+      if (result.success && result.data?.user) {
+        const user = result.data.user
+        const token = result.data.token
         // Store token first so migrateSession can use it
-        if (result.token) {
-          localStorage.setItem('yeelin_token', result.token)
+        if (token) {
+          localStorage.setItem('yeelin_token', token)
         }
 
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
-        if (guestOpenid && guestOpenid !== result.user.openid) {
+        if (guestOpenid && guestOpenid !== user.openid) {
           await api.migrateSession(guestOpenid)
         }
 
-        setUser(result.user, result.token)
-        localStorage.setItem('yeelin_openid', result.user.openid)
+        setUser(user, token)
+        localStorage.setItem('yeelin_openid', user.openid)
         navigate(from, { replace: true })
       } else {
-        setError(result.reason || '登录失败')
+        setError(result.data?.reason || result.reason || '登录失败')
       }
     } catch (err) {
       setError('网络错误，请检查网络连接')

@@ -4,15 +4,16 @@ import { storyService } from '../services/storyService.js'
 import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 export default async function sessionRoutes(fastify) {
   // POST /api/sessions - 创建会话
   fastify.post('/sessions', async (req, res) => {
     const { openid } = req.body
-    if (!openid) return res.status(400).send({ error: 'openid required' })
+    if (!openid) return res.status(400).send(errorResponse('openid required', 'MISSING_PARAMS'))
 
     const session = await sessionService.createSession(openid)
-    return { sessionId: session.id, status: session.status }
+    return res.send(successResponse({ sessionId: session.id, status: session.status }))
   })
 
   // POST /api/sessions/:sessionId/dream - 提交梦境
@@ -29,7 +30,7 @@ export default async function sessionRoutes(fastify) {
       data: { questions }
     })
 
-    return { success: true, questions, questionIndex: 0 }
+    return res.send(successResponse({ questions, questionIndex: 0 }))
   })
 
   // POST /api/sessions/:sessionId/answer - 提交回答
@@ -38,12 +39,12 @@ export default async function sessionRoutes(fastify) {
     const { answer } = req.body
 
     const session = await sessionService.getSession(sessionId)
-    if (!session) return res.status(404).send({ error: 'Session not found' })
+    if (!session) return res.status(404).send(errorResponse('Session not found', 'NOT_FOUND'))
 
     // Validate question index and questions array
     const questionIndex = session.currentQuestionIndex
     if (!session.questions || !session.questions[questionIndex]) {
-      return res.status(400).send({ error: '无效的问题索引' })
+      return res.status(400).send(errorResponse('无效的问题索引', 'INVALID_INDEX'))
     }
 
     const questionText = session.questions[questionIndex]
@@ -62,24 +63,23 @@ export default async function sessionRoutes(fastify) {
       )
 
       await sessionService.saveStory(sessionId, title, content, tokens)
-      return { success: true, story: { title, content } }
+      return res.send(successResponse({ story: { title, content } }))
     }
 
     const updatedSession = await sessionService.getSession(sessionId)
     const nextQuestion = updatedSession.questions?.[updatedSession.currentQuestionIndex]
-    return {
-      success: true,
+    return res.send(successResponse({
       nextQuestion: nextQuestion || null,
       nextIndex: updatedSession.currentQuestionIndex
-    }
+    }))
   })
 
   // GET /api/sessions/:sessionId/story - 获取故事
   fastify.get('/sessions/:sessionId/story', async (req, res) => {
     const { sessionId } = req.params
     const story = await prisma.story.findUnique({ where: { sessionId } })
-    if (!story) return res.status(404).send({ error: 'Story not found' })
-    return { story }
+    if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
+    return res.send(successResponse({ story }))
   })
 
   // GET /api/sessions/users/:openid/history - 获取历史
@@ -88,7 +88,7 @@ export default async function sessionRoutes(fastify) {
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 20
     const result = await sessionService.getUserHistory(openid, page, limit)
-    return result
+    return res.send(result)
   })
 
   // POST /api/sessions/:sessionId/interpret - 生成梦境解读 (需登录)
@@ -107,23 +107,23 @@ export default async function sessionRoutes(fastify) {
 
     // Get session with story and answers
     const session = await sessionService.getSession(sessionId)
-    if (!session) return res.status(404).send({ error: 'Session not found' })
+    if (!session) return res.status(404).send(errorResponse('Session not found', 'NOT_FOUND'))
 
     const story = await prisma.story.findUnique({ where: { sessionId } })
-    if (!story) return res.status(404).send({ error: 'Story not found' })
+    if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
 
     // Check if interpretation already exists
     if (story.interpretation) {
-      return { success: true, interpretation: story.interpretation, alreadyExists: true }
+      return res.send(successResponse({ interpretation: story.interpretation, alreadyExists: true }))
     }
 
     // Check user points (interpretation costs 10 points)
     const user = await prisma.user.findUnique({ where: { openid: tokenUser.openid } })
-    if (!user) return res.status(404).send({ error: 'User not found' })
+    if (!user) return res.status(404).send(errorResponse('User not found', 'NOT_FOUND'))
 
     const COST = 10
     if (user.points < COST) {
-      return { success: false, reason: `解读需要 ${COST} 积分，你的积分不足` }
+      return res.send(errorResponse(`解读需要 ${COST} 积分，你的积分不足`, 'INSUFFICIENT_POINTS'))
     }
 
     // Get answers for context
@@ -155,20 +155,19 @@ export default async function sessionRoutes(fastify) {
       }
     })
 
-    return {
-      success: true,
+    return res.send(successResponse({
       interpretation,
       pointsUsed: COST,
       remainingPoints: user.points - COST
-    }
+    }))
   })
 
   // GET /api/sessions/:sessionId/interpretation - 获取已有解读
   fastify.get('/sessions/:sessionId/interpretation', async (req, res) => {
     const { sessionId } = req.params
     const story = await prisma.story.findUnique({ where: { sessionId } })
-    if (!story) return res.status(404).send({ error: 'Story not found' })
-    return { interpretation: story.interpretation || null }
+    if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
+    return res.send(successResponse({ interpretation: story.interpretation || null }))
   })
 
   // POST /api/sessions/migrate - 迁移游客session到登录用户
@@ -222,6 +221,6 @@ export default async function sessionRoutes(fastify) {
       return { migrated: sessions.length, sessionIds: sessions.map(s => s.id) }
     })
 
-    return { success: true, ...result }
+    return res.send(successResponse(result))
   })
 }

@@ -1,6 +1,7 @@
 import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 export default async function storyFeedbackRoutes(fastify) {
   // POST /api/story-feedback - 提交故事反馈 (需登录)
@@ -91,15 +92,14 @@ export default async function storyFeedbackRoutes(fastify) {
       }
     })
 
-    return {
-      success: true,
+    return res.send(successResponse({
       feedback: {
         id: feedback.id,
         sessionId: feedback.sessionId,
         overallRating: feedback.overallRating,
         createdAt: feedback.createdAt
       }
-    }
+    }))
   })
 
   // GET /api/story-feedback/:sessionId - 获取反馈
@@ -114,8 +114,7 @@ export default async function storyFeedbackRoutes(fastify) {
       return res.status(404).send({ success: false, reason: '反馈不存在' })
     }
 
-    return {
-      success: true,
+    return res.send(successResponse({
       feedback: {
         id: feedback.id,
         sessionId: feedback.sessionId,
@@ -131,7 +130,7 @@ export default async function storyFeedbackRoutes(fastify) {
         comment: feedback.comment,
         createdAt: feedback.createdAt
       }
-    }
+    }))
   })
 
   // GET /api/story-feedback/:sessionId/all - 获取该session的所有反馈
@@ -141,21 +140,21 @@ export default async function storyFeedbackRoutes(fastify) {
     try {
       const feedbacks = await prisma.storyFeedback.findMany({
         where: { sessionId },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        take: 50
       })
 
       // 计算统计数据
       const count = feedbacks.length
       if (count === 0) {
-        return {
-          success: true,
+        return res.send(successResponse({
           feedbacks: [],
           stats: {
             count: 0,
             overallAvg: 0,
             elementAvgs: null
           }
-        }
+        }))
       }
 
       const overallSum = feedbacks.reduce((sum, f) => sum + f.overallRating, 0)
@@ -170,8 +169,7 @@ export default async function storyFeedbackRoutes(fastify) {
         plot: calculateAvg(feedbacks, 'plotRating')
       }
 
-      return {
-        success: true,
+      return res.send(successResponse({
         feedbacks: feedbacks.map(f => ({
           id: f.id,
           overallRating: f.overallRating,
@@ -190,7 +188,7 @@ export default async function storyFeedbackRoutes(fastify) {
           overallAvg,
           elementAvgs
         }
-      }
+      }))
     } catch (err) {
       console.error('Failed to fetch feedbacks:', err)
       return res.status(500).send({ success: false, reason: '服务器错误' })
@@ -211,8 +209,7 @@ export default async function storyFeedbackRoutes(fastify) {
         where: { sessionId, openid }
       })
 
-      return {
-        success: true,
+      return res.send(successResponse({
         hasSubmitted: !!feedback,
         feedback: feedback ? {
           id: feedback.id,
@@ -227,7 +224,7 @@ export default async function storyFeedbackRoutes(fastify) {
           comment: feedback.comment,
           createdAt: feedback.createdAt
         } : null
-      }
+      }))
     } catch (err) {
       console.error('Failed to check feedback:', err)
       return res.status(500).send({ success: false, reason: '服务器错误' })
@@ -238,13 +235,13 @@ export default async function storyFeedbackRoutes(fastify) {
   fastify.get('/story-feedback/analytics', async (req, res) => {
     try {
       const feedbacks = await prisma.storyFeedback.findMany({
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        take: 200
       })
 
       const count = feedbacks.length
       if (count === 0) {
-        return {
-          success: true,
+        return res.send(successResponse({
           analytics: {
             totalFeedbacks: 0,
             overallAvg: 0,
@@ -258,7 +255,7 @@ export default async function storyFeedbackRoutes(fastify) {
             ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
             suggestions: ['暂无反馈数据']
           }
-        }
+        }))
       }
 
       // Overall average
@@ -306,8 +303,7 @@ export default async function storyFeedbackRoutes(fastify) {
         suggestions.push('AI生成质量良好，继续保持当前prompt策略')
       }
 
-      return {
-        success: true,
+      return res.send(successResponse({
         analytics: {
           totalFeedbacks: count,
           overallAvg,
@@ -317,7 +313,7 @@ export default async function storyFeedbackRoutes(fastify) {
           weakestValue,
           suggestions
         }
-      }
+      }))
     } catch (err) {
       console.error('Failed to generate analytics:', err)
       return res.status(500).send({ success: false, reason: '服务器错误' })
@@ -339,7 +335,8 @@ export default async function storyFeedbackRoutes(fastify) {
     try {
       // Get user's historical feedbacks to build preference profile
       const userFeedbacks = await prisma.storyFeedback.findMany({
-        where: { openid }
+        where: { openid },
+        take: 100
       })
 
       // Calculate user's dimension preferences
@@ -375,8 +372,7 @@ export default async function storyFeedbackRoutes(fastify) {
           }
         })
 
-        return {
-          success: true,
+        return res.send(successResponse({
           recommendations: popularStories.map(p => ({
             id: p.id,
             sessionId: p.sessionId,
@@ -390,7 +386,7 @@ export default async function storyFeedbackRoutes(fastify) {
             reason: '热门推荐'
           })),
           hasPreferences: false
-        }
+        }))
       }
 
       // Find stories with similar dimension strengths
@@ -403,7 +399,8 @@ export default async function storyFeedbackRoutes(fastify) {
             }
           },
           likes: { take: 1, select: { openid: true } }
-        }
+        },
+        take: 200
       })
 
       // Score each story based on preference match
@@ -464,11 +461,10 @@ export default async function storyFeedbackRoutes(fastify) {
         .sort((a, b) => b.score - a.score)
         .slice(0, 10)
 
-      return {
-        success: true,
+      return res.send(successResponse({
         recommendations: scoredStories,
         hasPreferences: true
-      }
+      }))
     } catch (err) {
       console.error('Failed to generate recommendations:', err.message, err.stack)
       return res.status(500).send({ success: false, reason: '服务器错误' })
