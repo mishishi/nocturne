@@ -542,13 +542,13 @@ export function Story() {
   }
 
   const handlePublishToWall = async () => {
+    const token = localStorage.getItem('yeelin_token')
     const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
     const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || urlSessionId
 
-    if (!openid) {
-      setToastType('error')
-      setToastMessage('请先登录')
-      setToastVisible(true)
+    if (!openid || !user || !token) {
+      sessionStorage.setItem('login_redirect_from', location.pathname)
+      navigate('/login', { state: { from: { pathname: location.pathname } } })
       return
     }
 
