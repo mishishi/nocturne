@@ -1,13 +1,20 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { api } from '../services/api'
+import { Toast } from '../components/ui/Toast'
 import styles from './Login.module.css'
 
 export function WeChatCallback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { setUser } = useDreamStore()
+
+  // Toast state
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ visible: true, message, type })
+  }, [])
 
   useEffect(() => {
     const completeWeChatLogin = async () => {
@@ -24,21 +31,36 @@ export function WeChatCallback() {
       try {
         const user = JSON.parse(userJson)
 
+        // Save guest openid before setting new token
+        const guestOpenid = localStorage.getItem('yeelin_openid')
+
         // Store token
         localStorage.setItem('yeelin_token', token)
         localStorage.setItem('yeelin_openid', user.openid)
 
-        // Migrate guest sessions if exists
-        const guestOpenid = localStorage.getItem('yeelin_openid')
+        // Migrate guest sessions if exists (失败不影响登录流程)
         if (guestOpenid && guestOpenid !== user.openid) {
-          await api.migrateSession(guestOpenid)
+          try {
+            const result = await api.migrateSession(guestOpenid)
+            if (result.success && result.migrated > 0) {
+              showToast('检测到您有未完成的梦境，已为您保留')
+            }
+          } catch (err) {
+            console.error('Session migration failed:', err)
+          }
         }
 
         // Set user in store
         setUser(user, token)
 
-        // 跳转到首页或admin页
-        navigate(user.isAdmin ? '/admin' : '/', { replace: true })
+        // 清除本地游客数据
+        localStorage.removeItem('yeelin_guest_openid')
+
+        // 读取返回地址，默认为 /story
+        const redirectFrom = sessionStorage.getItem('login_redirect_from') || '/story'
+
+        // 跳转到首页或admin页或返回地址
+        navigate(user.isAdmin ? '/admin' : redirectFrom, { replace: true })
       } catch (err) {
         console.error('WeChat callback error:', err)
         navigate('/login', { replace: true })
@@ -46,7 +68,7 @@ export function WeChatCallback() {
     }
 
     completeWeChatLogin()
-  }, [searchParams, navigate, setUser])
+  }, [searchParams, navigate, setUser, showToast])
 
   return (
     <div className={styles.page}>
@@ -96,6 +118,14 @@ export function WeChatCallback() {
           </p>
         </div>
       </div>
+
+      {/* Toast */}
+      <Toast
+        message={toast.message}
+        visible={toast.visible}
+        type={toast.type}
+        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
+      />
     </div>
   )
 }
