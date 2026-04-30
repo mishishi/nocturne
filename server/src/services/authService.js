@@ -55,11 +55,34 @@ export const authService = {
 
   /**
    * Phone + password login
+   * Auto-register if user doesn't exist (seamless registration)
    */
   async phoneLogin(phone, password) {
-    const user = await prisma.user.findUnique({ where: { phone } })
+    let user = await prisma.user.findUnique({ where: { phone } })
 
-    if (!user || !user.passwordHash) {
+    // Auto-register if user doesn't exist
+    if (!user) {
+      const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
+      const openid = `phone_${phone}_${Date.now()}`
+      user = await prisma.user.create({
+        data: {
+          openid,
+          phone,
+          passwordHash,
+          nickname: `梦境旅人${Math.floor(Math.random() * 9999).toString().padStart(4, '0')}`,
+          lastLogin: new Date()
+        }
+      })
+      const token = generateToken(user.id)
+      return {
+        success: true,
+        user: this.sanitizeUser(user),
+        token
+      }
+    }
+
+    // User exists but no passwordHash (WeChat user) - can't login with phone+password
+    if (!user.passwordHash) {
       return { success: false, reason: '手机号或密码错误' }
     }
 
