@@ -10,6 +10,7 @@ export function Chat() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialFriendOpenid = searchParams.get('openid')
+  const initialFriendOpenidRef = useRef(initialFriendOpenid)
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [friends, setFriends] = useState<FriendListItem[]>([])
@@ -77,23 +78,30 @@ export function Chat() {
 
   // Initial load
   useEffect(() => {
+    let cancelled = false
     const init = async () => {
       setLoading(true)
       await Promise.all([loadConversations(), loadFriends()])
 
-      if (initialFriendOpenid) {
-        const friend = conversations.find(c => c.friendOpenid === initialFriendOpenid)?.friendNickname
-          || friends.find(f => f.openid === initialFriendOpenid)?.nickname
-        if (friend) {
-          setSelectedFriend({ nickname: friend })
-        }
-        await loadMessages(initialFriendOpenid)
+      if (cancelled) {
+        setLoading(false)
+        return
+      }
+
+      if (initialFriendOpenidRef.current) {
+        await loadMessages(initialFriendOpenidRef.current)
+        if (cancelled) return
         setMobileChatOpen(true)
       }
 
-      setLoading(false)
+      if (!cancelled) {
+        setLoading(false)
+      }
     }
     init()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Update selected friend info when conversations load
