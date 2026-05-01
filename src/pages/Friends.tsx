@@ -22,6 +22,9 @@ export function Friends() {
   const [searchResults, setSearchResults] = useState<Array<{ id: string; nickname?: string; avatar?: string; isMember: boolean }>>([])
   const [isSearching, setIsSearching] = useState(false)
   const [lastSearchQuery, setLastSearchQuery] = useState('') // 记住上次搜索词，切换回搜索tab时恢复结果
+  const [isAccepting, setIsAccepting] = useState(false)
+  const [isRejecting, setIsRejecting] = useState(false)
+  const [removingFriendId, setRemovingFriendId] = useState<string | null>(null)
 
   // Load data function (extracted for reuse)
   const loadData = async () => {
@@ -73,6 +76,8 @@ export function Friends() {
   }
 
   const handleAcceptRequest = async (requestId: string) => {
+    if (isAccepting) return
+    setIsAccepting(true)
     try {
       const result = await friendApi.acceptFriendRequest(requestId)
       if (result.success) {
@@ -85,10 +90,14 @@ export function Friends() {
     } catch (err) {
       console.error('Failed to accept request:', err)
       showToast('网络错误', 'error')
+    } finally {
+      setIsAccepting(false)
     }
   }
 
   const handleRejectRequest = async (requestId: string) => {
+    if (isRejecting) return
+    setIsRejecting(true)
     try {
       const result = await friendApi.rejectFriendRequest(requestId)
       if (result.success) {
@@ -101,10 +110,14 @@ export function Friends() {
     } catch (err) {
       console.error('Failed to reject request:', err)
       showToast('网络错误', 'error')
+    } finally {
+      setIsRejecting(false)
     }
   }
 
   const handleRemoveFriend = async (friendOpenid: string) => {
+    if (removingFriendId) return
+    setRemovingFriendId(friendOpenid)
     try {
       const result = await friendApi.removeFriend(friendOpenid)
       if (result.success) {
@@ -117,6 +130,8 @@ export function Friends() {
     } catch (err) {
       console.error('Failed to remove friend:', err)
       showToast('网络错误', 'error')
+    } finally {
+      setRemovingFriendId(null)
     }
   }
 
@@ -280,6 +295,7 @@ export function Friends() {
                             e.stopPropagation()
                             handleRemoveFriend(friend.openid)
                           }}
+                          disabled={removingFriendId === friend.openid}
                           aria-label="删除好友"
                         >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -320,14 +336,16 @@ export function Friends() {
                           <button
                             className={styles.acceptButton}
                             onClick={() => handleAcceptRequest(request.id)}
+                            disabled={isAccepting}
                           >
-                            接受
+                            {isAccepting ? '接受中...' : '接受'}
                           </button>
                           <button
                             className={styles.rejectButton}
                             onClick={() => handleRejectRequest(request.id)}
+                            disabled={isRejecting}
                           >
-                            拒绝
+                            {isRejecting ? '拒绝中...' : '拒绝'}
                           </button>
                         </div>
                       </div>

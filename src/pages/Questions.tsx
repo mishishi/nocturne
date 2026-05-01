@@ -11,6 +11,9 @@ import styles from './Questions.module.css'
 // Prevent concurrent submissions
 let isSubmittingRef = false
 
+// Magic string for skipped answers
+const SKIPPED_ANSWER = '（未回答）'
+
 export function Questions() {
   const navigate = useNavigate()
   const { currentSession, setAnswer, nextQuestion, prevQuestion, setStory } = useDreamStore()
@@ -37,7 +40,7 @@ export function Questions() {
   const isLastQuestion = currentQuestionIndex === questions.length - 1
 
   // 计算已回答数量
-  const answeredCount = answers.filter(a => a && a.trim() !== '' && a !== '（未回答）').length
+  const answeredCount = answers.filter(a => a && a.trim() !== '' && a !== SKIPPED_ANSWER).length
 
   // 计算进度
   const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0
@@ -113,12 +116,16 @@ export function Questions() {
   const handlePrev = () => {
     if (isFirstQuestion) return
     const prevAnswer = answers[currentQuestionIndex - 1] || ''
-    setCurrentAnswer(prevAnswer === '（未回答）' ? '' : prevAnswer)
+    setCurrentAnswer(prevAnswer === SKIPPED_ANSWER ? '' : prevAnswer)
     prevQuestion()
   }
 
   const handleSkip = () => {
-    setAnswer(currentQuestionIndex, '（未回答）')
+    if (currentQuestionIndex < 0 || currentQuestionIndex >= questions.length) {
+      console.error('Invalid question index:', currentQuestionIndex)
+      return
+    }
+    setAnswer(currentQuestionIndex, SKIPPED_ANSWER)
     setCurrentAnswer('')
     if (isLastQuestion) {
       handleFinalSubmit()
@@ -133,7 +140,7 @@ export function Questions() {
     const allAnswers = [...answers]
     allAnswers[currentQuestionIndex] = currentAnswer
 
-    const hasValidAnswer = allAnswers.some(a => a && a.trim() !== '' && a !== '（未回答）')
+    const hasValidAnswer = allAnswers.some(a => a && a.trim() !== '' && a !== SKIPPED_ANSWER)
     if (!hasValidAnswer && currentQuestionIndex === questions.length - 1) {
       setToastType('error')
       setToastMessage('请至少回答一个问题，让我更好地为你编织梦境')
@@ -283,7 +290,7 @@ export function Questions() {
           {currentQuestionIndex > 0 && (
             <div className={styles.completedSection}>
               {answers.map((answer, index) => {
-                if (index >= currentQuestionIndex || !answer?.trim() || answer === '（未回答）') return null
+                if (index >= currentQuestionIndex || !answer?.trim() || answer === SKIPPED_ANSWER) return null
                 return (
                   <div key={index} className={styles.completedCard}>
                     <div className={styles.completedHeader}>
