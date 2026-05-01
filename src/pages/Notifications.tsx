@@ -8,14 +8,10 @@ export function Notifications() {
   const navigate = useNavigate()
   const [notifications, setNotifications] = useState<ApiNotification[]>([])
   const [loading, setLoading] = useState(true)
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
-
-  // Load notifications on mount
-  useEffect(() => {
-    loadNotifications()
-  }, [])
 
   const loadNotifications = async () => {
     setLoading(true)
@@ -32,6 +28,23 @@ export function Notifications() {
     }
   }
 
+  // Load notifications on mount
+  useEffect(() => {
+    let cancelled = false
+    const doLoad = async () => {
+      await loadNotifications()
+      if (cancelled) {
+        // Reset state if component unmounted during load
+        setNotifications([])
+        setLoading(false)
+      }
+    }
+    doLoad()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message)
     setToastType(type)
@@ -39,6 +52,7 @@ export function Notifications() {
   }
 
   const handleMarkAllRead = async () => {
+    setIsMarkingAllRead(true)
     try {
       const result = await notificationApi.markAllRead()
       if (result.success) {
@@ -51,6 +65,8 @@ export function Notifications() {
     } catch (err) {
       console.error('Failed to mark all read:', err)
       showToast('操作失败', 'error')
+    } finally {
+      setIsMarkingAllRead(false)
     }
   }
 
@@ -208,6 +224,7 @@ export function Notifications() {
         <button
           className={styles.floatingMarkRead}
           onClick={handleMarkAllRead}
+          disabled={isMarkingAllRead}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
