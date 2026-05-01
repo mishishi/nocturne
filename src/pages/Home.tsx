@@ -74,14 +74,36 @@ export function Home() {
       {/* Header Actions */}
       <div className={styles.headerActions}>
         {user ? (
-          <Link to="/profile" className={styles.headerProfile}>
-            <span className={styles.headerAvatar}>
-              {user.nickname?.charAt(0) || '我'}
-            </span>
-            <span className={styles.headerNickname}>{user.nickname || '我的'}</span>
-          </Link>
+          <>
+            <button
+              onClick={() => {
+                localStorage.removeItem('hasSeenOnboarding')
+                window.location.reload()
+              }}
+              className={styles.resetOnboarding}
+              title="重新显示引导"
+            >
+              重新显示引导
+            </button>
+            <Link to="/profile" className={styles.headerProfile}>
+              <span className={styles.headerAvatar}>
+                {user.nickname?.charAt(0) || '我'}
+              </span>
+              <span className={styles.headerNickname}>{user.nickname || '我的'}</span>
+            </Link>
+          </>
         ) : (
           <>
+            <button
+              onClick={() => {
+                localStorage.removeItem('hasSeenOnboarding')
+                window.location.reload()
+              }}
+              className={styles.resetOnboarding}
+              title="重新显示引导"
+            >
+              重新显示引导
+            </button>
             <Link to="/login" className={styles.headerLogin}>登录</Link>
             <Link to="/register" className={styles.headerRegister}>注册</Link>
           </>
