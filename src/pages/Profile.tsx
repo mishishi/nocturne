@@ -31,6 +31,12 @@ const THEME_OPTIONS = [
   { value: 'dark' as const, label: '暗黑', icon: '🌑', desc: '深邃静谧' }
 ]
 
+// Helper to format stat values with skeleton loading
+const formatStatValue = (value: number | null): string => {
+  if (value === null) return '--'
+  return value.toLocaleString()
+}
+
 export function Profile() {
   const navigate = useNavigate()
   const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus, setHistory } = useDreamStore()
@@ -45,8 +51,9 @@ export function Profile() {
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'favorites' | 'settings'>('overview')
 
   // Initialize with local history to avoid flash of zeros, will be updated by backend sync
-  const [totalDreams, setTotalDreams] = useState(history.length)
-  const [totalWords, setTotalWords] = useState(history.reduce((acc, item) => acc + item.story.length, 0))
+  const [totalDreams, setTotalDreams] = useState<number | null>(null)
+  const [totalWords, setTotalWords] = useState<number | null>(null)
+  const [isStatsLoading, setIsStatsLoading] = useState(true)
 
   // Sync history from backend when user is logged in
   useEffect(() => {
@@ -120,6 +127,9 @@ export function Profile() {
     }
 
     syncHistory()
+      .finally(() => {
+        if (isMounted) setIsStatsLoading(false)
+      })
     return () => { isMounted = false }
   }, [user?.openid])
 
@@ -279,11 +289,15 @@ export function Profile() {
           <>
             <div className={styles.stats}>
               <div className={styles.statCard}>
-                <span className={styles.statValue}>{totalDreams}</span>
+                <span className={`${styles.statValue} ${isStatsLoading ? styles.statSkeleton : ''}`}>
+                  {formatStatValue(totalDreams)}
+                </span>
                 <span className={styles.statLabel}>记录梦境</span>
               </div>
               <div className={styles.statCard}>
-                <span className={styles.statValue}>{totalWords.toLocaleString()}</span>
+                <span className={`${styles.statValue} ${isStatsLoading ? styles.statSkeleton : ''}`}>
+                  {formatStatValue(totalWords)}
+                </span>
                 <span className={styles.statLabel}>累计文字</span>
               </div>
             </div>
