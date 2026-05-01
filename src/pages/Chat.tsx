@@ -94,9 +94,7 @@ export function Chat() {
         setMobileChatOpen(true)
       }
 
-      if (!cancelled) {
-        setLoading(false)
-      }
+      setLoading(false)
     }
     init()
     return () => {
