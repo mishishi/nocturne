@@ -23,6 +23,32 @@ export function Friends() {
   const [isSearching, setIsSearching] = useState(false)
   const [lastSearchQuery, setLastSearchQuery] = useState('') // 记住上次搜索词，切换回搜索tab时恢复结果
 
+  // Load data function (extracted for reuse)
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const [friendsRes, requestsRes, sentRes] = await Promise.all([
+        friendApi.getFriends(),
+        friendApi.getFriendRequests(),
+        friendApi.getSentRequests()
+      ])
+      if (friendsRes.success) {
+        setFriends(friendsRes.friends)
+      }
+      if (requestsRes.success) {
+        setRequests(requestsRes.requests)
+      }
+      if (sentRes.success) {
+        setSentRequests(sentRes.sentRequests)
+      }
+    } catch (err) {
+      console.error('Failed to load friends data:', err)
+      showToast('加载失败，请重试', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Load data on mount
   useEffect(() => {
     if (!user?.openid) {
@@ -32,32 +58,7 @@ export function Friends() {
     let cancelled = false
     const doLoad = async () => {
       if (cancelled) return
-      setLoading(true)
-      try {
-        const [friendsRes, requestsRes, sentRes] = await Promise.all([
-          friendApi.getFriends(),
-          friendApi.getFriendRequests(),
-          friendApi.getSentRequests()
-        ])
-        if (cancelled) return
-        if (friendsRes.success) {
-          setFriends(friendsRes.friends)
-        }
-        if (requestsRes.success) {
-          setRequests(requestsRes.requests)
-        }
-        if (sentRes.success) {
-          setSentRequests(sentRes.sentRequests)
-        }
-      } catch (err) {
-        if (cancelled) return
-        console.error('Failed to load friends data:', err)
-        showToast('加载失败，请重试', 'error')
-      } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
-      }
+      await loadData()
     }
     doLoad()
     return () => {
