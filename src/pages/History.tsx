@@ -103,6 +103,9 @@ export function History() {
         }
       } catch (err) {
         console.error('Failed to sync history from backend:', err)
+        setToastType('error')
+        setToastMessage('同步失败，请检查网络连接')
+        setToastVisible(true)
       }
     }
 
