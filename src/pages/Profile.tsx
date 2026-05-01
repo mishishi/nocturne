@@ -287,15 +287,15 @@ export function Profile() {
         {activeTab === 'overview' && (
           <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
           <>
-            <div className={styles.stats}>
+            <div className={styles.stats} aria-busy={isStatsLoading ? 'true' : undefined}>
               <div className={styles.statCard}>
-                <span className={`${styles.statValue} ${isStatsLoading ? styles.statSkeleton : ''}`}>
+                <span className={`${styles.statValue} ${isStatsLoading ? styles.statSkeleton : ''}`} role="status" aria-live="polite">
                   {formatStatValue(totalDreams)}
                 </span>
                 <span className={styles.statLabel}>记录梦境</span>
               </div>
               <div className={styles.statCard}>
-                <span className={`${styles.statValue} ${isStatsLoading ? styles.statSkeleton : ''}`}>
+                <span className={`${styles.statValue} ${isStatsLoading ? styles.statSkeleton : ''}`} role="status" aria-live="polite">
                   {formatStatValue(totalWords)}
                 </span>
                 <span className={styles.statLabel}>累计文字</span>
