@@ -28,7 +28,15 @@ export function DreamWall() {
   const [favoritingId, setFavoritingId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchHint, setSearchHint] = useState<{
+    show: boolean
+    message: string
+    action?: () => void
+  }>({ show: false, message: '' })
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  // Use ref to track page value and avoid stale closure in IntersectionObserver
+  const pageRef = useRef(page)
+  pageRef.current = page
 
   const loadPosts = useCallback(async (tab: TabType, pageNum: number, reset = false, keyword?: string) => {
     if (pageNum !== 1) {
@@ -173,7 +181,7 @@ export function DreamWall() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loadingMore && activeTab !== 'my') {
-          const nextPage = page + 1
+          const nextPage = pageRef.current + 1
           setPage(nextPage)
           if (activeTab === 'friends') {
             loadFriendPosts(nextPage, false)
@@ -187,16 +195,26 @@ export function DreamWall() {
 
     observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
-  }, [hasMore, loadingMore, activeTab, page, loadPosts, loadFriendPosts, searchKeyword])
+  }, [hasMore, loadingMore, activeTab, loadPosts, loadFriendPosts, searchKeyword])
 
   // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchKeyword(searchQuery)
+      // Show hint when searching in weekly tab with no results
+      if (activeTab === 'featured' && searchQuery && posts.length === 0) {
+        setSearchHint({
+          show: true,
+          message: '本周精选暂不支持搜索，看看全部内容吧',
+          action: () => handleTabChange('all')
+        })
+      } else {
+        setSearchHint({ show: false, message: '' })
+      }
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [searchQuery])
+  }, [searchQuery, activeTab, posts.length])
 
   const handleTabChange = (tab: TabType) => {
     if (tab === activeTab) return // Don't reset if same tab
@@ -462,6 +480,15 @@ export function DreamWall() {
         <div className={styles.content}>
           {loading && !(activeTab === 'friends' && !user?.openid) ? (
             <DreamWallSkeleton />
+          ) : searchHint.show ? (
+            <div className={styles.searchHint}>
+              <span>{searchHint.message}</span>
+              {searchHint.action && (
+                <button onClick={searchHint.action} className={styles.searchHintAction}>
+                  切换到全部
+                </button>
+              )}
+            </div>
           ) : posts.length === 0 ? (
             <div className={styles.empty}>
               <div className={styles.emptyIcon}>
