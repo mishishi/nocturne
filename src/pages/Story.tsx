@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
+import { useIsAuthor } from '../hooks/useAuthorization'
 import { useAchievementSound } from '../hooks/useAchievementSound'
 import { useTextToSpeech } from '../hooks/useTextToSpeech'
 import { useDreamWallContext, clearDreamWallContext } from '../hooks/useDreamWallContext'
@@ -91,8 +92,7 @@ export function Story() {
   // 只有在梦墙场景下才需要判断作者身份：当前用户openid与故事作者openid相同才是作者
   // isAuthor: user is the author if their openid matches the session's openid
   // For history stories where currentSession.openid is empty, use currentUserOpenid from localStorage
-  const isAuthor = (fromDreamWall && storyAuthorOpenid && currentUserOpenid === storyAuthorOpenid) ||
-    (!fromDreamWall && currentUserOpenid)
+  const isAuthor = useIsAuthor(wallContext)
 
   // Story reveal animation on mount
   useEffect(() => {
