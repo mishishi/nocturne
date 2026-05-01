@@ -27,6 +27,7 @@ export function Questions() {
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [showPermissionGuide, setShowPermissionGuide] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const voiceErrorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { questions, answers, currentQuestionIndex, sessionId, dreamText } = currentSession
 
@@ -204,10 +205,34 @@ export function Questions() {
   }
 
   const handleVoicePermissionDenied = () => {
+    // Clear any existing timeout
+    if (voiceErrorTimeoutRef.current) {
+      clearTimeout(voiceErrorTimeoutRef.current)
+      voiceErrorTimeoutRef.current = null
+    }
     setVoiceError('麦克风权限被拒绝，无法使用语音输入')
     setShowPermissionGuide(true)
-    setTimeout(() => setVoiceError(null), 5000)
   }
+
+  // Clear voice error only when modal is closed
+  const handleClosePermissionGuide = () => {
+    setShowPermissionGuide(false)
+    // Auto-clear error after modal closes
+    voiceErrorTimeoutRef.current = setTimeout(() => {
+      setVoiceError(null)
+      voiceErrorTimeoutRef.current = null
+    }, 300)
+  }
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (voiceErrorTimeoutRef.current) {
+        clearTimeout(voiceErrorTimeoutRef.current)
+        voiceErrorTimeoutRef.current = null
+      }
+    }
+  }, [])
 
   if (!currentQuestion) {
     navigate('/dream')
@@ -397,18 +422,24 @@ export function Questions() {
 
       {/* Permission guide modal */}
       {showPermissionGuide && (
-        <div className={styles.permissionGuideModal} onClick={() => setShowPermissionGuide(false)}>
+        <div
+          className={styles.permissionGuideModal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="permissionGuideTitle"
+          onClick={handleClosePermissionGuide}
+        >
           <div className={styles.permissionGuideContent} onClick={e => e.stopPropagation()}>
-            <h3>开启麦克风权限</h3>
+            <h3 id="permissionGuideTitle" className={styles.permissionGuideTitle}>开启麦克风权限</h3>
             <p>请在浏览器设置中允许麦克风访问：</p>
-            <ol>
-              <li>点击浏览器地址栏左侧的锁定图标</li>
-              <li>找到"麦克风"设置</li>
-              <li>选择"允许"</li>
-              <li>刷新页面后重试</li>
+            <ol className={styles.permissionGuideList}>
+              <li className={styles.permissionGuideListItem}>点击浏览器地址栏左侧的锁定图标</li>
+              <li className={styles.permissionGuideListItem}>找到"麦克风"设置</li>
+              <li className={styles.permissionGuideListItem}>选择"允许"</li>
+              <li className={styles.permissionGuideListItem}>刷新页面后重试</li>
             </ol>
             <div className={styles.permissionGuideActions}>
-              <button onClick={() => setShowPermissionGuide(false)}>我知道了</button>
+              <button onClick={handleClosePermissionGuide}>我知道了</button>
             </div>
           </div>
         </div>
