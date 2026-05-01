@@ -181,7 +181,7 @@ export function Register() {
                   />
                 </div>
 
-                <div className={styles.passwordHints}>
+                <div className={styles.passwordHints} aria-live="polite">
                   <span className={`${styles.hint} ${password.length >= 6 ? styles.hintOk : ''}`}>
                     {password.length >= 6 ? '✓' : '○'} 至少6位
                   </span>
