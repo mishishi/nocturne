@@ -82,3 +82,23 @@ export function FriendsSkeleton() {
     </div>
   )
 }
+
+export function StoryContentSkeleton() {
+  return (
+    <div className={styles.storyContentSkeleton} role="status" aria-live="polite" aria-label="正在加载故事内容">
+      <div className={styles.storySkeletonHeader}>
+        <Skeleton variant="title" className={styles.storySkeletonTitle} />
+        <div className={styles.storySkeletonMeta}>
+          <Skeleton variant="text" className={styles.storySkeletonMetaText} />
+        </div>
+      </div>
+      <div className={styles.storySkeletonBody}>
+        <Skeleton variant="line" className={styles.storySkeletonLine} />
+        <Skeleton variant="line" className={styles.storySkeletonLine} />
+        <Skeleton variant="line" className={styles.storySkeletonLine} />
+        <Skeleton variant="line" className={styles.storySkeletonLine} />
+        <Skeleton variant="line" className={styles.storySkeletonLineShort} />
+      </div>
+    </div>
+  )
+}

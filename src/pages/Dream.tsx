@@ -478,7 +478,12 @@ export function Dream() {
                 />
                 {/* Live transcription display */}
                 {isRecording && interimTranscript && (
-                  <div className={styles.liveTranscript}>
+                  <div
+                    className={styles.liveTranscript}
+                    role="status"
+                    aria-live="polite"
+                    aria-label="实时语音转写"
+                  >
                     <span className={styles.liveTranscriptLabel}>
                       <span className={styles.liveTranscriptDot} />
                       实时转写

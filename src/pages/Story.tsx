@@ -16,6 +16,7 @@ import { StoryFeedbackForm } from '../components/StoryFeedbackForm'
 import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
 import { CommentThread } from '../components/CommentThread'
 import { FriendRequestButton } from '../components/FriendRequestButton'
+import { StoryContentSkeleton } from '../components/ui/Skeleton'
 import { shareApi, api, wallApi } from '../services/api'
 import styles from './Story.module.css'
 
@@ -45,6 +46,8 @@ export function Story() {
   const [isPublished, setIsPublished] = useState(false)
   const [publishedPostId, setPublishedPostId] = useState<string | null>(null)
   const [dreamWallStory, setDreamWallStory] = useState<string | null>(null)
+  // Error state for story fetch (distinct from empty content)
+  const [storyFetchError, setStoryFetchError] = useState<Error | null>(null)
 
   // Unified Dream Wall context - handles location.state vs sessionStorage automatically
   const wallContext = useDreamWallContext()
@@ -61,7 +64,6 @@ export function Story() {
   const shareMenuRef = useRef<HTMLDivElement>(null)
   const aiMenuRef = useRef<HTMLDivElement>(null)
   const fabMenuRef = useRef<HTMLDivElement>(null)
-  const fabJustClosedByOutsideRef = useRef(false)
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Memoized particle positions to avoid Math.random() on each render
@@ -142,7 +144,6 @@ export function Story() {
         setShowAiMenu(false)
       }
       if (showFabMenu && fabMenuRef.current && !fabMenuRef.current.contains(e.target as Node)) {
-        fabJustClosedByOutsideRef.current = true
         setShowFabMenu(false)
       }
     }
@@ -258,11 +259,14 @@ export function Story() {
           if (result.data?.story) {
             setDreamWallStory(result.data.story.content)
           }
+          // If no story content, it's empty data (not an error)
+          setStoryFetchError(null)
           setIsLoadingDreamWallStory(false)
         }
       } catch (err) {
         console.error('[Story] Failed to fetch story:', err)
         if (!cancelled) {
+          setStoryFetchError(err as Error)
           setIsLoadingDreamWallStory(false)
         }
       }
@@ -625,14 +629,50 @@ export function Story() {
     }
   }
 
+  // Show error or empty state when story is not available and not loading
   if (!story && !isLoadingDreamWallStory) {
+    // Error state with retry option
+    if (storyFetchError) {
+      const handleRetry = () => {
+        setStoryFetchError(null)
+        setIsLoadingDreamWallStory(true)
+        // Re-trigger the effect by clearing and re-setting wallContext sessionId
+        const targetSessionId = wallContext.sessionId || urlSessionId
+        if (targetSessionId) {
+          api.getStory(targetSessionId).then((result) => {
+            if (result.data?.story) {
+              setDreamWallStory(result.data.story.content)
+            }
+            setStoryFetchError(null)
+            setIsLoadingDreamWallStory(false)
+          }).catch((err) => {
+            console.error('[Story] Retry failed:', err)
+            setStoryFetchError(err as Error)
+            setIsLoadingDreamWallStory(false)
+          })
+        }
+      }
+      return (
+        <div className={styles.page}>
+          <div className={styles.container}>
+            <div className={styles.errorState}>
+              <div className={styles.errorMoon} />
+              <p className={styles.errorText}>加载失败</p>
+              <p className={styles.errorSubtext}>网络错误，请检查连接后重试</p>
+              <Button variant="secondary" onClick={handleRetry}>重新加载</Button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    // Empty data state
     return (
       <div className={styles.page}>
         <div className={styles.container}>
           <div className={styles.errorState}>
             <div className={styles.errorMoon} />
-            <p className={styles.errorText}>梦境暂时无法浮现</p>
-            <p className={styles.errorSubtext}>请稍后再试，或者返回首页重新记录</p>
+            <p className={styles.errorText}>故事内容为空</p>
+            <p className={styles.errorSubtext}>该故事暂无内容</p>
             <Link to="/">
               <Button variant="secondary">返回首页</Button>
             </Link>
@@ -644,8 +684,21 @@ export function Story() {
 
   return (
     <>
-      {/* Pre-reveal loading state */}
-      {!isRevealed && (
+      {/* Story content skeleton - shown when fetching story from API (Dream Wall / direct URL) */}
+      {isLoadingDreamWallStory && (
+        <div className={styles.page}>
+          <div className={styles.container}>
+            <div className={styles.skeletonHeader}>
+              <div className={styles.skeletonBadge} />
+              <div className={styles.skeletonTitle} />
+            </div>
+            <StoryContentSkeleton />
+          </div>
+        </div>
+      )}
+
+      {/* Pre-reveal loading state - for new story generation animation */}
+      {!isRevealed && !isLoadingDreamWallStory && (
         <div className={styles.revealLoader}>
           <div className={styles.revealLoaderMoon}>
             <div className={styles.revealLoaderMoonCore} />
@@ -776,13 +829,7 @@ export function Story() {
               <div className={styles.fabWrapper} ref={fabMenuRef}>
                 <button
                   className={styles.fab}
-                  onClick={() => {
-                    if (fabJustClosedByOutsideRef.current) {
-                      fabJustClosedByOutsideRef.current = false
-                      return
-                    }
-                    setShowFabMenu(!showFabMenu)
-                  }}
+                  onClick={() => setShowFabMenu(!showFabMenu)}
                   aria-expanded={showFabMenu}
                   aria-label="更多操作"
                 >

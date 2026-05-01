@@ -29,6 +29,7 @@ export function Questions() {
   const [storyReady, setStoryReady] = useState(false)
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [showPermissionGuide, setShowPermissionGuide] = useState(false)
+  const [isWaitingForAI, setIsWaitingForAI] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const voiceErrorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -75,6 +76,7 @@ export function Questions() {
 
     isSubmittingRef = true
     setLoading(true)
+    setIsWaitingForAI(true)
     setError('')
 
     const timeoutId = setTimeout(() => {
@@ -92,6 +94,7 @@ export function Questions() {
         setStory(result.data.story.title, result.data.story.content)
         setShowReveal(true)
         setLoading(false)
+        setIsWaitingForAI(false)
         return
       } else if (result.data?.nextQuestion) {
         setAnswer(currentQuestionIndex + 1, '')
@@ -108,6 +111,7 @@ export function Questions() {
     } finally {
       if (!showReveal) {
         setLoading(false)
+        setIsWaitingForAI(false)
       }
       isSubmittingRef = false
     }
@@ -154,6 +158,7 @@ export function Questions() {
 
     setShowReveal(true)
     setLoading(true)
+    setIsWaitingForAI(true)
     setError('')
     isSubmittingRef = true
 
@@ -176,6 +181,7 @@ export function Questions() {
           setStory(result.data.story.title, result.data.story.content)
           setStoryReady(true)
           setLoading(false)
+          setIsWaitingForAI(false)
           return
         }
 
@@ -321,10 +327,24 @@ export function Questions() {
             </div>
 
             <div className={styles.questionContent}>
-              <span className={styles.questionTag}>追问 {currentQuestionIndex + 1}</span>
-              <h2 className={styles.questionText}>
-                {showInput ? currentQuestion : <span className={styles.placeholder}>...</span>}
-              </h2>
+              {isWaitingForAI ? (
+                <div className={styles.aiThinking}>
+                  <span className={styles.questionTag}>追问 {currentQuestionIndex + 1}</span>
+                  <div className={styles.thinkingIndicator}>
+                    <span className={styles.thinkingDot}>●</span>
+                    <span className={styles.thinkingDot}>●</span>
+                    <span className={styles.thinkingDot}>●</span>
+                  </div>
+                  <p className={styles.thinkingText}>正在回忆你的答案...</p>
+                </div>
+              ) : (
+                <>
+                  <span className={styles.questionTag}>追问 {currentQuestionIndex + 1}</span>
+                  <h2 className={styles.questionText}>
+                    {showInput ? currentQuestion : <span className={styles.placeholder}>...</span>}
+                  </h2>
+                </>
+              )}
             </div>
 
             <div className={styles.questionHint}>
