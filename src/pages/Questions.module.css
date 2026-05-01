@@ -509,3 +509,73 @@ textarea.textarea {
     justify-content: center;
   }
 }
+
+/* Voice permission error */
+.voiceError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #FFF3E0;
+  border-radius: 8px;
+  color: #E65100;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.voiceErrorHelp {
+  margin-left: auto;
+  padding: 4px 12px;
+  background: #E65100;
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.permissionGuideModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.permissionGuideContent {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  max-width: 320px;
+  color: #333;
+}
+
+.permissionGuideContent h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.permissionGuideContent ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.permissionGuideContent li {
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.permissionGuideActions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.permissionGuideActions button {
+  padding: 10px 20px;
+  background: #E65100;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}

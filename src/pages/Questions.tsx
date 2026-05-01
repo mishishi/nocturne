@@ -24,6 +24,8 @@ export function Questions() {
   const [showInput, setShowInput] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [storyReady, setStoryReady] = useState(false)
+  const [voiceError, setVoiceError] = useState<string | null>(null)
+  const [showPermissionGuide, setShowPermissionGuide] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { questions, answers, currentQuestionIndex, sessionId, dreamText } = currentSession
@@ -171,6 +173,8 @@ export function Questions() {
 
         currentIdx = result.data?.nextIndex ?? currentIdx + 1
 
+        // Clear before reassigning to ensure no stale timeout
+        clearTimeout(timeoutId)
         timeoutId = setTimeout(() => {
           setToastType('info')
           setToastMessage('生成中，请稍候...')
@@ -197,6 +201,12 @@ export function Questions() {
     setShowReveal(false)
     setStoryReady(false)
     navigate(`/story/${sessionId}`)
+  }
+
+  const handleVoicePermissionDenied = () => {
+    setVoiceError('麦克风权限被拒绝，无法使用语音输入')
+    setShowPermissionGuide(true)
+    setTimeout(() => setVoiceError(null), 5000)
   }
 
   if (!currentQuestion) {
@@ -319,6 +329,24 @@ export function Questions() {
               </div>
             )}
 
+            {/* Voice permission error */}
+            {voiceError && (
+              <div className={styles.voiceError}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>{voiceError}</span>
+                <button
+                  onClick={() => setShowPermissionGuide(true)}
+                  className={styles.voiceErrorHelp}
+                >
+                  如何开启
+                </button>
+              </div>
+            )}
+
             {/* 操作按钮 */}
             <div className={styles.actions}>
               <button
@@ -366,6 +394,25 @@ export function Questions() {
       </div>
 
       <Toast message={toastMessage} visible={toastVisible} onClose={() => setToastVisible(false)} type={toastType} />
+
+      {/* Permission guide modal */}
+      {showPermissionGuide && (
+        <div className={styles.permissionGuideModal} onClick={() => setShowPermissionGuide(false)}>
+          <div className={styles.permissionGuideContent} onClick={e => e.stopPropagation()}>
+            <h3>开启麦克风权限</h3>
+            <p>请在浏览器设置中允许麦克风访问：</p>
+            <ol>
+              <li>点击浏览器地址栏左侧的锁定图标</li>
+              <li>找到"麦克风"设置</li>
+              <li>选择"允许"</li>
+              <li>刷新页面后重试</li>
+            </ol>
+            <div className={styles.permissionGuideActions}>
+              <button onClick={() => setShowPermissionGuide(false)}>我知道了</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
