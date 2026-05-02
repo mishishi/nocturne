@@ -217,7 +217,7 @@ export function RevealScreen({ storyTitle, streamedContent, storyReady, onReveal
 
   return (
     <div className={styles.brocadeContainer}>
-      <div className={styles.content}>
+      <div className={styles.content} aria-live="polite" aria-atomic="true">
         {renderContent()}
       </div>
     </div>

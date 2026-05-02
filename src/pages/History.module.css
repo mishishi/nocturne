@@ -43,6 +43,17 @@
   margin-top: var(--space-3);
 }
 
+.syncIndicator {
+  display: inline-block;
+  margin-left: var(--space-2);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Search */
 .searchWrapper {
   position: relative;
@@ -1049,5 +1060,12 @@
 
   .swipeDeleteBtn span {
     font-size: 0.75rem;
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .syncIndicator {
+    animation: none;
   }
 }

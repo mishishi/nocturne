@@ -27,6 +27,7 @@ export function History() {
   const [multiSelectMode, setMultiSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   // Swipe-to-delete state
   const [swipedItemId, setSwipedItemId] = useState<string | null>(null)
@@ -53,6 +54,7 @@ export function History() {
       const openid = localStorage.getItem('yeelin_openid')
       if (!openid) return
 
+      setIsSyncing(true)
       try {
         const { sessions } = await api.getHistory(openid)
         if (!isMounted) return
@@ -106,6 +108,8 @@ export function History() {
         setToastType('error')
         setToastMessage('同步失败，请检查网络连接')
         setToastVisible(true)
+      } finally {
+        setIsSyncing(false)
       }
     }
 
@@ -418,6 +422,7 @@ export function History() {
         {/* Header */}
         <header className={styles.header}>
           <span className={styles.badge}>梦境档案</span>
+          {isSyncing && <span className={styles.syncIndicator} aria-label="正在同步">🔄</span>}
           <h1 className={styles.title}>你的故事集</h1>
           <p className={styles.subtitle}>
             {history.length > 0

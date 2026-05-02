@@ -27,7 +27,16 @@ export function createStoryStream(
     }
   }).then(response => {
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      const errorMessages: Record<number, string> = {
+        401: '登录已过期，请重新登录',
+        403: '无权访问此会话',
+        404: '会话不存在',
+        500: '服务器繁忙，请稍后再试',
+        502: '服务暂时不可用，请稍后再试',
+        503: '服务暂时不可用，请稍后再试',
+      }
+      const message = errorMessages[response.status] || `请求失败 (${response.status})`
+      throw new Error(message)
     }
 
     const reader = response.body?.getReader()
