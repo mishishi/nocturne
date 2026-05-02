@@ -8,6 +8,7 @@ interface TypewriterTextProps {
   className?: string
   onComplete?: () => void
   cursor?: boolean
+  variant?: 'default' | 'printing'
 }
 
 export function TypewriterText({
@@ -16,7 +17,8 @@ export function TypewriterText({
   delay = 0,
   className = '',
   onComplete,
-  cursor = true
+  cursor = true,
+  variant = 'default'
 }: TypewriterTextProps) {
   const [displayedText, setDisplayedText] = useState('')
   const [isComplete, setIsComplete] = useState(false)
@@ -46,9 +48,10 @@ export function TypewriterText({
   }, [text, speed, delay, onComplete])
 
   return (
-    <span className={`${styles.typewriter} ${className}`}>
+    <span className={`${styles.typewriter} ${styles[variant]} ${className}`}>
       {displayedText}
-      {cursor && !isComplete && <span className={styles.cursor}>|</span>}
+      {cursor && !isComplete && variant === 'default' && <span className={styles.cursor}>|</span>}
+      {cursor && !isComplete && variant === 'printing' && <span className={styles.printCursor}>_</span>}
     </span>
   )
 }

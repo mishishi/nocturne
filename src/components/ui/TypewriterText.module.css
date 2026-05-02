@@ -17,3 +17,50 @@
     opacity: 0;
   }
 }
+
+/* Printing press variant */
+.printing {
+  letter-spacing: 0.02em;
+}
+
+.printing .char {
+  display: inline-block;
+  animation: printStamp 0.15s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes printStamp {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px) scale(1.1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(1px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.printCursor {
+  display: inline-block;
+  animation: printCursorBlink 0.6s steps(1) infinite;
+  margin-left: 2px;
+  color: var(--color-golden);
+}
+
+@keyframes printCursorBlink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Override text rendering for printing effect */
+.typewriter.printing::after {
+  content: '';
+}

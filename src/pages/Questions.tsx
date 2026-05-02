@@ -5,6 +5,7 @@ import { api } from '../services/api'
 import { createStoryStream } from '../services/sseClient'
 import { Textarea } from '../components/ui/Textarea'
 import { Toast } from '../components/ui/Toast'
+import { TypewriterText } from '../components/ui/TypewriterText'
 import { RevealScreen } from '../components/RevealScreen'
 import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Questions.module.css'
@@ -398,7 +399,16 @@ export function Questions() {
                 <>
                   <span className={styles.questionTag}>追问 {currentQuestionIndex + 1}</span>
                   <h2 className={styles.questionText}>
-                    {showInput ? currentQuestion : <span className={styles.placeholder}>...</span>}
+                    {showInput ? (
+                      <TypewriterText
+                        text={currentQuestion}
+                        speed={40}
+                        variant="printing"
+                        className={styles.printingQuestion}
+                      />
+                    ) : (
+                      <span className={styles.placeholder}>...</span>
+                    )}
                   </h2>
                 </>
               )}

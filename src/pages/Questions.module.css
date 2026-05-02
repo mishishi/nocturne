@@ -254,6 +254,11 @@
   letter-spacing: 0.01em;
 }
 
+.printingQuestion {
+  display: block;
+  text-shadow: 0 2px 8px rgba(232, 244, 255, 0.15);
+}
+
 .placeholder {
   opacity: 0.3;
 }
