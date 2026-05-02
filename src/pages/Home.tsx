@@ -77,7 +77,7 @@ export function Home() {
           <>
             <button
               onClick={() => {
-                localStorage.removeItem('hasSeenOnboarding')
+                localStorage.removeItem('yeelin_onboarding_shown')
                 window.location.reload()
               }}
               className={styles.resetOnboarding}
@@ -96,7 +96,7 @@ export function Home() {
           <>
             <button
               onClick={() => {
-                localStorage.removeItem('hasSeenOnboarding')
+                localStorage.removeItem('yeelin_onboarding_shown')
                 window.location.reload()
               }}
               className={styles.resetOnboarding}
