@@ -30,6 +30,8 @@ import { Notifications } from './pages/Notifications'
 import { Chat } from './pages/Chat'
 import { Admin } from './pages/Admin'
 import { DemoExperience } from './pages/DemoExperience'
+import { StreamingEffectsDemo } from './pages/StreamingEffectsDemo'
+import { StreamingLayoutDemo } from './pages/StreamingLayoutDemo'
 
 function App() {
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement } = useDreamStore()
@@ -120,6 +122,8 @@ function App() {
             <Route path="/admin" element={
               <PageErrorBoundary><ProtectedRoute><Admin /></ProtectedRoute></PageErrorBoundary>
             } />
+            <Route path="/streaming-demo" element={<PageErrorBoundary><StreamingEffectsDemo /></PageErrorBoundary>} />
+            <Route path="/layout-demo" element={<PageErrorBoundary><StreamingLayoutDemo /></PageErrorBoundary>} />
           </Routes>
           </GlobalErrorBoundary>
         </main>

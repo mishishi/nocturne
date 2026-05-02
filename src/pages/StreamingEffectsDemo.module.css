@@ -1,0 +1,429 @@
+/* Streaming Effects Demo Page */
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+  padding: 40px 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.mainTitle {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #F4D35E;
+  margin: 0 0 12px 0;
+  text-shadow: 0 0 30px rgba(244, 211, 94, 0.3);
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: rgba(139, 157, 195, 0.8);
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============ Effect Card ============ */
+.effectCard {
+  background: rgba(30, 30, 50, 0.6);
+  border: 1px solid rgba(139, 157, 195, 0.15);
+  border-radius: 20px;
+  padding: 28px;
+  backdrop-filter: blur(12px);
+}
+
+.effectTitle {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: #F4D35E;
+  margin: 0 0 6px 0;
+}
+
+.effectDesc {
+  font-size: 0.875rem;
+  color: rgba(139, 157, 195, 0.7);
+  margin: 0 0 24px 0;
+}
+
+/* ============ Controls ============ */
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.startBtn, .resetBtn {
+  padding: 10px 28px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.startBtn {
+  background: linear-gradient(135deg, #F4D35E, #E8C547);
+  color: #1a1a2e;
+}
+
+.startBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(244, 211, 94, 0.3);
+}
+
+.startBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resetBtn {
+  background: transparent;
+  border: 1px solid rgba(139, 157, 195, 0.3);
+  color: rgba(139, 157, 195, 0.8);
+}
+
+.resetBtn:hover:not(:disabled) {
+  border-color: rgba(139, 157, 195, 0.6);
+  color: #fff;
+}
+
+.resetBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ============ 方案一：古典书卷 ============ */
+.classicalContainer {
+  position: relative;
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scrollBackground {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  background: linear-gradient(180deg, #f5e6d3 0%, #efe0c8 50%, #e8d5b5 100%);
+  border-radius: 8px;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    inset 0 0 30px rgba(139, 90, 43, 0.1);
+}
+
+.scrollEdgeTop, .scrollEdgeBottom {
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  height: 20px;
+  background: linear-gradient(90deg, #c9a86c, #d4b87a, #c9a86c);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.scrollEdgeTop {
+  top: -10px;
+}
+
+.scrollEdgeBottom {
+  bottom: -10px;
+}
+
+.scrollContent {
+  padding: 24px 20px;
+}
+
+.scrollTitle {
+  font-family: 'STKaiti', 'KaiTi', serif;
+  font-size: 1.2rem;
+  color: #8B5A2B;
+  margin: 0 0 12px 0;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(139, 90, 43, 0.2);
+}
+
+.scrollText {
+  font-family: 'STKaiti', 'KaiTi', serif;
+  font-size: 0.95rem;
+  line-height: 2;
+  color: #3d2914;
+  text-align: justify;
+  min-height: 120px;
+  position: relative;
+}
+
+.inkDrop {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #3d2914 30%, transparent 70%);
+  border-radius: 50%;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: inkPulse 1s ease-in-out infinite;
+}
+
+@keyframes inkPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+.inkSplash {
+  position: absolute;
+  bottom: -20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, rgba(61, 41, 20, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: splashPulse 2s ease-in-out infinite;
+}
+
+@keyframes splashPulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+}
+
+/* ============ 方案二：星空织锦 ============ */
+.brocadeContainer {
+  position: relative;
+  min-height: 260px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 100%);
+}
+
+.starryBackground {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.firefly {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #F4D35E;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #F4D35E, 0 0 20px rgba(244, 211, 94, 0.5);
+  animation: fireflyFloat 3s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+@keyframes fireflyFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+  50% { transform: translateY(-15px) scale(1.2); opacity: 1; }
+}
+
+.brocadeFrame {
+  position: relative;
+  padding: 24px 20px;
+  z-index: 1;
+}
+
+.brocadeTitle {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: #F4D35E;
+  margin: 0 0 16px 0;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(244, 211, 94, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.brocadeStar {
+  font-size: 0.9rem;
+  animation: starTwinkle 1.5s ease-in-out infinite;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.brocadeText {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 2;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: left;
+  min-height: 120px;
+  position: relative;
+}
+
+.goldenThread {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244, 211, 94, 0.4), transparent);
+  animation: threadFade 2s ease-out forwards;
+}
+
+@keyframes threadFade {
+  0% { opacity: 0; transform: scaleX(0); }
+  50% { opacity: 1; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1); }
+}
+
+.brocadeContent {
+  position: relative;
+  z-index: 1;
+}
+
+.featherCursor {
+  display: inline-block;
+  animation: featherSway 1s ease-in-out infinite;
+  margin-left: 4px;
+}
+
+@keyframes featherSway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+/* ============ 方案三：梦境涟漪 ============ */
+.rippleContainer {
+  position: relative;
+  min-height: 260px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.lakeBackground {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  background: linear-gradient(180deg, #1a1a3a 0%, #16213e 30%, #1a3a5c 70%, #0f2a42 100%);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  width: 60px;
+  height: 30px;
+  border: 1px solid rgba(244, 211, 94, 0.3);
+  border-radius: 50%;
+  animation: rippleExpand 2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleExpand {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.lotus {
+  position: absolute;
+  font-size: 1.5rem;
+  opacity: 0.6;
+  animation: lotusFloat 4s ease-in-out infinite;
+}
+
+@keyframes lotusFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(5deg); }
+}
+
+.lakeContent {
+  position: relative;
+  z-index: 1;
+  padding: 24px 20px;
+}
+
+.lakeTitle {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: rgba(244, 211, 94, 0.8);
+  margin: 0 0 16px 0;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(244, 211, 94, 0.3);
+}
+
+.lakeText {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 2;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: left;
+  min-height: 120px;
+  position: relative;
+}
+
+.rippleCursor {
+  display: inline-flex;
+  gap: 3px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: rgba(244, 211, 94, 0.6);
+  border-radius: 50%;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ============ Footer ============ */
+.footer {
+  text-align: center;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(139, 157, 195, 0.1);
+}
+
+.footer p {
+  font-size: 0.8rem;
+  color: rgba(139, 157, 195, 0.5);
+  margin: 0;
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 768px) {
+  .page {
+    padding: 24px 16px;
+  }
+
+  .mainTitle {
+    font-size: 1.8rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

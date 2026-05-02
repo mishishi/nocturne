@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { api } from '../services/api'
+import { createStoryStream } from '../services/sseClient'
 import { Textarea } from '../components/ui/Textarea'
 import { Toast } from '../components/ui/Toast'
 import { RevealScreen } from '../components/RevealScreen'
@@ -27,11 +28,14 @@ export function Questions() {
   const [showInput, setShowInput] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [storyReady, setStoryReady] = useState(false)
+  const [streamedContent, setStreamedContent] = useState('')
+  const [streamedTitle, setStreamedTitle] = useState('')
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [showPermissionGuide, setShowPermissionGuide] = useState(false)
   const [isWaitingForAI, setIsWaitingForAI] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const voiceErrorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sseCleanupRef = useRef<(() => void) | null>(null)
 
   const { questions, answers, currentQuestionIndex, sessionId, dreamText } = currentSession
 
@@ -160,6 +164,8 @@ export function Questions() {
     setLoading(true)
     setIsWaitingForAI(true)
     setError('')
+    setStreamedContent('')
+    setStreamedTitle('《梦境编织中》')
     isSubmittingRef = true
 
     let timeoutId = setTimeout(() => {
@@ -169,16 +175,30 @@ export function Questions() {
     }, 30000)
 
     try {
-      let currentIdx = currentQuestionIndex
-      let result
-
+      // First, submit all answers (including skipped ones)
+      console.log('[Questions] handleFinalSubmit: questions.length=', questions.length, 'currentQuestionIndex=', currentQuestionIndex, 'allAnswers=', JSON.stringify(allAnswers))
+      let currentIdx = 0
+      let iteration = 0
       while (currentIdx < questions.length) {
+        iteration++
+        console.log('[Questions] Iteration', iteration, 'at index', currentIdx, 'condition:', currentIdx, '<', questions.length, '=', currentIdx < questions.length)
         const answerToSubmit = allAnswers[currentIdx] || ''
-        result = await api.submitAnswer(sessionId, answerToSubmit)
+        console.log('[Questions] Submitting answer at index', currentIdx, ':', JSON.stringify(answerToSubmit), 'sessionId:', sessionId)
+        let result
+        try {
+          result = await api.submitAnswer(sessionId, answerToSubmit)
+        } catch (e) {
+          console.error('[Questions] submitAnswer error at index', currentIdx, ':', e.message)
+          throw e // Re-throw to stop the loop
+        }
+        console.log('[Questions] Result:', JSON.stringify(result.data))
         clearTimeout(timeoutId)
 
         if (result.data?.story) {
+          // Story already generated (edge case)
           setStory(result.data.story.title, result.data.story.content)
+          setStreamedTitle(result.data.story.title)
+          setStreamedContent(result.data.story.content)
           setStoryReady(true)
           setLoading(false)
           setIsWaitingForAI(false)
@@ -186,8 +206,7 @@ export function Questions() {
         }
 
         currentIdx = result.data?.nextIndex ?? currentIdx + 1
-
-        // Clear before reassigning to ensure no stale timeout
+        console.log('[Questions] nextIndex set to:', currentIdx, 'loop condition:', currentIdx < questions.length)
         clearTimeout(timeoutId)
         timeoutId = setTimeout(() => {
           setToastType('info')
@@ -195,8 +214,45 @@ export function Questions() {
           setToastVisible(true)
         }, 30000)
       }
+      console.log('[Questions] While loop done, currentIdx=', currentIdx, 'questions.length=', questions.length)
+
+      // Now use SSE to stream story generation
+      setIsWaitingForAI(false)
+      const cleanup = createStoryStream(sessionId, {
+        onStart: (data) => {
+          console.log('[Questions] Story streaming started:', data.title)
+          setStreamedTitle(data.title)
+        },
+        onChunk: (data) => {
+          setStreamedContent(prev => prev + data.content)
+        },
+        onDone: (data) => {
+          console.log('[Questions] Story streaming done:', data.title)
+          clearTimeout(timeoutId)
+          setStory(data.title, data.content)
+          setStreamedTitle(data.title)
+          setStreamedContent(data.content)
+          setStoryReady(true)
+          setLoading(false)
+          setIsWaitingForAI(false)
+        },
+        onError: (error) => {
+          console.error('[Questions] SSE error:', error)
+          clearTimeout(timeoutId)
+          const errorMsg = '生成故事失败了，请稍后重试'
+          setError(errorMsg)
+          setHasFailed(true)
+          setShowReveal(false)
+          setLoading(false)
+          setToastType('error')
+          setToastMessage(errorMsg)
+          setToastVisible(true)
+        }
+      })
+      sseCleanupRef.current = cleanup
     } catch (err) {
       clearTimeout(timeoutId)
+      console.error('[Questions] Catch block error:', err)
       const errorMsg = '生成故事失败了，请稍后重试'
       setError(errorMsg)
       setHasFailed(true)
@@ -256,7 +312,8 @@ export function Questions() {
     <div className={styles.page}>
       {showReveal && (
         <RevealScreen
-          storyTitle={currentSession.storyTitle || '你的梦境'}
+          storyTitle={streamedTitle || currentSession.storyTitle || '你的梦境'}
+          streamedContent={streamedContent}
           storyReady={storyReady}
           onReveal={handleReveal}
         />

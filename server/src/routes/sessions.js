@@ -50,27 +50,12 @@ export default async function sessionRoutes(fastify) {
     const questionText = session.questions[questionIndex]
     const { isLastQuestion } = await sessionService.saveAnswer(sessionId, questionIndex, questionText, answer)
 
-    if (isLastQuestion) {
-      const answers = await prisma.answer.findMany({
-        where: { sessionId },
-        orderBy: { questionIndex: 'asc' }
-      })
-
-      const { title, content, tokens } = await storyService.generateStory(
-        session.dreamFragment,
-        answers.map(a => ({ question: a.questionText, answer: a.answerText })),
-        session.styleTag
-      )
-
-      await sessionService.saveStory(sessionId, title, content, tokens)
-      return res.send(successResponse({ story: { title, content } }))
-    }
-
+    // 即使是最后一个问题，也返回nextIndex让前端通过SSE生成故事
     const updatedSession = await sessionService.getSession(sessionId)
-    const nextQuestion = updatedSession.questions?.[updatedSession.currentQuestionIndex]
     return res.send(successResponse({
-      nextQuestion: nextQuestion || null,
-      nextIndex: updatedSession.currentQuestionIndex
+      nextQuestion: null,
+      nextIndex: updatedSession.currentQuestionIndex,
+      isLastQuestion: isLastQuestion
     }))
   })
 
@@ -80,6 +65,78 @@ export default async function sessionRoutes(fastify) {
     const story = await prisma.story.findUnique({ where: { sessionId } })
     if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
     return res.send(successResponse({ story }))
+  })
+
+  // GET /api/sessions/:sessionId/story/stream - SSE流式生成故事
+  fastify.get('/sessions/:sessionId/story/stream', async (req, res) => {
+    const { sessionId } = req.params
+
+    // Verify auth token from Authorization header
+    const authHeader = req.headers.authorization
+    if (!authHeader) {
+      return res.status(401).send({ error: '未授权，请先登录' })
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    const tokenUser = await authService.verifyToken(token)
+    if (!tokenUser) {
+      return res.status(401).send({ error: '登录已过期，请重新登录' })
+    }
+
+    const session = await sessionService.getSession(sessionId)
+    if (!session) {
+      return res.status(404).send(errorResponse('Session not found', 'NOT_FOUND'))
+    }
+
+    // Verify session belongs to the authenticated user
+    if (session.openid !== tokenUser.openid) {
+      return res.status(403).send({ error: '无权访问此会话' })
+    }
+
+    // Check if story already exists
+    const existingStory = await prisma.story.findUnique({ where: { sessionId } })
+    if (existingStory) {
+      return res.send(successResponse({ story: { title: existingStory.title, content: existingStory.content } }))
+    }
+
+    // Get answers
+    const answers = await prisma.answer.findMany({
+      where: { sessionId },
+      orderBy: { questionIndex: 'asc' }
+    })
+
+    // Set SSE headers with CORS support
+    res.raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': 'true'
+    })
+
+    try {
+      // Stream story generation
+      for await (const event of storyService.generateStoryStream(
+        session.dreamFragment,
+        answers.map(a => ({ question: a.questionText, answer: a.answerText })),
+        session.styleTag
+      )) {
+        if (event.type === 'start') {
+          res.raw.write(`event: start\ndata: ${JSON.stringify({ title: event.title })}\n\n`)
+        } else if (event.type === 'chunk') {
+          res.raw.write(`event: chunk\ndata: ${JSON.stringify({ content: event.content })}\n\n`)
+        } else if (event.type === 'done') {
+          // Save story to DB
+          const { title, content } = event
+          await sessionService.saveStory(sessionId, title, content, { prompt: 0, completion: 0 })
+          res.raw.write(`event: done\ndata: ${JSON.stringify({ title, content })}\n\n`)
+        }
+      }
+    } catch (error) {
+      res.raw.write(`event: error\ndata: ${JSON.stringify({ message: error.message })}\n\n`)
+    } finally {
+      res.raw.end()
+    }
   })
 
   // GET /api/sessions/users/:openid/history - 获取历史

@@ -50,6 +50,113 @@ const INTERPRETATION_PROMPT = `你是一个梦境分析师。请根据以下梦�
 
 
 export const storyService = {
+  async *generateStoryStream(dreamFragment, answers, styleTag) {
+    const apiKey = process.env.MINIMAX_API_KEY
+    if (!apiKey) throw new Error('MINIMAX_API_KEY not configured')
+
+    const styleHint = styleTag && STYLE_HINTS[styleTag] ? STYLE_HINTS[styleTag] : ''
+    const detailsText = answers.map((a, i) => `问题${i + 1}: ${a.question}\n回答: ${a.answer}`).join('\n')
+
+    const prompt = STORY_PROMPT + dreamFragment + '\n\n风格倾向：' + styleHint + '\n\n用户补充细节：\n' + detailsText
+
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model: 'MiniMax-M2.7-highspeed',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 1200,
+        temperature: 0.8,
+        stream: true
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`MiniMax API error: ${response.status}`)
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let fullContent = ''
+    let title = '无题'
+    let inThink = false
+    let thinkContent = ''
+
+    // Send initial title event
+    yield { type: 'start', title: '《梦境编织中》' }
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6)
+          if (data === '[DONE]') continue
+
+          try {
+            const parsed = JSON.parse(data)
+            const content = parsed.choices?.[0]?.delta?.content || ''
+            if (!content) continue
+
+            // Filter thinking tags
+            if (content.includes('<think>')) {
+              inThink = true
+              thinkContent += content.replace(/世家/g, '')
+            }
+            if (inThink) {
+              thinkContent += content
+              if (content.includes('</think>') || thinkContent.includes('</think>')) {
+                const thinkEnd = thinkContent.indexOf('</think>')
+                if (thinkEnd !== -1) {
+                  thinkContent = thinkContent.substring(0, thinkEnd)
+                }
+                inThink = false
+                thinkContent = ''
+              }
+              continue
+            }
+
+            // Extract title from 《》
+            const titleMatch = content.match(/《([^》]+)》/)
+            if (titleMatch && !title.includes(titleMatch[1])) {
+              title = titleMatch[1]
+            }
+
+            // Send chunk
+            const cleanContent = content.replace(/《[^》]*》/g, '').replace(/\s+/g, ' ').trim()
+            if (cleanContent) {
+              fullContent += cleanContent
+              yield { type: 'chunk', content: cleanContent }
+            }
+          } catch (e) {
+            // Skip malformed JSON
+          }
+        }
+      }
+    }
+
+    // Extract final content without title
+    let storyContent = fullContent
+    const titleMatch = fullContent.match(/《([^》]+)》/)
+    if (titleMatch) {
+      title = titleMatch[1]
+      storyContent = fullContent.replace(/《[^》]+》\s*/, '').trim()
+    }
+
+    yield { type: 'done', title: '《' + title + '》', content: storyContent }
+  },
+
   async generateStory(dreamFragment, answers, styleTag) {
     console.time('generateStory')
     const apiKey = process.env.MINIMAX_API_KEY

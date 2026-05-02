@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-overlay);
-  background: var(--color-overlay);
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 50%, #16213e 100%);
   backdrop-filter: blur(24px);
   display: flex;
   align-items: center;
@@ -12,157 +12,325 @@
 
 .content {
   text-align: center;
-  max-width: 400px;
+  width: 100%;
+  max-width: none;
   padding: var(--space-8);
+  position: relative;
+  z-index: 1;
 }
 
 /* Loading Phase */
-.moonContainer {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin: 0 auto var(--space-10);
+.weavingSpinner {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.moon {
-  width: 100%;
-  height: 100%;
-  animation: moonGlow 2s ease-in-out infinite;
+.weavingStar {
+  font-size: 2.5rem;
+  color: #F4D35E;
+  text-shadow: 0 0 30px rgba(244, 211, 94, 0.8);
+  animation: starPulse 1.5s ease-in-out infinite;
 }
 
-.moon svg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 0 30px rgba(244, 211, 94, 0.5));
+@keyframes starPulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    text-shadow: 0 0 30px rgba(244, 211, 94, 0.8);
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    text-shadow: 0 0 50px rgba(244, 211, 94, 1);
+  }
 }
-
-.rays {
-  position: absolute;
-  inset: -20px;
-  animation: rotate 20s linear infinite;
-}
-
-.ray {
-  position: absolute;
-  width: 2px;
-  height: 20px;
-  background: linear-gradient(to top, rgba(244, 211, 94, 0.6), transparent);
-  left: 50%;
-  top: 0;
-  transform-origin: center 70px;
-  opacity: 0.5;
-}
-
-.ray:nth-child(1) { transform: rotate(0deg); }
-.ray:nth-child(2) { transform: rotate(30deg); }
-.ray:nth-child(3) { transform: rotate(60deg); }
-.ray:nth-child(4) { transform: rotate(90deg); }
-.ray:nth-child(5) { transform: rotate(120deg); }
-.ray:nth-child(6) { transform: rotate(150deg); }
-.ray:nth-child(7) { transform: rotate(180deg); }
-.ray:nth-child(8) { transform: rotate(210deg); }
-.ray:nth-child(9) { transform: rotate(240deg); }
-.ray:nth-child(10) { transform: rotate(270deg); }
-.ray:nth-child(11) { transform: rotate(300deg); }
-.ray:nth-child(12) { transform: rotate(330deg); }
 
 .loadingTitle {
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 500;
-  color: var(--color-moonlight);
-  margin: 0 0 var(--space-3) 0;
+  color: #F4D35E;
+  margin: 0 0 12px 0;
+  text-shadow: 0 0 20px rgba(244, 211, 94, 0.4);
   animation: fadeInUp 0.8s var(--ease-dream);
 }
 
 .loadingMessage {
   font-size: 1rem;
-  color: var(--color-silver);
-  margin: 0 0 var(--space-8) 0;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
   min-height: 1.5em;
 }
 
-.progressBar {
-  width: 200px;
-  height: 4px;
-  background: rgba(139, 157, 195, 0.2);
-  border-radius: 2px;
-  margin: 0 auto;
-  overflow: hidden;
+/* ========== Streaming Phase: 星空织锦 ========== */
+.brocadeContainer {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 50%, #16213e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-overlay);
+  animation: fadeIn 0.6s var(--ease-dream);
 }
 
-.progressFill {
-  height: 100%;
-  width: 30%;
-  background: linear-gradient(90deg, var(--color-golden), var(--color-moonlight));
-  border-radius: 2px;
-  animation: progressIndeterminate 1.5s ease-in-out infinite;
-}
-
-/* Ready Phase */
-.readyMoon {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto var(--space-8);
-}
-
-.readyMoon svg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 0 40px rgba(244, 211, 94, 0.6));
-}
-
-.moonPulse {
-  animation: moonPulse 1.5s ease-in-out infinite;
-}
-
-.readyStars {
+.brocadeStars {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  overflow: hidden;
 }
 
-.star {
+.firefly {
   position: absolute;
-  width: 6px;
-  height: 6px;
-  background: var(--color-golden);
+  width: 4px;
+  height: 4px;
+  background: #F4D35E;
   border-radius: 50%;
-  animation: starFadeIn 0.5s var(--ease-dream) forwards;
-  opacity: 0;
+  box-shadow: 0 0 10px #F4D35E, 0 0 20px rgba(244, 211, 94, 0.5);
+  animation: fireflyFloat 3s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+@keyframes fireflyFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-15px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+.brocadeFrame {
+  position: relative;
+  width: 800px;
+  max-width: 95vw;
+  margin: 0 auto;
+  padding: 48px;
+  background: rgba(15, 15, 35, 0.8);
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  z-index: 1;
+}
+
+.brocadeTitle {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 500;
+  color: #F4D35E;
+  margin: 0 0 36px 0;
+  text-align: center;
+  text-shadow: 0 0 30px rgba(244, 211, 94, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  animation: titleReveal 0.8s var(--ease-dream);
+}
+
+@keyframes titleReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.brocadeStar {
+  font-size: 1rem;
+  animation: starTwinkle 1.5s ease-in-out infinite;
+}
+
+.brocadeStar:last-child {
+  animation-delay: 0.75s;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.brocadeContent {
+  position: relative;
+  max-height: 450px;
+  overflow-y: auto;
+  padding: 32px;
+  background: rgba(10, 10, 26, 0.6);
+  border: 1px solid rgba(244, 211, 94, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  animation: frameReveal 0.6s var(--ease-dream) 0.2s backwards;
+}
+
+.brocadeContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.brocadeContent::-webkit-scrollbar-track {
+  background: rgba(244, 211, 94, 0.1);
+  border-radius: 3px;
+}
+
+.brocadeContent::-webkit-scrollbar-thumb {
+  background: rgba(244, 211, 94, 0.3);
+  border-radius: 3px;
+}
+
+.brocadeContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 211, 94, 0.5);
+}
+
+@keyframes frameReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.brocadeText {
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  line-height: 2;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: left;
+  margin: 0;
+  animation: textFadeIn 0.3s ease-out;
+}
+
+@keyframes textFadeIn {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+.featherCursor {
+  display: inline-block;
+  animation: featherSway 1s ease-in-out infinite;
+  margin-left: 4px;
+}
+
+@keyframes featherSway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.goldenThreads {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.thread {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244, 211, 94, 0.3), transparent);
+  animation: threadShimmer 4s ease-in-out infinite;
+}
+
+@keyframes threadShimmer {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scaleX(0.8);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scaleX(1);
+  }
+}
+
+.charCount {
+  text-align: right;
+  font-size: 0.8rem;
+  color: rgba(244, 211, 94, 0.5);
+  margin-top: 12px;
+  font-family: var(--font-body);
+}
+
+/* ========== Ready Phase ========== */
+.completionBadge {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.badgeStar {
+  font-size: 1.25rem;
+  color: #F4D35E;
+  text-shadow: 0 0 15px rgba(244, 211, 94, 0.8);
+  animation: badgePulse 1.5s ease-in-out infinite;
+}
+
+.badgeStar:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.badgeStar:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
 }
 
 .readyTitle {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 500;
-  color: var(--color-moonlight);
-  margin: 0 0 var(--space-2) 0;
+  color: #F4D35E;
+  margin: 0 0 12px 0;
+  text-shadow: 0 0 30px rgba(244, 211, 94, 0.5);
   animation: fadeInUp 0.6s var(--ease-dream);
 }
 
 .readySubtitle {
-  font-size: 0.875rem;
-  color: var(--color-silver);
-  opacity: 0.7;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 24px 0;
   animation: fadeInUp 0.6s var(--ease-dream) 0.2s backwards;
 }
 
 .readyStoryTitle {
   font-family: var(--font-display);
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 500;
-  color: var(--color-golden);
-  margin: var(--space-4) 0 0 0;
-  opacity: 0.9;
+  color: rgba(244, 211, 94, 0.85);
+  margin: 0;
+  text-shadow: 0 0 20px rgba(244, 211, 94, 0.4);
   animation: fadeInUp 0.6s var(--ease-dream) 0.3s backwards;
 }
 
-/* Countdown Phase */
+/* ========== Countdown Phase ========== */
+.countdownContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.4s var(--ease-dream);
+}
+
 .countdownMoon {
   width: 140px;
   height: 140px;
-  margin: 0 auto var(--space-8);
+  margin: 0 auto 32px;
   animation: moonReveal 0.8s var(--ease-dream);
 }
 
@@ -172,27 +340,12 @@
   filter: drop-shadow(0 0 50px rgba(244, 211, 94, 0.7));
 }
 
-.countdownStars {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.twinkleStar {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: var(--color-golden);
-  border-radius: 50%;
-  animation: twinkle 1.5s ease-in-out infinite;
-}
-
 .countdownNumber {
   font-family: var(--font-display);
-  font-size: 6rem;
+  font-size: 8rem;
   font-weight: 600;
-  color: var(--color-golden);
-  text-shadow: 0 0 40px rgba(244, 211, 94, 0.5);
+  color: #F4D35E;
+  text-shadow: 0 0 60px rgba(244, 211, 94, 0.8);
   animation: countdownPop 1s var(--ease-dream);
 }
 
@@ -294,6 +447,11 @@
   }
 }
 
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .content {
@@ -321,5 +479,25 @@
 
   .countdownNumber {
     font-size: 5rem;
+  }
+
+  .brocadeFrame {
+    width: 100%;
+    padding: 32px 20px;
+    border-radius: 24px;
+  }
+
+  .brocadeContent {
+    max-height: 350px;
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .brocadeTitle {
+    font-size: 1.5rem;
+  }
+
+  .brocadeText {
+    font-size: 1.05rem;
   }
 }
