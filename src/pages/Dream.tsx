@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
+import { Toast } from '../components/ui/Toast'
 import styles from './Dream.module.css'
 
 // Web Speech API types
@@ -87,9 +88,13 @@ export function Dream() {
   const [interimTranscript, setInterimTranscript] = useState('')
   const [pendingTranscript, setPendingTranscript] = useState('')
   const [showTranscriptConfirm, setShowTranscriptConfirm] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastVisible, setToastVisible] = useState(false)
   const lastSavedRef = useRef<string>(currentSession.dreamText)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const finalTranscriptRef = useRef<string>('')
+  const emotionRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [focusedEmotionIndex, setFocusedEmotionIndex] = useState(-1)
   const { startWaveform, stopWaveform, canvasRef } = useVoiceWaveform()
   const [searchParams] = useSearchParams()
 
@@ -221,6 +226,11 @@ export function Dream() {
   }
 
   const handleStartRecording = async () => {
+    if (!recognitionRef.current) {
+      setToastMessage('您的浏览器不支持语音输入，请使用键盘输入')
+      setToastVisible(true)
+      return
+    }
     if (recognitionRef.current && !isRecording) {
       finalTranscriptRef.current = currentSession.dreamText // Preserve existing text
       try {
@@ -276,6 +286,39 @@ export function Dream() {
 
   const handleSkipEmotion = () => {
     setStep('describe')
+  }
+
+  const handleEmotionKeyDown = (e: React.KeyboardEvent, index: number) => {
+    const cols = 3 // 3 columns grid
+    const rows = Math.ceil(DREAM_TAGS.length / cols)
+    let newIndex = index
+
+    switch (e.key) {
+      case 'ArrowRight':
+        newIndex = index + 1 >= DREAM_TAGS.length ? 0 : index + 1
+        break
+      case 'ArrowLeft':
+        newIndex = index - 1 < 0 ? DREAM_TAGS.length - 1 : index - 1
+        break
+      case 'ArrowDown':
+        newIndex = index + cols >= DREAM_TAGS.length ? index % cols : index + cols
+        break
+      case 'ArrowUp':
+        newIndex = index - cols < 0 ? (rows - 1) * cols + (index % cols) : index - cols
+        if (newIndex >= DREAM_TAGS.length) newIndex = DREAM_TAGS.length - 1
+        break
+      case 'Enter':
+      case ' ':
+        e.preventDefault()
+        handleEmotionSelect(DREAM_TAGS[index].id)
+        return
+      default:
+        return
+    }
+
+    e.preventDefault()
+    setFocusedEmotionIndex(newIndex)
+    emotionRefs.current[newIndex]?.focus()
   }
 
   const handleElementsToggle = (elementId: string) => {
@@ -379,13 +422,22 @@ export function Dream() {
               <p className={styles.subtitle}>选择最接近的情绪标签</p>
             </div>
 
-            <div className={styles.emotionGrid}>
+            <div
+              className={styles.emotionGrid}
+              role="radiogroup"
+              aria-label="选择情绪标签"
+            >
               {DREAM_TAGS.map((tag, index) => (
                 <button
                   key={tag.id}
+                  ref={el => { emotionRefs.current[index] = el }}
                   className={`${styles.emotionCard} ${selectedEmotion === tag.id ? styles.selected : ''}`}
                   onClick={() => handleEmotionSelect(tag.id)}
+                  onKeyDown={(e) => handleEmotionKeyDown(e, index)}
                   disabled={transitionEmotion !== null}
+                  tabIndex={focusedEmotionIndex === index || (focusedEmotionIndex === -1 && index === 0) ? 0 : -1}
+                  role="radio"
+                  aria-checked={selectedEmotion === tag.id}
                   style={{
                     '--tag-color': tag.color,
                     animationDelay: `${index * 0.05}s`
@@ -441,7 +493,7 @@ export function Dream() {
 
             {/* Voice Input */}
             {isSrSupported && (
-              <div className={styles.voiceSection}>
+              <div className={styles.voiceSection} aria-live="polite" aria-label="语音输入状态">
                 <button
                   className={`${styles.voiceBtn} ${isRecording ? styles.recording : ''}`}
                   onClick={isRecording ? handleStopRecording : handleStartRecording}
@@ -617,6 +669,14 @@ export function Dream() {
           cancelText="取消"
           onConfirm={handleConfirmTranscript}
           onCancel={handleCancelTranscript}
+        />
+
+        {/* Toast for browser unsupported */}
+        <Toast
+          message={toastMessage}
+          visible={toastVisible}
+          type="info"
+          onClose={() => setToastVisible(false)}
         />
       </div>
     </div>
