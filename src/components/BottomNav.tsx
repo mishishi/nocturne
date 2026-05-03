@@ -89,13 +89,12 @@ export function BottomNav({ onDraftConfirm }: BottomNavProps) {
 
   return (
     <nav className={styles.nav} aria-label="底部导航">
-      <div className={styles.tabList} role="tablist">
+      <div className={styles.tabList}>
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.path}
             to={item.path}
             className={`${styles.tab} ${isActive(item.path) ? styles.active : ''}`}
-            role="tab"
             aria-current={isActive(item.path) ? 'page' : undefined}
             aria-label={item.label}
           >
@@ -103,12 +102,12 @@ export function BottomNav({ onDraftConfirm }: BottomNavProps) {
             <span className={styles.label}>{item.label}</span>
             {item.path === '/profile' && recentlyUnlocked.length > 0 && (
               <span className={styles.badge} aria-label={`${recentlyUnlocked.length}个新成就`}>
-                {recentlyUnlocked.length}
+                {recentlyUnlocked.length > 99 ? '99+' : recentlyUnlocked.length}
               </span>
             )}
             {item.path === '/friends' && friendRequests.length > 0 && (
               <span className={styles.badge} aria-label={`${friendRequests.length}个待处理好友请求`}>
-                {friendRequests.length}
+                {friendRequests.length > 99 ? '99+' : friendRequests.length}
               </span>
             )}
           </Link>
@@ -116,30 +115,30 @@ export function BottomNav({ onDraftConfirm }: BottomNavProps) {
       </div>
 
       {/* Floating Action Button for recording */}
-      <button
-        className={`${styles.fab} ${hasDraft ? styles.fabHasDraft : ''}`}
-        aria-label={hasDraft ? '继续编辑梦境草稿' : '记录梦境'}
-        onClick={() => {
-          if (hasDraft) {
-            onDraftConfirm?.()
-          }
-        }}
-      >
-        <Link to="/dream?new=1" className={styles.fabLink}>
-          {hasDraft ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          )}
+      {hasDraft ? (
+        <button
+          className={`${styles.fab} ${styles.fabHasDraft}`}
+          aria-label="继续编辑梦境草稿"
+          onClick={onDraftConfirm}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+          <span className={styles.draftIndicator} />
+        </button>
+      ) : (
+        <Link
+          to="/dream?new=1"
+          className={styles.fab}
+          aria-label="记录梦境"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
         </Link>
-        {hasDraft && <span className={styles.draftIndicator} />}
-      </button>
+      )}
 
     </nav>
   )

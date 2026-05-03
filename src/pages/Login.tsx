@@ -18,6 +18,7 @@ export function Login() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [touched, setTouched] = useState({ phone: false, password: false })
 
   // Confirm modal state
   const [confirmModal, setConfirmModal] = useState<{
@@ -28,6 +29,26 @@ export function Login() {
 
   // Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
+
+  // Real-time validation
+  const validateField = (field: 'phone' | 'password', value: string): string => {
+    if (field === 'phone') {
+      if (value && !/^1[3-9]\d{9}$/.test(value)) {
+        return '请输入有效的手机号'
+      }
+    }
+    if (field === 'password') {
+      if (value && value.length < 6) {
+        return '密码至少6位'
+      }
+    }
+    return ''
+  }
+
+  const getFieldError = (field: 'phone' | 'password'): string => {
+    const value = field === 'phone' ? phone : password
+    return touched[field] ? validateField(field, value) : ''
+  }
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ visible: true, message, type })
   }, [])
@@ -100,10 +121,11 @@ export function Login() {
           try {
             const result = await api.migrateSession(guestOpenid)
             if (result.success && result.migrated > 0) {
-              showToast('检测到您有未完成的梦境，已为您保留')
+              showToast(`已保留 ${result.migrated} 个未完成的梦境`)
             }
           } catch (err) {
             console.error('Session migration failed:', err)
+            showToast('无法保留草稿，但您仍可正常登录', 'error')
           }
         }
 
@@ -274,10 +296,14 @@ export function Login() {
                       placeholder="手机号"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className={styles.input}
+                      onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
+                      className={`${styles.input} ${getFieldError('phone') ? styles.inputError : ''}`}
                       maxLength={11}
                       autoComplete="tel"
                     />
+                    {getFieldError('phone') && (
+                      <span className={styles.fieldError}>{getFieldError('phone')}</span>
+                    )}
                   </div>
 
                   <div className={styles.inputWrapper}>
@@ -290,9 +316,13 @@ export function Login() {
                       placeholder="密码"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={styles.input}
+                      onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
+                      className={`${styles.input} ${getFieldError('password') ? styles.inputError : ''}`}
                       autoComplete="current-password"
                     />
+                    {getFieldError('password') && (
+                      <span className={styles.fieldError}>{getFieldError('password')}</span>
+                    )}
                   </div>
                 </div>
 

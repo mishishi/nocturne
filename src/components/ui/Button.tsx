@@ -28,12 +28,13 @@ export function Button({
   const [ripples, setRipples] = useState<Ripple[]>([])
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  // Clean up ripples on unmount
+  // Clean up ripples on unmount and when disabled becomes true
   useEffect(() => {
-    return () => {
+    if (disabled || loading) {
       setRipples([])
     }
-  }, [])
+  }, [disabled, loading])
+
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (disabled || loading) return
