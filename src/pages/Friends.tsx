@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { friendApi, FriendListItem, FriendRequestItem } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { Toast } from '../components/ui/Toast'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { FriendsSkeleton } from '../components/ui/Skeleton'
 import styles from './Friends.module.css'
@@ -21,10 +22,34 @@ export function Friends() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Array<{ id: string; nickname?: string; avatar?: string; isMember: boolean }>>([])
   const [isSearching, setIsSearching] = useState(false)
-  const [lastSearchQuery, setLastSearchQuery] = useState('') // 记住上次搜索词，切换回搜索tab时恢复结果
+  const [lastSearchQuery, setLastSearchQuery] = useState(() => {
+    // 从 localStorage 恢复上次搜索词
+    return localStorage.getItem('friends_last_search') || ''
+  })
+
+  // 保存搜索词到 localStorage
+  const saveLastSearchQuery = (query: string) => {
+    setLastSearchQuery(query)
+    if (query) {
+      localStorage.setItem('friends_last_search', query)
+    } else {
+      localStorage.removeItem('friends_last_search')
+    }
+  }
   const [isAccepting, setIsAccepting] = useState(false)
   const [isRejecting, setIsRejecting] = useState(false)
   const [removingFriendId, setRemovingFriendId] = useState<string | null>(null)
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean
+    friendOpenid: string | null
+    friendNickname: string
+    onConfirm: () => void
+  }>({
+    open: false,
+    friendOpenid: null,
+    friendNickname: '',
+    onConfirm: () => {}
+  })
 
   // Load data function (extracted for reuse)
   const loadData = async () => {
@@ -36,13 +61,13 @@ export function Friends() {
         friendApi.getSentRequests()
       ])
       if (friendsRes.success) {
-        setFriends(friendsRes.friends)
+        setFriends(friendsRes.data.friends)
       }
       if (requestsRes.success) {
-        setRequests(requestsRes.requests)
+        setRequests(requestsRes.data.requests)
       }
       if (sentRes.success) {
-        setSentRequests(sentRes.sentRequests)
+        setSentRequests(sentRes.data.sentRequests)
       }
     } catch (err) {
       console.error('Failed to load friends data:', err)
@@ -115,29 +140,36 @@ export function Friends() {
     }
   }
 
-  const handleRemoveFriend = async (friendOpenid: string) => {
-    if (removingFriendId) return
-    setRemovingFriendId(friendOpenid)
-    try {
-      const result = await friendApi.removeFriend(friendOpenid)
-      if (result.success) {
-        showToast('已删除好友', 'info')
-        // Remove from local state
-        setFriends(prev => prev.filter(f => f.openid !== friendOpenid))
-      } else {
-        showToast(result.message || '删除失败', 'error')
+  const handleRemoveFriend = (friendOpenid: string, friendNickname: string) => {
+    setConfirmModal({
+      open: true,
+      friendOpenid,
+      friendNickname,
+      onConfirm: async () => {
+        if (removingFriendId) return
+        setRemovingFriendId(friendOpenid)
+        setConfirmModal(prev => ({ ...prev, open: false }))
+        try {
+          const result = await friendApi.removeFriend(friendOpenid)
+          if (result.success) {
+            showToast('已删除好友', 'info')
+            setFriends(prev => prev.filter(f => f.openid !== friendOpenid))
+          } else {
+            showToast(result.message || '删除失败', 'error')
+          }
+        } catch (err) {
+          console.error('Failed to remove friend:', err)
+          showToast('网络错误', 'error')
+        } finally {
+          setRemovingFriendId(null)
+        }
       }
-    } catch (err) {
-      console.error('Failed to remove friend:', err)
-      showToast('网络错误', 'error')
-    } finally {
-      setRemovingFriendId(null)
-    }
+    })
   }
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
-    setLastSearchQuery(searchQuery.trim())
+    saveLastSearchQuery(searchQuery.trim())
     setIsSearching(true)
     try {
       const result = await friendApi.searchUsers(searchQuery.trim(), user?.openid)
@@ -156,12 +188,26 @@ export function Friends() {
     }
   }
 
-  // 切换到搜索tab时，如果之前有搜索结果则恢复显示
+  // 切换到搜索tab时，如果之前有搜索词但没有结果，则恢复搜索
   useEffect(() => {
     if (activeTab === 'search' && lastSearchQuery && searchResults.length === 0 && searchQuery === lastSearchQuery) {
-      // 恢复搜索结果，无需重新请求（当前未实现持久化，恢复功能暂不可用）
+      // 恢复搜索结果
+      const restoreSearch = async () => {
+        setIsSearching(true)
+        try {
+          const result = await friendApi.searchUsers(lastSearchQuery, user?.openid)
+          if (result.success) {
+            setSearchResults(result.users)
+          }
+        } catch (err) {
+          console.error('Failed to restore search:', err)
+        } finally {
+          setIsSearching(false)
+        }
+      }
+      restoreSearch()
     }
-  }, [activeTab, lastSearchQuery, searchResults.length, searchQuery])
+  }, [activeTab, lastSearchQuery, searchResults.length, searchQuery, user?.openid])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -187,14 +233,21 @@ export function Friends() {
         <header className={styles.header}>
           <div className={styles.moonIcon}>
             <svg viewBox="0 0 60 60" fill="none">
-              <circle cx="30" cy="30" r="25" fill="url(#friendMoonGrad)" />
-              <circle cx="22" cy="22" r="4" fill="rgba(255,255,255,0.3)" />
-              <circle cx="35" cy="28" r="3" fill="rgba(255,255,255,0.2)" />
-              <circle cx="25" cy="35" r="3.5" fill="rgba(255,255,255,0.25)" />
+              {/* Two people silhouettes representing friendship */}
+              <circle cx="20" cy="18" r="8" fill="url(#friendPersonGrad)" />
+              <path d="M8 42c0-8 5.5-14 12-14s12 6 12 14" fill="url(#friendPersonGrad)" />
+              <circle cx="40" cy="18" r="8" fill="url(#friendPersonGrad)" />
+              <path d="M28 42c0-8 5.5-14 12-14s12 6 12 14" fill="url(#friendPersonGrad)" />
+              {/* Connection heart */}
+              <path d="M30 28c-2-3-6-3-6 2s6 6 6 6 6 0 6-6-4-5-6-2" fill="url(#friendHeartGrad)" />
               <defs>
-                <radialGradient id="friendMoonGrad" cx="50%" cy="50%" r="50%">
+                <radialGradient id="friendPersonGrad" cx="50%" cy="30%" r="60%">
                   <stop offset="0%" stopColor="#FFD666" />
                   <stop offset="100%" stopColor="#F4D35E" />
+                </radialGradient>
+                <radialGradient id="friendHeartGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FF6B8A" />
+                  <stop offset="100%" stopColor="#FF8FA3" />
                 </radialGradient>
               </defs>
             </svg>
@@ -293,7 +346,7 @@ export function Friends() {
                           className={styles.removeButton}
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleRemoveFriend(friend.openid)
+                            handleRemoveFriend(friend.openid, friend.nickname || '该好友')
                           }}
                           disabled={removingFriendId === friend.openid}
                           aria-label="删除好友"
@@ -406,7 +459,13 @@ export function Friends() {
                       className={styles.searchInput}
                       placeholder="输入昵称搜索用户..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setSearchQuery(value)
+                        if (!value) {
+                          saveLastSearchQuery('')
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && searchQuery.trim()) {
                           handleSearch()
@@ -461,6 +520,17 @@ export function Friends() {
         visible={toastVisible}
         onClose={() => setToastVisible(false)}
         type={toastType}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.open}
+        title="删除好友"
+        message={`确定要删除好友「${confirmModal.friendNickname}」吗？删除后将不再显示在好友列表中。`}
+        confirmText="删除"
+        cancelText="取消"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+        danger
       />
     </div>
   )
