@@ -5,6 +5,7 @@ import { MobileHeader } from './components/MobileHeader'
 import { BottomNav } from './components/BottomNav'
 import { PageTransition } from './components/PageTransition'
 import { AchievementToast } from './components/AchievementToast'
+import { ReEngagementModal, updateLastActiveDate, shouldShowReEngagement } from './components/ReEngagementModal'
 import { AtmosphereEffects } from './components/effects/AtmosphereEffects'
 import { SkipLink } from './components/SkipLink'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -59,6 +60,22 @@ function App() {
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
+  const [showReEngagement, setShowReEngagement] = useState(false)
+
+  // Re-engagement: update last active date and check if should show modal
+  useEffect(() => {
+    if (!user) return // Only for logged-in users
+
+    updateLastActiveDate()
+    const shouldShow = shouldShowReEngagement(false)
+    setShowReEngagement(shouldShow)
+  }, [user])
+
+  const handleCloseReEngagement = () => {
+    setShowReEngagement(false)
+    // Mark as seen for this session by updating last active to today
+    updateLastActiveDate()
+  }
 
   // Update page title based on route
   useEffect(() => {
@@ -196,6 +213,8 @@ function App() {
         achievement={currentAchievement}
         onDismiss={handleClose}
       />
+
+      {showReEngagement && <ReEngagementModal onClose={handleCloseReEngagement} />}
     </div>
   )
 }

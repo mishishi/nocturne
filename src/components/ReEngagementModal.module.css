@@ -1,0 +1,135 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 15, 30, 0.85);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal {
+  position: relative;
+  width: 90%;
+  max-width: 320px;
+  padding: var(--space-8);
+  background: linear-gradient(
+    145deg,
+    rgba(26, 58, 92, 0.95) 0%,
+    rgba(20, 45, 72, 0.9) 100%
+  );
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  overflow: hidden;
+  animation: slideUp 0.4s var(--ease-dream);
+}
+
+.icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-5);
+  animation: float 3s ease-in-out infinite;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 20px rgba(244, 211, 94, 0.4));
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-moonlight);
+  margin: 0 0 var(--space-3);
+}
+
+.message {
+  font-size: 1rem;
+  color: var(--color-silver);
+  line-height: 1.6;
+  margin: 0 0 var(--space-4);
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: var(--color-golden);
+  opacity: 0.8;
+  margin-bottom: var(--space-6);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skipButton {
+  background: transparent;
+  border: none;
+  color: var(--color-silver);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: var(--space-2);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.skipButton:hover {
+  opacity: 1;
+}
+
+/* Decorative stars */
+.star {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--color-golden);
+  border-radius: 50%;
+  opacity: 0;
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
