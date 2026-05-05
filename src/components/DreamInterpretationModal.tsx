@@ -1,16 +1,68 @@
 import { createPortal } from 'react-dom'
+import { useState, useEffect } from 'react'
+import { api } from '../services/api'
 import styles from './DreamInterpretationModal.module.css'
 
 interface DreamInterpretationModalProps {
   interpretation: string
+  sessionId: string
   onClose: () => void
 }
 
-export function DreamInterpretationModal({ interpretation, onClose }: DreamInterpretationModalProps) {
-  // Parse the interpretation content
-  const sections = parseInterpretation(interpretation)
+type FeedbackState = 'idle' | 'submitting' | 'submitted' | 'error'
 
-  return createPortal(
+export function DreamInterpretationModal({ interpretation, sessionId, onClose }: DreamInterpretationModalProps) {
+  const sections = parseInterpretation(interpretation)
+  const [feedbackState, setFeedbackState] = useState<FeedbackState>('idle')
+  const [selectedRating, setSelectedRating] = useState<boolean | null>(null)
+  const [feedbackComment, setFeedbackComment] = useState('')
+  const [existingFeedback, setExistingFeedback] = useState<{ isAccurate: boolean; comment?: string } | null>(null)
+
+  // Check if user already submitted feedback
+  useEffect(() => {
+    const checkExistingFeedback = async () => {
+      try {
+        const result = await api.getInterpretationFeedback(sessionId)
+        if (result.success && result.data?.feedback) {
+          setExistingFeedback(result.data.feedback)
+          setFeedbackState('submitted')
+          setSelectedRating(result.data.feedback.isAccurate)
+          setFeedbackComment(result.data.feedback.comment || '')
+        }
+      } catch {
+        // Ignore - user might not be logged in or feedback doesn't exist
+      }
+    }
+    checkExistingFeedback()
+  }, [sessionId])
+
+  const handleFeedback = async (isAccurate: boolean) => {
+    if (feedbackState === 'submitted' || feedbackState === 'submitting') return
+
+    setSelectedRating(isAccurate)
+    setFeedbackState('submitting')
+
+    try {
+      await api.submitInterpretationFeedback(sessionId, isAccurate, feedbackComment.trim() || undefined)
+      setFeedbackState('submitted')
+    } catch {
+      setFeedbackState('error')
+    }
+  }
+
+  const handleUpdateComment = async () => {
+    if (feedbackState !== 'submitted' || selectedRating === null) return
+
+    setFeedbackState('submitting')
+    try {
+      await api.submitInterpretationFeedback(sessionId, selectedRating, feedbackComment.trim() || undefined)
+      setFeedbackState('submitted')
+    } catch {
+      setFeedbackState('error')
+    }
+  }
+
+  return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
@@ -73,6 +125,80 @@ export function DreamInterpretationModal({ interpretation, onClose }: DreamInter
               <p className={styles.questionText}>{sections.question}</p>
             </div>
           )}
+
+          {/* Feedback Section */}
+          <div className={styles.feedbackSection}>
+            {feedbackState === 'idle' && (
+              <>
+                <p className={styles.feedbackPrompt}>这份解读对你有帮助吗？</p>
+                <div className={styles.feedbackButtons}>
+                  <button
+                    className={`${styles.feedbackBtn} ${styles.feedbackBtnGood}`}
+                    onClick={() => handleFeedback(true)}
+                    aria-label="有帮助"
+                  >
+                    <span className={styles.feedbackEmoji}>👍</span>
+                    <span>有帮助</span>
+                  </button>
+                  <button
+                    className={`${styles.feedbackBtn} ${styles.feedbackBtnBad}`}
+                    onClick={() => handleFeedback(false)}
+                    aria-label="不太准确"
+                  >
+                    <span className={styles.feedbackEmoji}>👎</span>
+                    <span>不太准确</span>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {feedbackState === 'submitting' && (
+              <div className={styles.feedbackLoading}>
+                <div className={styles.miniSpinner} />
+                <span>提交中...</span>
+              </div>
+            )}
+
+            {(feedbackState === 'submitted' || existingFeedback) && (
+              <div className={styles.feedbackSubmitted}>
+                <div className={styles.feedbackThanks}>
+                  {selectedRating ? '感谢你的反馈！' : '感谢你的反馈，我们会继续改进'}
+                  {selectedRating && ' 🙏'}
+                </div>
+
+                {/* Optional comment update */}
+                <div className={styles.feedbackComment}>
+                  <input
+                    type="text"
+                    className={styles.commentInput}
+                    placeholder="补充说明（选填）..."
+                    value={feedbackComment}
+                    onChange={(e) => setFeedbackComment(e.target.value)}
+                    maxLength={200}
+                  />
+                  <button
+                    className={styles.commentSubmit}
+                    onClick={handleUpdateComment}
+                    disabled={feedbackState === 'submitting'}
+                  >
+                    更新
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {feedbackState === 'error' && (
+              <div className={styles.feedbackError}>
+                <span>提交失败</span>
+                <button
+                  className={styles.retryBtn}
+                  onClick={() => setFeedbackState('idle')}
+                >
+                  重试
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className={styles.footer}>

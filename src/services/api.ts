@@ -308,6 +308,30 @@ export const api = {
     return res.json()
   },
 
+  // Submit interpretation feedback
+  async submitInterpretationFeedback(
+    sessionId: string,
+    isAccurate: boolean,
+    comment?: string
+  ): Promise<ApiResponse<{ feedback: { id: string; isAccurate: boolean; comment?: string } }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/interpretation-feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ isAccurate, comment })
+    })
+    if (!res.ok) throw new Error(`提交反馈失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get interpretation feedback status
+  async getInterpretationFeedback(
+    sessionId: string
+  ): Promise<ApiResponse<{ feedback: { id: string; isAccurate: boolean; comment?: string } | null }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/interpretation-feedback`)
+    if (!res.ok) throw new Error(`获取反馈状态失败: ${res.status}`)
+    return res.json()
+  },
+
   // Migrate guest sessions to logged-in user
   async migrateSession(guestOpenid: string): Promise<ApiResponse<{
     migrated: number

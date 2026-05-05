@@ -1101,6 +1101,7 @@ export function Story() {
       {showInterpretation && interpretation && (
         <DreamInterpretationModal
           interpretation={interpretation}
+          sessionId={sessionId}
           onClose={() => setShowInterpretation(false)}
         />
       )}

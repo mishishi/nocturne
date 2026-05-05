@@ -227,6 +227,81 @@ export default async function sessionRoutes(fastify) {
     return res.send(successResponse({ interpretation: story.interpretation || null }))
   })
 
+  // POST /api/sessions/:sessionId/interpretation-feedback - 提交解读反馈
+  fastify.post('/sessions/:sessionId/interpretation-feedback', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { sessionId } = req.params
+    const { isAccurate, comment } = req.body
+
+    if (typeof isAccurate !== 'boolean') {
+      return res.status(400).send(errorResponse('isAccurate (boolean) is required', 'MISSING_PARAMS'))
+    }
+
+    // Get authenticated user from token
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser) {
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
+    }
+
+    // Verify session exists and has an interpretation
+    const story = await prisma.story.findUnique({ where: { sessionId } })
+    if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
+    if (!story.interpretation) {
+      return res.status(400).send(errorResponse('解读不存在，无法提交反馈', 'INTERPRETATION_NOT_FOUND'))
+    }
+
+    // Upsert feedback (update if exists, create if not)
+    const feedback = await prisma.interpretationFeedback.upsert({
+      where: {
+        sessionId_openid: {
+          sessionId,
+          openid: tokenUser.openid
+        }
+      },
+      update: {
+        isAccurate,
+        comment: comment || null
+      },
+      create: {
+        sessionId,
+        openid: tokenUser.openid,
+        isAccurate,
+        comment: comment || null
+      }
+    })
+
+    return res.send(successResponse({ feedback }))
+  })
+
+  // GET /api/sessions/:sessionId/interpretation-feedback - 获取解读反馈状态
+  fastify.get('/sessions/:sessionId/interpretation-feedback', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { sessionId } = req.params
+
+    // Get authenticated user from token
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser) {
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
+    }
+
+    const feedback = await prisma.interpretationFeedback.findUnique({
+      where: {
+        sessionId_openid: {
+          sessionId,
+          openid: tokenUser.openid
+        }
+      }
+    })
+
+    return res.send(successResponse({ feedback }))
+  })
+
   // POST /api/sessions/migrate - 迁移游客session到登录用户
   fastify.post('/sessions/migrate', {
     preHandler: async (req, res) => {

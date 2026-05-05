@@ -320,6 +320,96 @@ const result = await api.interpret(sessionId, openid)
 
 ---
 
+### POST /api/sessions/:sessionId/interpretation-feedback
+
+**功能：** 提交梦境解读的反馈
+
+**需要认证：** 是
+
+**URL 参数：**
+- `sessionId`: 会话 ID
+
+**请求 Body：**
+```json
+{
+  "isAccurate": true,    // 必填，解读是否准确
+  "comment": "string"     // 选填，补充说明
+}
+```
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "feedback": {
+    "id": "feedback_id",
+    "isAccurate": true,
+    "comment": "补充说明..."
+  }
+}
+
+// 参数错误
+{
+  "success": false,
+  "reason": "isAccurate (boolean) is required"
+}
+
+// 未找到解读
+{
+  "success": false,
+  "reason": "解读不存在，无法提交反馈"
+}
+```
+
+**业务逻辑：**
+- 验证用户已登录
+- 检查该 session 的故事是否有解读
+- 使用 upsert 逻辑，允许用户更新自己的反馈
+- 每个用户对每个解读只能提交一次反馈
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/components/DreamInterpretationModal.tsx` | `handleFeedback()` | 用户点击"有帮助"或"不太准确"按钮 |
+
+---
+
+### GET /api/sessions/:sessionId/interpretation-feedback
+
+**功能：** 获取当前用户对解读的反馈状态
+
+**需要认证：** 是
+
+**URL 参数：**
+- `sessionId`: 会话 ID
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "feedback": {
+    "id": "feedback_id",
+    "isAccurate": true,
+    "comment": "补充说明..."
+  }
+}
+
+// 未提交过反馈
+{
+  "success": true,
+  "feedback": null
+}
+```
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/components/DreamInterpretationModal.tsx` | `useEffect()` | 打开解读弹窗时检查是否已反馈 |
+
+---
+
 ### POST /api/sessions/migrate
 
 **功能：** 迁移游客会话到登录用户
@@ -434,6 +524,18 @@ model Story {
   wordCount       Int?
   promptTokens    Int?
   completionTokens Int?
+}
+
+// 梦境解读反馈
+model InterpretationFeedback {
+  id          String   @id @default(cuid())
+  sessionId   String   // 关联的 session
+  openid      String   // 提供反馈的用户
+  isAccurate  Boolean  // 解读是否准确
+  comment     String?  // 用户可选的详细反馈
+  createdAt   DateTime @default(now())
+
+  @@unique([sessionId, openid])
 }
 ```
 

@@ -29,6 +29,7 @@ model User {
   sessions         Session[]
   shareLogs        ShareLog[]
   storyFeedbacks   StoryFeedback[]
+  interpretationFeedback InterpretationFeedback[]
   invitesSent      Invite[]  @relation("Inviter")
   invitesReceived  Invite[]  @relation("Invitee")
   friends          Friend[]  @relation("UserFriends")
@@ -70,6 +71,7 @@ model Session {
   answers              Answer[]
   story                Story?
   storyFeedback        StoryFeedback[]
+  interpretationFeedback InterpretationFeedback[]
   wallPost             DreamWall?
   storyFavorites      StoryFavorite[]
 }
@@ -235,6 +237,23 @@ model StoryFeedback {
   session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   user             User     @relation(fields: [openid], references: [openid])
 
+  @@index([openid])
+}
+
+// 梦境解读反馈
+model InterpretationFeedback {
+  id          String   @id @default(cuid())
+  sessionId   String   // 关联的 session
+  openid      String   // 提供反馈的用户
+  isAccurate  Boolean  // 解读是否准确：true=准确, false=不准确
+  comment     String?  // 用户可选的详细反馈
+  createdAt   DateTime @default(now())
+
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user        User    @relation(fields: [openid], references: [openid])
+
+  @@unique([sessionId, openid]) // 每个用户对每个解读只能提交一次反馈
+  @@index([sessionId])
   @@index([openid])
 }
 

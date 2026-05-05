@@ -32,6 +32,7 @@
 | 2026-04-28 | 完成 message.md 私信模块文档 |
 | 2026-04-28 | GET /api/wall/friends 新增关注的人动态接口 |
 | 2026-04-30 | 完成 admin.md 管理后台 API 文档 |
+| 2026-05-05 | 新增解读反馈 API（interpretation-feedback）|
 
 ---
 
@@ -59,6 +60,8 @@
 | `/api/sessions/users/:openid/history` | GET | 获取用户历史 | 否 |
 | `/api/sessions/:sessionId/interpret` | POST | 生成梦境解读 | 否 |
 | `/api/sessions/:sessionId/interpretation` | GET | 获取已有解读 | 否 |
+| `/api/sessions/:sessionId/interpretation-feedback` | POST | 提交解读反馈 | **是** |
+| `/api/sessions/:sessionId/interpretation-feedback` | GET | 获取反馈状态 | **是** |
 | `/api/sessions/migrate` | POST | 迁移游客会话 | 否 |
 
 ### 分享/积分相关
@@ -193,7 +196,9 @@ User
 ├── Session (1:N)
 │   ├── Message (1:N)
 │   ├── Answer (1:N)
-│   └── Story (1:1)
+│   ├── Story (1:1)
+│   │   └── InterpretationFeedback (1:N)
+│   └── InterpretationFeedback (1:N)
 ├── ShareLog (1:N)
 ├── Invite (1:N - as inviter)
 ├── Invite (1:N - as invitee)
