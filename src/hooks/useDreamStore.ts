@@ -1,11 +1,24 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { checkInApi, wallApi, achievementApi } from '../services/api'
+import { checkInApi, wallApi, achievementApi, apiWithRetry } from '../services/api'
 import { useAuthStore } from './useAuthStore'
+
+// Toast 通知回调函数（用于后台任务失败时通知用户）
+type ToastCallback = (message: string, type: 'success' | 'error') => void
+let toastCallback: ToastCallback | null = null
+
+/**
+ * 注册 Toast 回调函数
+ * 应在 App.tsx 初始化时调用
+ */
+export function registerToastCallback(fn: ToastCallback) {
+  toastCallback = fn
+}
 
 export interface DreamSession {
   id: string
   sessionId: string  // Backend session ID for publishing
+  openid: string     // Author's openid
   date: string
   dreamSnippet: string
   storyTitle: string
@@ -177,7 +190,7 @@ interface DreamState {
   setAmbientVolume: (volume: number) => void
   reset: () => void
   // Auth actions
-  setUser: (user: User | null, token?: string | null) => void
+  setUser: (user: User | null, token?: string | null, previousOpenid?: string) => void
   logout: () => void
   // Friend actions
   setFriends: (friends: Friend[]) => void
@@ -354,6 +367,7 @@ export const useDreamStore = create<DreamState>()(
         const newSession: DreamSession = {
           id: `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
           sessionId: state.currentSession.sessionId,
+          openid: state.currentSession.openid,
           date: new Date().toLocaleDateString('zh-CN'),
           dreamSnippet: dreamText.slice(0, 100) + (dreamText.length > 100 ? '...' : ''),
           storyTitle,
@@ -436,9 +450,11 @@ export const useDreamStore = create<DreamState>()(
           }
         })
         if (sessionId) {
-          wallApi.toggleStoryFavorite(sessionId).catch(err => {
-            console.error('Failed to sync favorite to backend:', err)
-          })
+          apiWithRetry.toggleStoryFavorite(sessionId)
+            .catch(err => {
+              console.error('Failed to sync favorite to backend:', err)
+              toastCallback?.('收藏同步失败，请检查网络', 'error')
+            })
         }
       },
 
@@ -482,10 +498,12 @@ export const useDreamStore = create<DreamState>()(
         set((state) => {
           if (state.achievements.includes(id)) return state
           const newAchievements = [...state.achievements, id]
-          // Sync to server in background
-          achievementApi.syncAchievements(newAchievements).catch(err => {
-            console.error('Failed to sync achievement to server:', err)
-          })
+          // Sync to server in background with retry
+          apiWithRetry.syncAchievements(newAchievements)
+            .catch(err => {
+              console.error('Failed to sync achievement to server:', err)
+              toastCallback?.('成就同步失败', 'error')
+            })
           return {
             achievements: newAchievements,
             recentlyUnlocked: [...state.recentlyUnlocked, id]
@@ -551,7 +569,7 @@ export const useDreamStore = create<DreamState>()(
         set({ currentSession: initialState.currentSession }),
 
       // Auth actions
-      setUser: (user, token = null) => {
+      setUser: (user, token = null, previousOpenid) => {
         if (token) {
           localStorage.setItem('yeelin_token', token)
         }
@@ -561,6 +579,16 @@ export const useDreamStore = create<DreamState>()(
         // Sync achievements from server when user logs in
         if (user) {
           useDreamStore.getState().syncAchievementsFromServer()
+        }
+        // Migrate history items from guest openid to logged-in openid
+        if (user && previousOpenid && previousOpenid !== user.openid) {
+          set((state) => ({
+            history: state.history.map(item =>
+              item.openid === previousOpenid
+                ? { ...item, openid: user.openid }
+                : item
+            )
+          }))
         }
       },
 

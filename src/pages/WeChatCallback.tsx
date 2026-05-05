@@ -8,7 +8,7 @@ import styles from './Login.module.css'
 export function WeChatCallback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { setUser } = useDreamStore()
+  const { setUser, currentSession } = useDreamStore()
 
   // Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
@@ -42,7 +42,7 @@ export function WeChatCallback() {
         if (guestOpenid && guestOpenid !== user.openid) {
           try {
             const result = await api.migrateSession(guestOpenid)
-            if (result.success && result.migrated > 0) {
+            if (result.success && (result.data?.migrated ?? 0) > 0) {
               showToast('检测到您有未完成的梦境，已为您保留')
             }
           } catch (err) {
@@ -56,11 +56,28 @@ export function WeChatCallback() {
         // 清除本地游客数据
         localStorage.removeItem('yeelin_guest_openid')
 
-        // 读取返回地址，默认为 /story
-        const redirectFrom = sessionStorage.getItem('login_redirect_from') || '/story'
+        // 确定重定向目标
+        let redirectTo = '/'
+
+        // 如果有未完成的会话，恢复到对应页面继续流程
+        if (currentSession.status === 'answering' || currentSession.status === 'questions') {
+          redirectTo = '/story'
+        } else if (currentSession.status === 'story_generating' || currentSession.status === 'dream_submitted') {
+          redirectTo = '/story'
+        } else if (currentSession.status === 'completed') {
+          // 已完成的会话，跳转到故事页面查看
+          redirectTo = '/story'
+        }
+
+        // 如果有存储的返回地址，优先使用
+        const storedRedirect = sessionStorage.getItem('login_redirect_from')
+        if (storedRedirect) {
+          redirectTo = storedRedirect
+          sessionStorage.removeItem('login_redirect_from')
+        }
 
         // 跳转到首页或admin页或返回地址
-        navigate(user.isAdmin ? '/admin' : redirectFrom, { replace: true })
+        navigate(user.isAdmin ? '/admin' : redirectTo, { replace: true })
       } catch (err) {
         console.error('WeChat callback error:', err)
         navigate('/login', { replace: true })

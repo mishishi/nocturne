@@ -17,7 +17,7 @@ import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
 import { CommentThread } from '../components/CommentThread'
 import { FriendRequestButton } from '../components/FriendRequestButton'
 import { StoryContentSkeleton } from '../components/ui/Skeleton'
-import { shareApi, api, wallApi } from '../services/api'
+import { shareApi, api, wallApi, apiWithRetry } from '../services/api'
 import styles from './Story.module.css'
 
 const PUBLISHED_SESSIONS_KEY = 'yeelin_published_sessions'
@@ -59,6 +59,7 @@ export function Story() {
   // Pending share confirmation state
   const [pendingShareType, setPendingShareType] = useState<'friend' | 'moment' | null>(null)
   const { speak, stop, isSpeaking, voices, selectedVoice, setVoice } = useTextToSpeech()
+  const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0)
   const shareWrapperRef = useRef<HTMLDivElement>(null)
   const aiWrapperRef = useRef<HTMLDivElement>(null)
   const shareMenuRef = useRef<HTMLDivElement>(null)
@@ -94,7 +95,7 @@ export function Story() {
   // 只有在梦墙场景下才需要判断作者身份：当前用户openid与故事作者openid相同才是作者
   // isAuthor: user is the author if their openid matches the session's openid
   // For history stories where currentSession.openid is empty, use currentUserOpenid from localStorage
-  const isAuthor = useIsAuthor(wallContext)
+  const isAuthor = useIsAuthor(fromHistory ? { authorOpenid: fromHistory.openid } : wallContext)
 
   // Story reveal animation on mount
   useEffect(() => {
@@ -281,7 +282,7 @@ export function Story() {
 
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle || wallContext.storyTitle
   const story = wallContext.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
-  const dreamText = fromHistory?.dreamSnippet || currentSession.dreamText
+  const dreamText = fromHistory?.dreamSnippet || wallContext.dreamSnippet || currentSession.dreamText
   const status = fromHistory || wallContext.fromDreamWall ? 'completed' : currentSession.status
 
   useEffect(() => {
@@ -351,8 +352,8 @@ export function Story() {
     // Check daily share limit before showing confirm modal
     try {
       const stats = await shareApi.getStats(openid)
-      const limit = stats.dailyLimit[type]
-      const todayCount = stats.todayShareCount[type]
+      const limit = stats.data?.dailyLimit[type]
+      const todayCount = stats.data?.todayShareCount[type]
       if (todayCount >= limit) {
         setToastType('info')
         setToastMessage('分享次数已达今日上限')
@@ -433,7 +434,7 @@ export function Story() {
       if (isAuthor && openid) {
         try {
           const result = await shareApi.logShare(openid, 'link')
-          if (result.data?.success) {
+          if (result.success && result.data) {
             const parts: string[] = []
             if (result.data.pointsEarned) parts.push(`+${result.data.pointsEarned} 积分`)
             if (result.data.medalsUnlocked?.length) parts.push(`${result.data.medalsUnlocked.join(',')} 已解锁`)
@@ -566,17 +567,12 @@ export function Story() {
     setIsPublishing(true)
 
     try {
-      const result = await wallApi.publish({
-        openid,
-        sessionId,
-        isAnonymous: true,
-        visibility: 'public'
-      })
+      const result = await apiWithRetry.publishStory(openid, sessionId, true)
 
       if (result.success) {
         setIsPublished(true)
-        if (result.post?.id) {
-          setPublishedPostId(result.post.id)
+        if (result.data?.post?.id) {
+          setPublishedPostId(result.data.post.id)
         }
         // Save to localStorage to persist across page refreshes
         const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
@@ -781,13 +777,15 @@ export function Story() {
         </details>
 
         {/* Nested Comment Thread - for Dream Wall posts */}
-        {fromDreamWall && wallContext.postId && (
+        {wallContext.postId ? (
           <CommentThread postId={wallContext.postId} />
-        )}
+        ) : fromDreamWall ? (
+          <p className={styles.noComments}>评论仅在梦墙帖子中可见</p>
+        ) : null}
 
-        {/* Feedback Panel - only visible to author */}
-        {(fromDreamWall || fromHistory) && isAuthor && (
-          <StoryFeedbackPanel sessionId={sessionId} />
+        {/* Feedback Panel - visible to everyone */}
+        {(fromDreamWall || fromHistory || wallContext.fromDreamWall) && (
+          <StoryFeedbackPanel sessionId={sessionId} refreshKey={feedbackRefreshKey} />
         )}
 
         {/* Next Actions */}
@@ -895,12 +893,6 @@ export function Story() {
                         </span>
                       )
                     )}
-                    <Link to="/dream" className={styles.fabMenuLink} onClick={() => setShowFabMenu(false)}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                        <path d="M12 5v14M5 12h14" />
-                      </svg>
-                      记录新梦境
-                    </Link>
                   </div>
                 )}
               </div>
@@ -1091,7 +1083,11 @@ export function Story() {
       </div>
 
       {/* Story Feedback Form */}
-      <StoryFeedbackForm sessionId={sessionId} isAuthor={isAuthor} />
+      <StoryFeedbackForm
+        sessionId={sessionId}
+        isAuthor={isAuthor}
+        onSubmitted={() => setFeedbackRefreshKey(k => k + 1)}
+      />
 
       {/* Toast */}
       <Toast message={toastMessage} visible={toastVisible} onClose={handleToastClose} type={toastType} />
@@ -1125,7 +1121,7 @@ export function Story() {
             if (openid) {
               try {
                 const result = await shareApi.logShare(openid, type)
-                if (result.data?.success) {
+                if (result.success && result.data) {
                   const parts: string[] = []
                   if (result.data.pointsEarned) parts.push(`+${result.data.pointsEarned} 积分`)
                   if (result.data.medalsUnlocked?.length) parts.push(`${result.data.medalsUnlocked.join(',')} 已解锁`)

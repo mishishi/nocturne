@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import { registerToastCallback } from './hooks/useDreamStore'
+import { Toast } from './components/ui/Toast'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { MobileHeader } from './components/MobileHeader'
 import { BottomNav } from './components/BottomNav'
 import { PageTransition } from './components/PageTransition'
 import { AchievementToast } from './components/AchievementToast'
-import { ReEngagementModal, updateLastActiveDate, shouldShowReEngagement } from './components/ReEngagementModal'
+import { ReEngagementModal, updateLastActiveDate, shouldShowReEngagement, markReEngagementShown, hasShownReEngagementThisSession } from './components/ReEngagementModal'
 import { AtmosphereEffects } from './components/effects/AtmosphereEffects'
 import { SkipLink } from './components/SkipLink'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -30,7 +32,11 @@ import { DreamWall } from './pages/DreamWall'
 import { WeChatCallback } from './pages/WeChatCallback'
 import { Notifications } from './pages/Notifications'
 import { Chat } from './pages/Chat'
-import { Admin } from './pages/Admin'
+import { AdminRoute } from './components/AdminRoute'
+import { AdminLayout } from './components/AdminLayout'
+import { Dashboard } from './pages/admin/Dashboard'
+import { PendingPosts } from './pages/admin/PendingPosts'
+import { CommentManagement } from './pages/admin/CommentManagement'
 import { DemoExperience } from './pages/DemoExperience'
 import { StreamingEffectsDemo } from './pages/StreamingEffectsDemo'
 import { StreamingLayoutDemo } from './pages/StreamingLayoutDemo'
@@ -51,7 +57,10 @@ const PAGE_TITLES: Record<string, string> = {
   '/friends': '好友列表 - 夜棂',
   '/notifications': '通知 - 夜棂',
   '/chat': '聊天 - 夜棂',
-  '/admin': '管理后台 - 夜棂'
+  '/admin': '管理后台 - 夜棂',
+  '/admin/pending': '待审核 - 管理后台 - 夜棂',
+  '/admin/comments': '评论管理 - 管理后台 - 夜棂',
+  '/admin/stats': '数据统计 - 管理后台 - 夜棂'
 }
 
 function App() {
@@ -61,14 +70,22 @@ function App() {
   const lastPlayedRef = useRef<string | null>(null)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
   const [showReEngagement, setShowReEngagement] = useState(false)
+  const [toastVisible, setToastVisible] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
-  // Re-engagement: update last active date and check if should show modal
+  // Re-engagement: check if should show modal based on last active date
   useEffect(() => {
     if (!user) return // Only for logged-in users
 
-    updateLastActiveDate()
-    const shouldShow = shouldShowReEngagement(false)
-    setShowReEngagement(shouldShow)
+    // Check if we should show the re-engagement modal
+    // (only once per browser session, and only if 3+ days inactive)
+    const alreadyShownThisSession = hasShownReEngagementThisSession()
+    const shouldShow = shouldShowReEngagement(alreadyShownThisSession)
+    if (shouldShow) {
+      markReEngagementShown()
+      setShowReEngagement(true)
+    }
   }, [user])
 
   const handleCloseReEngagement = () => {
@@ -139,6 +156,15 @@ function App() {
     }
   }, [])
 
+  // Register Toast callback for background task error notifications
+  useEffect(() => {
+    registerToastCallback((message: string, type: 'success' | 'error') => {
+      setToastMessage(message)
+      setToastType(type)
+      setToastVisible(true)
+    })
+  }, [])
+
   // Get the first recently unlocked achievement to show
   const currentAchievement = recentlyUnlocked.length > 0
     ? ACHIEVEMENTS.find(a => a.id === recentlyUnlocked[0]) || null
@@ -155,8 +181,8 @@ function App() {
     <div data-font-size={fontSize} data-theme={theme}>
       <SkipLink />
       <AtmosphereEffects />
-      <Navbar />
-      <MobileHeader />
+      {!location.pathname.startsWith('/admin') && <Navbar />}
+      {!location.pathname.startsWith('/admin') && <MobileHeader />}
       <PageTransition>
         <main id="main-content" role="main" aria-label="主内容区域">
           <GlobalErrorBoundary>
@@ -187,7 +213,16 @@ function App() {
               <PageErrorBoundary><ProtectedRoute><Chat /></ProtectedRoute></PageErrorBoundary>
             } />
             <Route path="/admin" element={
-              <PageErrorBoundary><ProtectedRoute><Admin /></ProtectedRoute></PageErrorBoundary>
+              <PageErrorBoundary><AdminRoute><AdminLayout><Dashboard /></AdminLayout></AdminRoute></PageErrorBoundary>
+            } />
+            <Route path="/admin/pending" element={
+              <PageErrorBoundary><AdminRoute><AdminLayout><PendingPosts /></AdminLayout></AdminRoute></PageErrorBoundary>
+            } />
+            <Route path="/admin/comments" element={
+              <PageErrorBoundary><AdminRoute><AdminLayout><CommentManagement /></AdminLayout></AdminRoute></PageErrorBoundary>
+            } />
+            <Route path="/admin/stats" element={
+              <PageErrorBoundary><AdminRoute><AdminLayout><Dashboard /></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
             <Route path="/streaming-demo" element={<PageErrorBoundary><StreamingEffectsDemo /></PageErrorBoundary>} />
             <Route path="/layout-demo" element={<PageErrorBoundary><StreamingLayoutDemo /></PageErrorBoundary>} />
@@ -196,7 +231,9 @@ function App() {
         </main>
       </PageTransition>
 
-      <BottomNav onDraftConfirm={() => setShowDraftConfirm(true)} />
+      {!location.pathname.startsWith('/admin') && (
+        <BottomNav onDraftConfirm={() => setShowDraftConfirm(true)} />
+      )}
 
       <ConfirmModal
         isOpen={showDraftConfirm}
@@ -215,6 +252,13 @@ function App() {
       />
 
       {showReEngagement && <ReEngagementModal onClose={handleCloseReEngagement} />}
+
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setToastVisible(false)}
+      />
     </div>
   )
 }

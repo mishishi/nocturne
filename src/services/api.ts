@@ -67,6 +67,91 @@ async function fetchWithLongTimeout(url: string, options: RequestInit = {}): Pro
   }
 }
 
+// ============ API 调用包装器 ============
+
+/**
+ * 带指数退避的重试包装器
+ * @param fn 要重试的异步函数
+ * @param maxRetries 最大重试次数（默认3次）
+ * @param baseDelay 基础延迟毫秒数（默认1000ms）
+ */
+export async function retryWrapper<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error as Error
+
+      if (attempt < maxRetries) {
+        // 指数退避：1s, 2s, 4s
+        const delay = baseDelay * Math.pow(2, attempt)
+        console.log(`[API Retry] call failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`, lastError.message)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+  }
+
+  throw lastError
+}
+
+/**
+ * 判断错误是否应该重试
+ * 只对网络错误和 5xx 服务器错误重试
+ */
+function shouldRetry(error: unknown): boolean {
+  if (error instanceof TypeError && error.message.includes('fetch')) {
+    // 网络错误
+    return true
+  }
+  if (error instanceof Error) {
+    // 检查是否是 5xx 错误
+    if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503') || error.message.includes('504')) {
+      return true
+    }
+    // 检查是否是网络超时
+    if (error.message.includes('aborted') || error.message.includes('timeout')) {
+      return true
+    }
+  }
+  return false
+}
+
+// 带重试的关键 API 封装
+export const apiWithRetry = {
+  // 发布故事到梦墙（带重试）
+  async publishStory(openid: string, sessionId: string, isAnonymous?: boolean): Promise<ApiResponse<{ post: { id: string } }>> {
+    return retryWrapper(
+      () => wallApi.publish({ openid, sessionId, isAnonymous }),
+      3,
+      1000
+    )
+  },
+
+  // 切换故事收藏状态（带重试）
+  async toggleStoryFavorite(sessionId: string): Promise<ApiResponse<{ favorited: boolean }>> {
+    return retryWrapper(
+      () => wallApi.toggleStoryFavorite(sessionId),
+      3,
+      1000
+    )
+  },
+
+  // 同步成就到服务器（带重试）
+  async syncAchievements(medals: string[]): Promise<ApiResponse<{ medals: string[] }>> {
+    return retryWrapper(
+      () => achievementApi.syncAchievements(medals),
+      3,
+      1000
+    )
+  }
+}
+
 // Common headers including auth
 function authHeaders(): HeadersInit {
   const token = getAuthToken()
@@ -512,7 +597,7 @@ export const friendApi = {
   },
 
   // Search users
-  async searchUsers(query: string, excludeId?: string): Promise<ApiResponse<{ users: Array<{ id: string; nickname?: string; avatar?: string; isMember: boolean }> }>> {
+  async searchUsers(query: string, excludeId?: string): Promise<ApiResponse<{ users: Array<{ id: string; openid: string; nickname?: string; avatar?: string; isMember: boolean }> }>> {
     const params = new URLSearchParams({ query })
     if (excludeId) params.append('excludeId', excludeId)
     const res = await fetchWithTimeout(`${API_BASE}/friends/search?${params}`, {
@@ -540,6 +625,7 @@ export interface DreamWallPost {
   storyTitle: string
   storySnippet: string
   storyFull?: string // Full story content for direct navigation
+  dreamFragment?: string // 原始梦境碎片
   isAnonymous: boolean
   isOwnStory?: boolean
   nickname?: string
@@ -1030,6 +1116,21 @@ export interface AdminStats {
   pendingPosts: number
   totalPosts: number
   totalComments: number
+  trends?: {
+    postsLast7Days: number
+    postsGrowth: number
+    approvedLast7Days: number
+    rejectedLast7Days: number
+  }
+  dailyStats?: DailyStat[]
+}
+
+export interface DailyStat {
+  date: string
+  dateLabel: string
+  posts: number
+  approved: number
+  rejected: number
 }
 
 export interface PendingPost {
@@ -1094,6 +1195,28 @@ export const adminApi = {
       body: JSON.stringify({ reason })
     })
     if (!res.ok) throw new Error(`拒绝审核失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Batch approve posts
+  async batchApprovePosts(postIds: string[]): Promise<ApiResponse<{ approved: boolean; count: number }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/posts/batch-approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ postIds })
+    })
+    if (!res.ok) throw new Error(`批量通过审核失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Batch reject posts
+  async batchRejectPosts(postIds: string[], reason: string): Promise<ApiResponse<{ rejected: boolean; count: number }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/posts/batch-reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ postIds, reason })
+    })
+    if (!res.ok) throw new Error(`批量拒绝审核失败: ${res.status}`)
     return res.json()
   },
 
