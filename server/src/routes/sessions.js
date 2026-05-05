@@ -157,6 +157,13 @@ export default async function sessionRoutes(fastify) {
     }
   }, async (req, res) => {
     const { sessionId } = req.params
+    const { visibility } = req.body || {}
+
+    // Validate visibility if provided
+    const validVisibilities = ['private', 'friends', 'public']
+    const interpretationVisibility = visibility && validVisibilities.includes(visibility)
+      ? visibility
+      : 'private'
 
     // Get authenticated user from token
     const tokenUser = await authService.getUser(req.userId)
@@ -217,6 +224,7 @@ export default async function sessionRoutes(fastify) {
       where: { sessionId },
       data: {
         interpretation,
+        interpretationVisibility,
         promptTokens: story.promptTokens + (tokens.prompt || 0),
         completionTokens: story.completionTokens + (tokens.completion || 0)
       }
@@ -224,11 +232,60 @@ export default async function sessionRoutes(fastify) {
 
     return res.send(successResponse({
       interpretation,
+      interpretationVisibility,
       depthLevel,
       hasAuxiliaryClue,
       pointsUsed: COST,
       remainingPoints: user.points - COST
     }))
+  })
+
+  // PATCH /api/sessions/:sessionId/interpretation-visibility - 更新解读可见性 (需登录)
+  fastify.patch('/sessions/:sessionId/interpretation-visibility', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { sessionId } = req.params
+    const { visibility } = req.body
+
+    // Validate visibility
+    const validVisibilities = ['private', 'friends', 'public']
+    if (!visibility || !validVisibilities.includes(visibility)) {
+      return res.status(400).send(errorResponse(
+        `visibility must be one of: ${validVisibilities.join(', ')}`,
+        'INVALID_VISIBILITY'
+      ))
+    }
+
+    // Get authenticated user from token
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser) {
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
+    }
+
+    // Get session and verify ownership
+    const session = await sessionService.getSession(sessionId)
+    if (!session) return res.status(404).send(errorResponse('Session not found', 'NOT_FOUND'))
+
+    // Verify session belongs to the user
+    if (session.openid !== tokenUser.openid) {
+      return res.status(403).send(errorResponse('无权限修改此解读的可见性', 'FORBIDDEN'))
+    }
+
+    const story = await prisma.story.findUnique({ where: { sessionId } })
+    if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
+    if (!story.interpretation) {
+      return res.status(400).send(errorResponse('解读不存在，无法设置可见性', 'INTERPRETATION_NOT_FOUND'))
+    }
+
+    // Update visibility
+    await prisma.story.update({
+      where: { sessionId },
+      data: { interpretationVisibility: visibility }
+    })
+
+    return res.send(successResponse({ interpretationVisibility: visibility }))
   })
 
   // GET /api/sessions/:sessionId/interpretation - 获取已有解读

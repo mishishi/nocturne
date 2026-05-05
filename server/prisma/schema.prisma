@@ -102,6 +102,7 @@ model Story {
   title           String
   content         String
   interpretation  String?  // 梦境解读
+  interpretationVisibility String @default("private") // private, friends, public
   wordCount       Int?
   promptTokens    Int?
   completionTokens Int?

@@ -35,6 +35,7 @@
 | 2026-05-05 | 新增解读反馈 API（interpretation-feedback）|
 | 2026-05-05 | 解读增加个性化深度机制（基于历史反馈自动调整详细程度）|
 | 2026-05-05 | 解读增加辅助线索关联（参考用户历史梦境数据生成个性化解读）|
+| 2026-05-05 | 新增解读可见性控制 API（interpretation-visibility）|
 
 ---
 
@@ -64,6 +65,7 @@
 | `/api/sessions/:sessionId/interpretation` | GET | 获取已有解读 | 否 |
 | `/api/sessions/:sessionId/interpretation-feedback` | POST | 提交解读反馈 | **是** |
 | `/api/sessions/:sessionId/interpretation-feedback` | GET | 获取反馈状态 | **是** |
+| `/api/sessions/:sessionId/interpretation-visibility` | PATCH | 更新解读可见性 | **是** |
 | `/api/sessions/migrate` | POST | 迁移游客会话 | 否 |
 
 ### 分享/积分相关

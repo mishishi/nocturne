@@ -248,7 +248,8 @@ const history = await api.getHistory(openid)
 **请求 Body：**
 ```json
 {
-  "openid": "string"  // 必填，用户 openid（用于扣积分）
+  "openid": "string",  // 必填，用户 openid（用于扣积分）
+  "visibility": "private"  // 可选，可见性设置：private(仅自己)、friends(仅好友)、public(公开)，默认 private
 }
 ```
 
@@ -257,6 +258,7 @@ const history = await api.getHistory(openid)
 {
   "success": true,
   "interpretation": "这是一段关于...的梦境解读",
+  "interpretationVisibility": "private",
   "depthLevel": "standard",
   "hasAuxiliaryClue": true,
   "pointsUsed": 10,
@@ -335,6 +337,53 @@ const result = await api.interpret(sessionId, openid)
 ```
 
 **前端调用：** 无（未使用）
+
+---
+
+### PATCH /api/sessions/:sessionId/interpretation-visibility
+
+**功能：** 更新已有解读的可见性设置
+
+**需要认证：** 是
+
+**URL 参数：**
+- `sessionId`: 会话 ID
+
+**请求 Body：**
+```json
+{
+  "visibility": "private"  // 必填，可见性：private(仅自己)、friends(仅好友)、public(公开)
+}
+```
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "interpretationVisibility": "private"
+}
+
+// 权限不足
+{
+  "success": false,
+  "reason": "无权限修改此解读的可见性"
+}
+
+// 解读不存在
+{
+  "success": false,
+  "reason": "解读不存在，无法设置可见性"
+}
+```
+
+**业务逻辑：**
+- 验证用户是否拥有该 session
+- 更新 Story.interpretationVisibility 字段
+
+**可见性规则：**
+- `private`：仅自己可见
+- `friends`：仅好友可见
+- `public`：公开可见
 
 ---
 
@@ -539,6 +588,7 @@ model Story {
   title           String
   content         String
   interpretation  String?  // 梦境解读
+  interpretationVisibility String @default("private") // private, friends, public
   wordCount       Int?
   promptTokens    Int?
   completionTokens Int?
