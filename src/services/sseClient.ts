@@ -39,10 +39,11 @@ export function createStoryStream(
       throw new Error(message)
     }
 
-    const reader = response.body?.getReader()
-    if (!reader) {
+    const readerOrUndefined = response.body?.getReader()
+    if (!readerOrUndefined) {
       throw new Error('No response body reader')
     }
+    const reader = readerOrUndefined
 
     const decoder = new TextDecoder()
     let buffer = ''
@@ -51,7 +52,6 @@ export function createStoryStream(
       const lines = text.split('\n')
       for (const line of lines) {
         if (line.startsWith('event: ')) {
-          const eventType = line.slice(7)
           buffer = ''
         } else if (line.startsWith('data: ')) {
           const data = line.slice(6)

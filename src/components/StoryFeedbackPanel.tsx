@@ -4,6 +4,7 @@ import styles from './StoryFeedbackPanel.module.css'
 
 interface StoryFeedbackPanelProps {
   sessionId: string
+  refreshKey?: number
 }
 
 interface Stats {
@@ -26,15 +27,16 @@ const ELEMENT_LABELS = {
   plot: '剧情'
 }
 
-export function StoryFeedbackPanel({ sessionId }: StoryFeedbackPanelProps) {
+export function StoryFeedbackPanel({ sessionId, refreshKey = 0 }: StoryFeedbackPanelProps) {
   const [stats, setStats] = useState<Stats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
     if (!isExpanded) return
 
     async function load() {
+      setLoading(true)
       try {
         const result = await storyFeedbackApi.getAll(sessionId)
         setStats(result.data?.stats ?? null)
@@ -45,7 +47,7 @@ export function StoryFeedbackPanel({ sessionId }: StoryFeedbackPanelProps) {
       }
     }
     load()
-  }, [sessionId, isExpanded])
+  }, [sessionId, isExpanded, refreshKey])
 
   if (loading) {
     return <div className={styles.loading}>加载中...</div>

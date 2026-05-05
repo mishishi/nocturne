@@ -332,3 +332,17 @@ Story 页面分享成功后：
 - `src/pages/Profile.tsx` - 邀请入口、统计展示
 - `src/pages/Story.tsx` - 分享触发、积分提示
 - `src/components/SharePoster.tsx` - 海报生成组件
+
+---
+
+## ⚠️ 生产部署检查清单
+
+部署到生产环境前，请检查以下配置（位于 `server/src/services/shareService.js`）：
+
+| 配置项 | 当前值 | 生产应设置为 |
+|--------|--------|-------------|
+| `DAILY_LIMIT` | 999（测试值） | poster: 3, moment: 1, link: 5, friend: 2 |
+| `MAX_POINTS_PER_DAY` | 9999（测试值） | 30 |
+| `IP_DAILY_LIMIT` | 999（测试值） | 50 |
+
+> **注意**：这些测试值是为了方便开发调试。生产环境必须修改为上表中的正式值，否则用户可以通过刷分享获得大量积分。建议将这些值迁移到环境变量或配置文件，不硬编码在代码中。

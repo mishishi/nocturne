@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { storyFeedbackApi } from '../services/api'
 import styles from './StoryCommentList.module.css'
 
@@ -38,7 +38,6 @@ function formatDate(dateString: string) {
 export function StoryCommentList({ sessionId }: StoryCommentListProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
-  const loadedRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false

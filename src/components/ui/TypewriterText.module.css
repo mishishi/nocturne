@@ -64,3 +64,21 @@
 .typewriter.printing::after {
   content: '';
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
+    opacity: 1;
+  }
+
+  .printing .char {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .printCursor {
+    animation: none;
+    opacity: 1;
+  }
+}

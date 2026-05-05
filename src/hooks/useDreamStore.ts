@@ -15,6 +15,14 @@ export function registerToastCallback(fn: ToastCallback) {
   toastCallback = fn
 }
 
+/**
+ * 注销 Toast 回调函数
+ * 应在 App.tsx 卸载时调用，防止内存泄漏
+ */
+export function unregisterToastCallback() {
+  toastCallback = null
+}
+
 export interface DreamSession {
   id: string
   sessionId: string  // Backend session ID for publishing

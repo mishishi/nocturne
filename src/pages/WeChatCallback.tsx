@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { api } from '../services/api'
@@ -15,6 +15,18 @@ export function WeChatCallback() {
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ visible: true, message, type })
   }, [])
+
+  // Memoized star positions to avoid Math.random() on each render
+  const stars = useMemo(() =>
+    Array.from({ length: 80 }, () => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 4}s`,
+      animationDuration: `${2 + Math.random() * 3}s`,
+      width: `${1 + Math.random() * 2}px`,
+      height: `${1 + Math.random() * 2}px`
+    })), []
+  )
 
   useEffect(() => {
     const completeWeChatLogin = async () => {
@@ -90,17 +102,17 @@ export function WeChatCallback() {
   return (
     <div className={styles.page}>
       <div className={styles.starfield}>
-        {[...Array(80)].map((_, i) => (
+        {stars.map((star, i) => (
           <div
             key={i}
             className={styles.star}
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 4}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
-              width: `${1 + Math.random() * 2}px`,
-              height: `${1 + Math.random() * 2}px`
+              left: star.left,
+              top: star.top,
+              animationDelay: star.animationDelay,
+              animationDuration: star.animationDuration,
+              width: star.width,
+              height: star.height
             }}
           />
         ))}

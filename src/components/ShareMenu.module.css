@@ -1,0 +1,73 @@
+.shareMenu {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13, 27, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  min-width: 160px;
+  z-index: var(--z-dropdown);
+  animation: fadeInUp var(--duration-fast) var(--ease-dream);
+  box-shadow: var(--shadow-elevated);
+}
+
+.shareMenu::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: rgba(13, 27, 42, 0.95);
+}
+
+.shareMenuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-moonlight);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.shareMenuItem:hover {
+  background: rgba(244, 211, 94, 0.1);
+  color: var(--color-golden);
+}
+
+.shareMenuItem:active {
+  background: rgba(244, 211, 94, 0.15);
+  transform: scale(0.98);
+}
+
+.shareMenuItem:focus-visible {
+  outline: 2px solid var(--color-golden);
+  outline-offset: -2px;
+}
+
+.shareMenuItem svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}

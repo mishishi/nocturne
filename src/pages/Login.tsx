@@ -131,11 +131,11 @@ export function Login() {
           }
         }
 
-        setUser(user, token)
+        setUser(user, token, guestOpenid)
         localStorage.setItem('yeelin_openid', user.openid)
         navigate(user.isAdmin ? '/admin' : from, { replace: true })
       } else {
-        setError((result as any)?.reason || '登录失败')
+        setError(result.error?.message || '登录失败')
       }
     } catch (err) {
       setError('网络错误，请检查网络连接')
@@ -302,9 +302,11 @@ export function Login() {
                       className={`${styles.input} ${getFieldError('phone') ? styles.inputError : ''}`}
                       maxLength={11}
                       autoComplete="tel"
+                      aria-describedby={getFieldError('phone') ? 'phone-error' : undefined}
+                      aria-invalid={getFieldError('phone') ? 'true' : undefined}
                     />
                     {getFieldError('phone') && (
-                      <span className={styles.fieldError}>{getFieldError('phone')}</span>
+                      <span id="phone-error" className={styles.fieldError} role="alert">{getFieldError('phone')}</span>
                     )}
                   </div>
 
@@ -321,6 +323,8 @@ export function Login() {
                       onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
                       className={`${styles.input} ${getFieldError('password') ? styles.inputError : ''}`}
                       autoComplete="current-password"
+                      aria-describedby={getFieldError('password') ? 'password-error' : undefined}
+                      aria-invalid={getFieldError('password') ? 'true' : undefined}
                     />
                     <button
                       type="button"
@@ -341,7 +345,7 @@ export function Login() {
                       )}
                     </button>
                     {getFieldError('password') && (
-                      <span className={styles.fieldError}>{getFieldError('password')}</span>
+                      <span id="password-error" className={styles.fieldError} role="alert">{getFieldError('password')}</span>
                     )}
                   </div>
                 </div>

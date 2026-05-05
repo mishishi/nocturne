@@ -3,10 +3,12 @@ import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { createNotification } from '../services/notificationService.js'
 import { checkContentSafety } from '../services/contentSafety.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 export default async function dreamWallRoutes(fastify) {
   // GET /api/wall - 获取梦墙列表 (公开)
   fastify.get('/wall', async (req, res) => {
+    try {
     const { tab = 'all', page = '1', limit = '20', keyword, openid: userOpenid } = req.query
     const skip = (parseInt(page) - 1) * parseInt(limit)
 
@@ -56,7 +58,8 @@ export default async function dreamWallRoutes(fastify) {
           take: parseInt(limit),
           include: {
             likes: { take: 1, select: { openid: true } },
-            favorites: { take: 1, select: { openid: true } }
+            favorites: { take: 1, select: { openid: true } },
+            session: { select: { dreamFragment: true } }
           }
         }),
         prisma.dreamWall.count({
@@ -120,6 +123,7 @@ export default async function dreamWallRoutes(fastify) {
         storyTitle: post.storyTitle,
         storySnippet: post.storySnippet,
         storyFull: post.storyFull,
+        dreamFragment: post.session?.dreamFragment,
         isAnonymous: post.isAnonymous,
         isOwnStory: isOwnPost(post),
         nickname: isOwnPost(post) ? '我的故事' : (post.isAnonymous ? '匿名用户' : post.nickname),
@@ -134,7 +138,7 @@ export default async function dreamWallRoutes(fastify) {
         engagementScore: post.likeCount + post.commentCount * 2
       }))
 
-      return {
+      return successResponse({
         posts: items,
         pagination: {
           page: parseInt(page),
@@ -142,7 +146,7 @@ export default async function dreamWallRoutes(fastify) {
           total,
           hasMore: skip + items.length < total
         }
-      }
+      })
     }
 
     const [posts, total] = await Promise.all([
@@ -157,7 +161,8 @@ export default async function dreamWallRoutes(fastify) {
         include: {
           likes: { take: 1, select: { openid: true } },
           favorites: { take: 1, select: { openid: true } },
-          _count: { select: { comments: true } }
+          _count: { select: { comments: true } },
+          session: { select: { dreamFragment: true } }
         }
       }),
       prisma.dreamWall.count({ where })
@@ -220,6 +225,7 @@ export default async function dreamWallRoutes(fastify) {
       storyTitle: post.storyTitle,
       storySnippet: post.storySnippet,
       storyFull: post.storyFull, // Include full story for direct navigation
+      dreamFragment: post.session?.dreamFragment,
       isAnonymous: post.isAnonymous,
       isOwnStory: isOwnPost(post),
       nickname: isOwnPost(post) ? '我的故事' : (post.isAnonymous ? '匿名用户' : post.nickname),
@@ -233,7 +239,7 @@ export default async function dreamWallRoutes(fastify) {
       isFriend: userOpenid ? friendOpenidSet.has(post.openid) : false
     }))
 
-    return {
+    return successResponse({
       posts: items,
       pagination: {
         page: parseInt(page),
@@ -241,6 +247,10 @@ export default async function dreamWallRoutes(fastify) {
         total,
         hasMore: skip + items.length < total
       }
+    })
+    } catch (error) {
+      console.error('Error in GET /wall:', error)
+      return res.status(500).send(errorResponse('服务器错误: ' + error.message, 'SERVER_ERROR'))
     }
   })
 
@@ -253,13 +263,13 @@ export default async function dreamWallRoutes(fastify) {
     const { openid, sessionId, isAnonymous = true, visibility = 'public' } = req.body
 
     if (!openid || !sessionId) {
-      return res.status(400).send({ success: false, reason: '缺少必要参数' })
+      return res.status(400).send(errorResponse('缺少必要参数', 'MISSING_PARAMS'))
     }
 
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'FORBIDDEN'))
     }
 
     // Get user's story
@@ -269,12 +279,12 @@ export default async function dreamWallRoutes(fastify) {
     })
 
     if (!story) {
-      return res.status(404).send({ success: false, reason: '故事不存在' })
+      return res.status(404).send(errorResponse('故事不存在', 'NOT_FOUND'))
     }
 
     // Verify ownership
     if (story.session.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'FORBIDDEN'))
     }
 
     // Check if already posted
@@ -283,7 +293,7 @@ export default async function dreamWallRoutes(fastify) {
     })
 
     if (existing) {
-      return res.status(409).send({ success: false, reason: '该故事已在梦墙发布' })
+      return res.status(409).send(errorResponse('该故事已在梦墙发布', 'ALREADY_PUBLISHED'))
     }
 
     // Content safety check
@@ -345,13 +355,15 @@ export default async function dreamWallRoutes(fastify) {
         reason: '内容审核未通过：' + rejectReason
       }
     } else if (status === 'pending') {
-      return {
-        success: true,
+      return successResponse({
         post: { id: post.id },
         message: '内容待审核，审核通过后将显示在梦墙'
-      }
+      })
     } else {
-      return { success: true, post: { id: post.id }, message: '发布成功' }
+      return successResponse({
+        post: { id: post.id },
+        message: '发布成功'
+      })
     }
   })
 
@@ -368,7 +380,7 @@ export default async function dreamWallRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Find all ACCEPTED friend records where userId = current user
@@ -447,7 +459,7 @@ export default async function dreamWallRoutes(fastify) {
         isFavorite: post.favorites.some(f => f.openid === tokenUser.openid)
       }))
 
-      return {
+      return successResponse({
         posts: items,
         pagination: {
           page: parseInt(page),
@@ -455,10 +467,10 @@ export default async function dreamWallRoutes(fastify) {
           total,
           hasMore: skip + items.length < total
         }
-      }
+      })
     } catch (error) {
       console.error('Error fetching friends feed:', error)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -473,7 +485,7 @@ export default async function dreamWallRoutes(fastify) {
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'FORBIDDEN'))
     }
 
     const posts = await prisma.dreamWall.findMany({
@@ -481,8 +493,7 @@ export default async function dreamWallRoutes(fastify) {
       orderBy: { createdAt: 'desc' }
     })
 
-    return {
-      success: true,
+    return successResponse({
       posts: posts.map(p => ({
         id: p.id,
         sessionId: p.sessionId,
@@ -498,7 +509,7 @@ export default async function dreamWallRoutes(fastify) {
         isFeatured: p.isFeatured,
         createdAt: p.createdAt
       }))
-    }
+    })
   })
 
   // POST /api/wall/:postId/like - 点赞/取消点赞 (需登录)
@@ -511,13 +522,13 @@ export default async function dreamWallRoutes(fastify) {
     const { openid } = req.body
 
     if (!openid) {
-      return res.status(400).send({ success: false, reason: '缺少 openid' })
+      return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
     }
 
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'FORBIDDEN'))
     }
 
     const post = await prisma.dreamWall.findUnique({
@@ -525,7 +536,7 @@ export default async function dreamWallRoutes(fastify) {
     })
 
     if (!post) {
-      return res.status(404).send({ success: false, reason: '帖子不存在' })
+      return res.status(404).send(errorResponse('帖子不存在', 'NOT_FOUND'))
     }
 
     // Check if already liked
@@ -546,7 +557,7 @@ export default async function dreamWallRoutes(fastify) {
         data: { likeCount: { decrement: 1 } }
       })
 
-      return { success: true, liked: false }
+      return successResponse({ liked: false })
     } else {
       // Like
       await prisma.dreamWallLike.create({
@@ -575,7 +586,7 @@ export default async function dreamWallRoutes(fastify) {
         req.log.error({ err }, 'Failed to create notification')
       })
 
-      return { success: true, liked: true }
+      return successResponse({ liked: true })
     }
   })
 
@@ -590,7 +601,7 @@ export default async function dreamWallRoutes(fastify) {
     })
 
     if (!wallPost) {
-      return res.status(404).send({ success: false, reason: '帖子不存在' })
+      return res.status(404).send(errorResponse('帖子不存在', 'NOT_FOUND'))
     }
 
     // Fetch all comments with their replies
@@ -630,10 +641,9 @@ export default async function dreamWallRoutes(fastify) {
         }))
       }))
 
-    return {
-      success: true,
+    return successResponse({
       comments: topLevelComments
-    }
+    })
   })
 
   // POST /api/wall/:postId/comments - 添加评论 (需登录)
@@ -646,17 +656,17 @@ export default async function dreamWallRoutes(fastify) {
     const { openid, content, isAnonymous = true, parentId } = req.body
 
     if (!openid || !content) {
-      return res.status(400).send({ success: false, reason: '缺少必要参数' })
+      return res.status(400).send(errorResponse('缺少必要参数', 'MISSING_PARAMS'))
     }
 
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'FORBIDDEN'))
     }
 
     if (content.length > 500) {
-      return res.status(400).send({ success: false, reason: '评论字数不超过500' })
+      return res.status(400).send(errorResponse('评论字数不超过500', 'INVALID_CONTENT'))
     }
 
     const post = await prisma.dreamWall.findUnique({
@@ -664,7 +674,7 @@ export default async function dreamWallRoutes(fastify) {
     })
 
     if (!post) {
-      return res.status(404).send({ success: false, reason: '帖子不存在' })
+      return res.status(404).send(errorResponse('帖子不存在', 'NOT_FOUND'))
     }
 
     // If parentId is provided, validate it
@@ -674,16 +684,16 @@ export default async function dreamWallRoutes(fastify) {
       })
 
       if (!parentComment) {
-        return res.status(404).send({ success: false, reason: '父评论不存在' })
+        return res.status(404).send(errorResponse('父评论不存在', 'NOT_FOUND'))
       }
 
       if (parentComment.wallId !== postId) {
-        return res.status(400).send({ success: false, reason: '父评论不属于该帖子' })
+        return res.status(400).send(errorResponse('父评论不属于该帖子', 'INVALID_PARENT'))
       }
 
       // Max 2 levels: parent must not be a reply itself
       if (parentComment.parentId !== null) {
-        return res.status(400).send({ success: false, reason: '不能回复二级评论' })
+        return res.status(400).send(errorResponse('不能回复二级评论', 'INVALID_NESTING'))
       }
     }
 
@@ -691,7 +701,7 @@ export default async function dreamWallRoutes(fastify) {
     const safety = await checkContentSafety(content)
     if (safety.verdict !== 'safe') {
       const reason = safety.reason || '内容包含敏感信息'
-      return res.status(400).send({ success: false, reason })
+      return res.status(400).send(errorResponse(reason, 'VALIDATION_ERROR'))
     }
 
     // Get user info
@@ -730,8 +740,7 @@ export default async function dreamWallRoutes(fastify) {
       req.log.error({ err }, 'Failed to create notification')
     })
 
-    return {
-      success: true,
+    return successResponse({
       comment: {
         id: comment.id,
         content: comment.content,
@@ -742,7 +751,7 @@ export default async function dreamWallRoutes(fastify) {
         createdAt: comment.createdAt,
         replies: []
       }
-    }
+    })
   })
 
   // POST /api/wall/:postId/favorite - 收藏/取消收藏 (需登录)
@@ -755,13 +764,13 @@ export default async function dreamWallRoutes(fastify) {
     const { openid } = req.body
 
     if (!openid) {
-      return res.status(400).send({ success: false, reason: '缺少 openid' })
+      return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
     }
 
     // Verify the openid matches the token user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser || tokenUser.openid !== openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'FORBIDDEN'))
     }
 
     const post = await prisma.dreamWall.findUnique({
@@ -769,7 +778,7 @@ export default async function dreamWallRoutes(fastify) {
     })
 
     if (!post) {
-      return res.status(404).send({ success: false, reason: '帖子不存在' })
+      return res.status(404).send(errorResponse('帖子不存在', 'NOT_FOUND'))
     }
 
     // Check if already favorited
@@ -785,14 +794,14 @@ export default async function dreamWallRoutes(fastify) {
         where: { id: existingFavorite.id }
       })
 
-      return { success: true, favorited: false }
+      return successResponse({ favorited: false })
     } else {
       // Add favorite
       await prisma.dreamWallFavorite.create({
         data: { wallId: postId, openid }
       })
 
-      return { success: true, favorited: true }
+      return successResponse({ favorited: true })
     }
   })
 
@@ -809,7 +818,7 @@ export default async function dreamWallRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       const [favorites, total] = await Promise.all([
@@ -851,7 +860,7 @@ export default async function dreamWallRoutes(fastify) {
           isFavorite: true
         }))
 
-      return {
+      return successResponse({
         posts,
         pagination: {
           page: parseInt(page),
@@ -859,10 +868,10 @@ export default async function dreamWallRoutes(fastify) {
           total,
           hasMore: skip + posts.length < total
         }
-      }
+      })
     } catch (error) {
       console.error('Error fetching favorites:', error)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -876,7 +885,7 @@ export default async function dreamWallRoutes(fastify) {
 
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser) {
-      return res.status(401).send({ success: false, reason: '用户未找到' })
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
     }
 
     // Check if already favorited
@@ -894,7 +903,7 @@ export default async function dreamWallRoutes(fastify) {
       await prisma.storyFavorite.delete({
         where: { id: existing.id }
       })
-      return { success: true, favorited: false }
+      return successResponse({ favorited: false })
     } else {
       // Add favorite
       await prisma.storyFavorite.create({
@@ -903,7 +912,7 @@ export default async function dreamWallRoutes(fastify) {
           openid: tokenUser.openid
         }
       })
-      return { success: true, favorited: true }
+      return successResponse({ favorited: true })
     }
   })
 
@@ -915,7 +924,7 @@ export default async function dreamWallRoutes(fastify) {
   }, async (req, res) => {
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser) {
-      return res.status(401).send({ success: false, reason: '用户未找到' })
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
     }
 
     const favorites = await prisma.storyFavorite.findMany({
@@ -945,6 +954,6 @@ export default async function dreamWallRoutes(fastify) {
         date: f.session.completedAt?.toISOString() || f.session.updatedAt.toISOString()
       }))
 
-    return { success: true, stories }
+    return successResponse({ stories })
   })
 }

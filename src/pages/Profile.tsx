@@ -67,17 +67,17 @@ export function Profile() {
         if (!isMounted) return
 
         // Update total stats from backend pagination
-        if (res.pagination) {
-          setTotalDreams(res.pagination.total)
+        if (res.data?.pagination) {
+          setTotalDreams(res.data.pagination.total)
         }
 
-        if (res.sessions && res.sessions.length > 0) {
+        if (res.data?.sessions && res.data.sessions.length > 0) {
           // Calculate total words from backend sessions
-          const words = res.sessions.reduce((acc: number, s: any) => acc + (s.story?.length || 0), 0)
+          const words = res.data.sessions.reduce((acc: number, s: any) => acc + (s.story?.length || 0), 0)
           setTotalWords(words)
 
           // Build backend map for merging (same logic as History.tsx)
-          const backendMap = new Map(res.sessions.map((s: any) => [s.id, s]))
+          const backendMap = new Map(res.data.sessions.map((s: any) => [s.id, s]))
 
           // Use backend data for authoritative fields, preserve local-only fields
           const currentHistory = useDreamStore.getState().history
@@ -94,7 +94,7 @@ export function Profile() {
           })
 
           // Add new items from backend that don't exist locally
-          res.sessions.forEach((s: any) => {
+          ;(res.data?.sessions || []).forEach((s: any) => {
             if (!merged.find((item: any) => item.id === s.id || item.sessionId === s.sessionId)) {
               merged.push({
                 id: s.id,
@@ -142,7 +142,7 @@ export function Profile() {
     const fetchFavorites = async () => {
       try {
         const res = await wallApi.getFavorites({ page: 1, limit: 50 })
-        setFavorites(res.posts)
+        setFavorites(res.data?.posts)
       } catch (err) {
         console.error('Failed to fetch favorites:', err)
         setFavorites([])
@@ -155,7 +155,7 @@ export function Profile() {
       try {
         const res = await wallApi.getStoryFavorites()
         if (res.success) {
-          setStoryFavorites(res.stories)
+          setStoryFavorites(res.data?.stories || [])
         }
       } catch (err) {
         console.error('Failed to fetch story favorites:', err)
@@ -175,10 +175,10 @@ export function Profile() {
         const stats = await shareApi.getStats(openid)
         setShareStatsLocal(stats.data || stats)
         setShareStats({
-          points: stats.data?.points ?? stats.points,
-          medals: stats.data?.medals ?? stats.medals,
-          consecutiveShares: stats.data?.consecutiveShares ?? stats.consecutiveShares,
-          lastShareDate: stats.data?.lastShareDate ?? stats.lastShareDate
+          points: stats.data?.points,
+          medals: stats.data?.medals,
+          consecutiveShares: stats.data?.consecutiveShares,
+          lastShareDate: stats.data?.lastShareDate
         })
       } catch (err) {
         console.error('Failed to fetch share stats:', err)
@@ -235,7 +235,29 @@ export function Profile() {
           ]}
         />
         <header className={styles.header}>
-          <span className={styles.badge}>个人中心</span>
+          <div className={styles.headerIcon}>
+            <svg viewBox="0 0 60 60" fill="none">
+              {/* Person silhouette with halo representing personal center */}
+              <circle cx="30" cy="20" r="12" fill="url(#profileHeadGrad)" />
+              <path d="M12 52c0-10 8-16 18-16s18 6 18 16" fill="url(#profileBodyGrad)" />
+              <circle cx="30" cy="10" r="18" stroke="url(#profileHaloGrad)" strokeWidth="2" strokeOpacity="0.6" fill="none" />
+              <circle cx="30" cy="10" r="22" stroke="url(#profileHaloGrad)" strokeWidth="1" strokeOpacity="0.3" fill="none" />
+              <defs>
+                <radialGradient id="profileHeadGrad" cx="50%" cy="30%" r="60%">
+                  <stop offset="0%" stopColor="#FFD666" />
+                  <stop offset="100%" stopColor="#F4D35E" />
+                </radialGradient>
+                <linearGradient id="profileBodyGrad" x1="12" y1="36" x2="48" y2="52">
+                  <stop offset="0%" stopColor="#B8A9C9" />
+                  <stop offset="100%" stopColor="#8B7BA8" />
+                </linearGradient>
+                <linearGradient id="profileHaloGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FFD666" />
+                  <stop offset="100%" stopColor="#F4D35E" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
           <h1 className={styles.title}>梦境档案</h1>
         </header>
 

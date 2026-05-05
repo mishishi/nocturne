@@ -125,6 +125,7 @@ export const sessionService = {
       sessions: sessions.map(s => ({
         id: s.id,
         sessionId: s.id,
+        openid: s.openid,
         date: s.completedAt?.toISOString() || s.updatedAt.toISOString(),
         dreamFragment: s.dreamFragment,
         storyTitle: s.story?.title || '',

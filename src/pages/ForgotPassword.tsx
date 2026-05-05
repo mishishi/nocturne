@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '../services/api'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
@@ -17,6 +17,17 @@ export function ForgotPassword() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [codeSent, setCodeSent] = useState(false)
+
+  // Memoized star positions to avoid Math.random() on each render
+  const stars = useMemo(() =>
+    Array.from({ length: 60 }, () => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 4}s`,
+      width: `${1 + Math.random() * 2}px`,
+      height: `${1 + Math.random() * 2}px`
+    })), []
+  )
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,16 +110,16 @@ export function ForgotPassword() {
     <div className={styles.page}>
       {/* Background effects */}
       <div className={styles.starfield}>
-        {[...Array(60)].map((_, i) => (
+        {stars.map((star, i) => (
           <div
             key={i}
             className={styles.star}
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 4}s`,
-              width: `${1 + Math.random() * 2}px`,
-              height: `${1 + Math.random() * 2}px`
+              left: star.left,
+              top: star.top,
+              animationDelay: star.animationDelay,
+              width: star.width,
+              height: star.height
             }}
           />
         ))}
@@ -172,10 +183,6 @@ export function ForgotPassword() {
                   </>
                 )}
               </button>
-
-              <p className={styles.hint}>
-                演示版本验证码为 <strong>123456</strong>
-              </p>
 
               <p className={styles.loginLink}>
                 想起密码了？<a href="/login" className={styles.link}>立即登录</a>

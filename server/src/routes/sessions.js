@@ -74,12 +74,12 @@ export default async function sessionRoutes(fastify) {
     // Verify auth token from Authorization header
     const authHeader = req.headers.authorization
     if (!authHeader) {
-      return res.status(401).send({ error: '未授权，请先登录' })
+      return res.status(401).send(errorResponse('未授权，请先登录', 'UNAUTHORIZED'))
     }
     const token = authHeader.replace(/^Bearer\s+/i, '')
     const tokenUser = await authService.verifyToken(token)
     if (!tokenUser) {
-      return res.status(401).send({ error: '登录已过期，请重新登录' })
+      return res.status(401).send(errorResponse('登录已过期，请重新登录', 'TOKEN_EXPIRED'))
     }
 
     const session = await sessionService.getSession(sessionId)
@@ -89,7 +89,7 @@ export default async function sessionRoutes(fastify) {
 
     // Verify session belongs to the authenticated user
     if (session.openid !== tokenUser.openid) {
-      return res.status(403).send({ error: '无权访问此会话' })
+      return res.status(403).send(errorResponse('无权访问此会话', 'FORBIDDEN'))
     }
 
     // Check if story already exists
@@ -145,7 +145,7 @@ export default async function sessionRoutes(fastify) {
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 20
     const result = await sessionService.getUserHistory(openid, page, limit)
-    return res.send(result)
+    return res.send(successResponse(result))
   })
 
   // POST /api/sessions/:sessionId/interpret - 生成梦境解读 (需登录)
@@ -159,7 +159,7 @@ export default async function sessionRoutes(fastify) {
     // Get authenticated user from token
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser) {
-      return res.status(401).send({ success: false, reason: '用户未找到' })
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
     }
 
     // Get session with story and answers
@@ -236,13 +236,13 @@ export default async function sessionRoutes(fastify) {
     const { guestOpenid } = req.body
 
     if (!guestOpenid) {
-      return res.status(400).send({ success: false, reason: '缺少 guestOpenid 参数' })
+      return res.status(400).send(errorResponse('缺少 guestOpenid 参数', 'MISSING_PARAMS'))
     }
 
     // Get authenticated user from token
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser) {
-      return res.status(401).send({ success: false, reason: '用户未找到' })
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
     }
 
     // The token user's openid is the destination (userOpenid)
@@ -254,7 +254,7 @@ export default async function sessionRoutes(fastify) {
 
     // If guestOpenid belongs to a registered user, the token user must be that user
     if (guestUser && guestUser.openid !== tokenUser.openid) {
-      return res.status(403).send({ success: false, reason: '无权操作' })
+      return res.status(403).send(errorResponse('无权操作', 'FORBIDDEN'))
     }
 
     // If guestOpenid doesn't exist as a user, allow migration

@@ -28,6 +28,8 @@ export function Admin() {
   const [pendingPosts, setPendingPosts] = useState<PendingPost[]>([])
   const [postsPage, setPostsPage] = useState(1)
   const [postsHasMore, setPostsHasMore] = useState(true)
+  const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set())
+  const [batchLoading, setBatchLoading] = useState(false)
 
   // Comments
   const [comments, setComments] = useState<AdminComment[]>([])
@@ -75,6 +77,7 @@ export function Admin() {
       if (result.success) {
         if (reset) {
           setPendingPosts(result.data.posts)
+          setSelectedPosts(new Set())
         } else {
           setPendingPosts(prev => [...prev, ...result.data.posts])
         }
@@ -168,6 +171,67 @@ export function Admin() {
     }
   }
 
+  const handleSelectPost = (postId: string) => {
+    setSelectedPosts(prev => {
+      const next = new Set(prev)
+      if (next.has(postId)) {
+        next.delete(postId)
+      } else {
+        next.add(postId)
+      }
+      return next
+    })
+  }
+
+  const handleSelectAll = () => {
+    if (selectedPosts.size === pendingPosts.length) {
+      setSelectedPosts(new Set())
+    } else {
+      setSelectedPosts(new Set(pendingPosts.map(p => p.id)))
+    }
+  }
+
+  const handleBatchApprove = async () => {
+    if (selectedPosts.size === 0) return
+    setBatchLoading(true)
+    try {
+      const result = await adminApi.batchApprovePosts(Array.from(selectedPosts))
+      if (result.success) {
+        showToast(`已通过 ${result.data.count} 篇帖子`, 'success')
+        setSelectedPosts(new Set())
+        loadPendingPosts(1, true)
+        loadStats()
+      }
+    } catch (err) {
+      console.error('Failed to batch approve:', err)
+      showToast('批量操作失败', 'error')
+    } finally {
+      setBatchLoading(false)
+    }
+  }
+
+  const handleBatchReject = async () => {
+    if (selectedPosts.size === 0) return
+    if (!confirm(`确定拒绝选中的 ${selectedPosts.size} 篇帖子？`)) return
+
+    const reason = '内容违规' // Default reason for batch operations
+    setBatchLoading(true)
+    try {
+      const result = await adminApi.batchRejectPosts(Array.from(selectedPosts), reason)
+      if (result.success) {
+        showToast(`已拒绝 ${result.data.count} 篇帖子`, 'success')
+        setSelectedPosts(new Set())
+        loadPendingPosts(1, true)
+        loadStats()
+      }
+    } catch (err) {
+      console.error('Failed to batch reject:', err)
+      showToast('批量操作失败', 'error')
+    } finally {
+      setBatchLoading(false)
+    }
+  }
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString('zh-CN', {
@@ -236,6 +300,28 @@ export function Admin() {
               <div className={styles.statValue}>{stats?.totalComments ?? '-'}</div>
               <div className={styles.statLabel}>总评论数</div>
             </div>
+            {stats?.trends && (
+              <>
+                <div className={styles.statCard}>
+                  <div className={styles.statValue}>{stats.trends.postsLast7Days}</div>
+                  <div className={styles.statLabel}>7天新增帖子</div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={`${styles.statValue} ${stats.trends.postsGrowth >= 0 ? styles.positive : styles.negative}`}>
+                    {stats.trends.postsGrowth >= 0 ? '+' : ''}{stats.trends.postsGrowth}%
+                  </div>
+                  <div className={styles.statLabel}>增长率</div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statValue}>{stats.trends.approvedLast7Days}</div>
+                  <div className={styles.statLabel}>7天通过</div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statValue}>{stats.trends.rejectedLast7Days}</div>
+                  <div className={styles.statLabel}>7天拒绝</div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -254,34 +340,73 @@ export function Admin() {
                 <p className={styles.emptyText}>暂无待审核内容</p>
               </div>
             ) : (
-              pendingPosts.map(post => (
-                <div key={post.id} className={styles.card}>
-                  <div className={styles.cardHeader}>
-                    <div className={styles.cardMeta}>
-                      <span className={styles.nickname}>
-                        {post.isAnonymous ? '匿名用户' : (post.nickname || '匿名用户')}
-                      </span>
-                      <span className={styles.date}>{formatDate(post.createdAt)}</span>
+              <>
+                {/* Batch action bar */}
+                <div className={styles.batchBar}>
+                  <label className={styles.selectAll}>
+                    <input
+                      type="checkbox"
+                      checked={selectedPosts.size === pendingPosts.length && pendingPosts.length > 0}
+                      onChange={handleSelectAll}
+                    />
+                    <span>全选</span>
+                  </label>
+                  {selectedPosts.size > 0 && (
+                    <div className={styles.batchActions}>
+                      <span className={styles.selectedCount}>已选 {selectedPosts.size} 篇</span>
+                      <button
+                        className={styles.batchApproveBtn}
+                        onClick={handleBatchApprove}
+                        disabled={batchLoading}
+                      >
+                        批量通过
+                      </button>
+                      <button
+                        className={styles.batchRejectBtn}
+                        onClick={handleBatchReject}
+                        disabled={batchLoading}
+                      >
+                        批量拒绝
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {pendingPosts.map(post => (
+                  <div key={post.id} className={`${styles.card} ${selectedPosts.has(post.id) ? styles.selected : ''}`}>
+                    <div className={styles.cardHeader}>
+                      <label className={styles.cardSelect}>
+                        <input
+                          type="checkbox"
+                          checked={selectedPosts.has(post.id)}
+                          onChange={() => handleSelectPost(post.id)}
+                        />
+                      </label>
+                      <div className={styles.cardMeta}>
+                        <span className={styles.nickname}>
+                          {post.isAnonymous ? '匿名用户' : (post.nickname || '匿名用户')}
+                        </span>
+                        <span className={styles.date}>{formatDate(post.createdAt)}</span>
+                      </div>
+                    </div>
+                    <h3 className={styles.cardTitle}>{post.storyTitle}</h3>
+                    <p className={styles.cardSnippet}>{post.storySnippet}</p>
+                    <div className={styles.cardActions}>
+                      <button
+                        className={styles.approveBtn}
+                        onClick={() => handleApprove(post)}
+                      >
+                        通过
+                      </button>
+                      <button
+                        className={styles.rejectBtn}
+                        onClick={() => handleOpenReject(post)}
+                      >
+                        拒绝
+                      </button>
                     </div>
                   </div>
-                  <h3 className={styles.cardTitle}>{post.storyTitle}</h3>
-                  <p className={styles.cardSnippet}>{post.storySnippet}</p>
-                  <div className={styles.cardActions}>
-                    <button
-                      className={styles.approveBtn}
-                      onClick={() => handleApprove(post)}
-                    >
-                      通过
-                    </button>
-                    <button
-                      className={styles.rejectBtn}
-                      onClick={() => handleOpenReject(post)}
-                    >
-                      拒绝
-                    </button>
-                  </div>
-                </div>
-              ))
+                ))}
+            </>
             )}
             {postsHasMore && !loading && (
               <button

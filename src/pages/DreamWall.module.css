@@ -169,6 +169,19 @@
   height: 16px;
 }
 
+.searching {
+  position: absolute;
+  right: 40px;
+  font-size: var(--text-xs);
+  color: var(--color-silver);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 /* Content */
 .content {
   min-height: 300px;

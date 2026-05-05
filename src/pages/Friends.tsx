@@ -149,16 +149,31 @@ export function Friends() {
         if (removingFriendId) return
         setRemovingFriendId(friendOpenid)
         setConfirmModal(prev => ({ ...prev, open: false }))
+
+        // Optimistic remove
+        let removedFriend: FriendListItem | null = null
+        setFriends(prev => {
+          removedFriend = prev.find(f => f.openid === friendOpenid) || null
+          return prev.filter(f => f.openid !== friendOpenid)
+        })
+
         try {
           const result = await friendApi.removeFriend(friendOpenid)
           if (result.success) {
             showToast('已删除好友', 'info')
-            setFriends(prev => prev.filter(f => f.openid !== friendOpenid))
           } else {
+            // Rollback on failure
+            if (removedFriend) {
+              setFriends(prev => [...prev, removedFriend!])
+            }
             showToast(result.message || '删除失败', 'error')
           }
         } catch (err) {
           console.error('Failed to remove friend:', err)
+          // Rollback on error
+          if (removedFriend) {
+            setFriends(prev => [...prev, removedFriend!])
+          }
           showToast('网络错误', 'error')
         } finally {
           setRemovingFriendId(null)
@@ -485,7 +500,7 @@ export function Friends() {
                         <div
                           key={result.id}
                           className={styles.searchResultCard}
-                          onClick={() => navigate(`/friends/${result.id}`)}
+                          onClick={() => navigate(`/friends/${result.openid}`)}
                         >
                           <div className={styles.friendAvatar}>
                             {result.avatar ? (

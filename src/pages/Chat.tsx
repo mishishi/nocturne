@@ -26,6 +26,7 @@ export function Chat() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [mobileChatOpen, setMobileChatOpen] = useState(false)
+  const [pendingMessageId, setPendingMessageId] = useState<string | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -36,7 +37,7 @@ export function Chat() {
     try {
       const result = await messageApi.getConversations()
       if (result.success) {
-        setConversations(result.conversations)
+        setConversations(result.data.conversations)
       }
     } catch (err) {
       console.error('Failed to load conversations:', err)
@@ -48,7 +49,7 @@ export function Chat() {
     try {
       const result = await friendApi.getFriends()
       if (result.success) {
-        setFriends(result.friends)
+        setFriends(result.data.friends)
       }
     } catch (err) {
       console.error('Failed to load friends:', err)
@@ -61,11 +62,11 @@ export function Chat() {
       const result = await messageApi.getMessages(friendOpenid, pageNum)
       if (result.success) {
         if (append) {
-          setMessages(prev => [...result.messages, ...prev])
+          setMessages(prev => [...(result.data.messages || []), ...prev])
         } else {
-          setMessages(result.messages)
+          setMessages(result.data.messages)
         }
-        setHasMore(result.pagination.page < result.pagination.totalPages)
+        setHasMore((result.data.pagination?.page ?? 0) < (result.data.pagination?.totalPages ?? 0))
         setPage(pageNum)
       }
     } catch (err) {
@@ -159,22 +160,48 @@ export function Chat() {
   const handleSend = async () => {
     if (!inputText.trim() || !selectedFriendOpenid || sending) return
 
+    const tempId = `temp_${crypto.randomUUID()}`
+    const optimisticMessage: Message = {
+      id: tempId,
+      fromOpenid: '',
+      toOpenid: selectedFriendOpenid,
+      content: inputText.trim(),
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      isMine: true
+    }
+
     setSending(true)
+    setPendingMessageId(tempId)
+    setMessages(prev => [...prev, optimisticMessage])
+    setInputText('')
+    inputRef.current?.focus()
+
     try {
       const result = await messageApi.sendMessage(selectedFriendOpenid, inputText.trim())
       if (result.success) {
-        setMessages(prev => [...prev, result.message])
-        setInputText('')
-        inputRef.current?.focus()
+        // Replace optimistic message with real one
+        setMessages(prev => prev.map(msg => msg.id === tempId ? result.data.message : msg))
         loadConversations()
+      } else {
+        // Remove optimistic message on failure
+        setMessages(prev => prev.filter(msg => msg.id !== tempId))
+        setInputText(inputText.trim()) // Restore input
+        setToastType('error')
+        setToastMessage('发送失败，请重试')
+        setToastVisible(true)
       }
     } catch (err) {
       console.error('Failed to send message:', err)
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(msg => msg.id !== tempId))
+      setInputText(inputText.trim()) // Restore input
       setToastType('error')
       setToastMessage('发送失败，请重试')
       setToastVisible(true)
     } finally {
       setSending(false)
+      setPendingMessageId(null)
     }
   }
 
@@ -363,6 +390,7 @@ export function Chat() {
                     message={message.content}
                     isMine={message.isMine}
                     timestamp={formatTime(message.createdAt)}
+                    sending={message.id === pendingMessageId}
                   />
                 ))}
                 <div ref={messagesEndRef} />
@@ -373,7 +401,7 @@ export function Chat() {
                 <textarea
                   ref={inputRef}
                   className={styles.input}
-                  placeholder="输入消息..."
+                  placeholder="输入消息... Enter 发送，Shift+Enter 换行"
                   value={inputText}
                   onChange={e => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}

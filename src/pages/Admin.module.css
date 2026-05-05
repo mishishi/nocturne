@@ -156,7 +156,6 @@
 
 .cardHeader {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   margin-bottom: var(--space-3);
 }
@@ -260,6 +259,116 @@
 .deleteBtn:hover {
   background: rgba(237, 100, 100, 0.3);
   border-color: #ed6464;
+}
+
+/* Batch Action Bar */
+.batchBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: rgba(26, 58, 92, 0.2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+}
+
+.selectAll {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-moonlight);
+}
+
+.selectAll input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-golden);
+}
+
+.batchActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.selectedCount {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.batchApproveBtn {
+  padding: var(--space-2) var(--space-4);
+  background: rgba(72, 199, 142, 0.2);
+  border: 1px solid rgba(72, 199, 142, 0.5);
+  border-radius: var(--radius-md);
+  color: #48c78e;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+}
+
+.batchApproveBtn:hover:not(:disabled) {
+  background: rgba(72, 199, 142, 0.3);
+  border-color: #48c78e;
+}
+
+.batchApproveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.batchRejectBtn {
+  padding: var(--space-2) var(--space-4);
+  background: rgba(237, 100, 100, 0.2);
+  border: 1px solid rgba(237, 100, 100, 0.5);
+  border-radius: var(--radius-md);
+  color: #ed6464;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-dream);
+}
+
+.batchRejectBtn:hover:not(:disabled) {
+  background: rgba(237, 100, 100, 0.3);
+  border-color: #ed6464;
+}
+
+.batchRejectBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Card Selection */
+.cardSelect {
+  display: flex;
+  align-items: center;
+  margin-right: var(--space-3);
+}
+
+.cardSelect input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-golden);
+  cursor: pointer;
+}
+
+.card.selected {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+/* Trend indicators */
+.positive {
+  color: #48c78e !important;
+}
+
+.negative {
+  color: #ed6464 !important;
 }
 
 /* Empty State */

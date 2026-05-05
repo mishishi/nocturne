@@ -5,7 +5,6 @@ import { useDreamStore } from './useDreamStore'
 // Shared cache to prevent duplicate API calls
 let cachedFriends: FriendListItem[] = []
 let cacheOpenid: string | null = null
-let isLoading = false
 let loadPromise: Promise<FriendListItem[]> | null = null
 
 async function fetchFriends(openid: string): Promise<FriendListItem[]> {
@@ -19,16 +18,14 @@ async function fetchFriends(openid: string): Promise<FriendListItem[]> {
     return loadPromise
   }
 
-  isLoading = true
   loadPromise = (async () => {
     try {
       const res = await friendApi.getFriends()
-      const friends = res.success ? res.friends : []
+      const friends = res.success ? (res.data.friends || []) : []
       cachedFriends = friends
       cacheOpenid = openid
       return friends
     } finally {
-      isLoading = false
       loadPromise = null
     }
   })()

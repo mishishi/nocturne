@@ -8,6 +8,7 @@ import styles from './StoryFeedbackForm.module.css'
 interface StoryFeedbackFormProps {
   sessionId: string
   isAuthor?: boolean
+  onSubmitted?: () => void
 }
 
 interface ElementRatings {
@@ -98,7 +99,7 @@ function StarRating({ value, onChange, hoverValue, onHover, readOnly = false }: 
   )
 }
 
-export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedbackFormProps) {
+export function StoryFeedbackForm({ sessionId, isAuthor = false, onSubmitted }: StoryFeedbackFormProps) {
   const { user } = useDreamStore()
   const isLoggedIn = !!user?.openid
 
@@ -297,6 +298,7 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false }: StoryFeedback
       setToastMessage('感谢反馈')
       setToastVisible(true)
       setIsVisible(false)
+      onSubmitted?.()
     } catch (err) {
       console.error('Failed to submit feedback:', err)
       setToastMessage('提交失败，请重试')

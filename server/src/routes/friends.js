@@ -2,6 +2,7 @@ import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { createNotification } from '../services/notificationService.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 export default async function friendRoutes(fastify) {
   // POST /api/friends/request - 发送好友请求 (需登录)
@@ -16,17 +17,17 @@ export default async function friendRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Validate input
       if (!friendOpenid) {
-        return res.status(400).send({ success: false, reason: '缺少 friendOpenid' })
+        return res.status(400).send(errorResponse('缺少 friendOpenid', 'MISSING_PARAMS'))
       }
 
       // Check: not sending to self
       if (friendOpenid === tokenUser.openid) {
-        return res.status(400).send({ success: false, reason: '不能添加自己为好友' })
+        return res.status(400).send(errorResponse('不能添加自己为好友', 'INVALID_REQUEST'))
       }
 
       // Find friend user by openid
@@ -35,7 +36,7 @@ export default async function friendRoutes(fastify) {
       })
 
       if (!friendUser) {
-        return res.status(404).send({ success: false, reason: '用户不存在' })
+        return res.status(404).send(errorResponse('用户不存在', 'USER_NOT_FOUND'))
       }
 
       // Create Friend record with status: 'PENDING' atomically
@@ -91,16 +92,15 @@ export default async function friendRoutes(fastify) {
         console.error('Failed to create FRIEND_REQUEST notification', err)
       })
 
-      return res.status(200).send({
-        success: true,
+      return res.send(successResponse({
         requestId: friend.id,
         message: "好友请求已发送"
-      })
+      }))
     } catch (error) {
       if (error.message === '好友请求已存在' || error.message === '你们已经是好友或已有待处理请求') {
-        return res.status(409).send({ success: false, reason: error.message })
+        return res.status(409).send(errorResponse(error.message, 'CONFLICT'))
       }
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -116,12 +116,12 @@ export default async function friendRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Validate input
       if (!requestId) {
-        return res.status(400).send({ success: false, reason: '缺少 requestId' })
+        return res.status(400).send(errorResponse('缺少 requestId', 'MISSING_PARAMS'))
       }
 
       // Find the Friend record where friendId = current user and status = PENDING
@@ -134,7 +134,7 @@ export default async function friendRoutes(fastify) {
       })
 
       if (!friendRequest) {
-        return res.status(404).send({ success: false, reason: '好友请求不存在或已处理' })
+        return res.status(404).send(errorResponse('好友请求不存在或已处理', 'NOT_FOUND'))
       }
 
       // Get original requester's user info for notification
@@ -144,7 +144,7 @@ export default async function friendRoutes(fastify) {
       })
 
       if (!requesterUser) {
-        return res.status(404).send({ success: false, reason: '用户不存在' })
+        return res.status(404).send(errorResponse('用户不存在', 'USER_NOT_FOUND'))
       }
 
       // Update status to ACCEPTED and create reciprocal record atomically
@@ -175,12 +175,9 @@ export default async function friendRoutes(fastify) {
         console.error('Failed to create FRIEND_ACCEPTED notification', err)
       })
 
-      return res.status(200).send({
-        success: true,
-        message: "已添加好友"
-      })
+      return res.send(successResponse({ message: "已添加好友" }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -196,12 +193,12 @@ export default async function friendRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Validate input
       if (!requestId) {
-        return res.status(400).send({ success: false, reason: '缺少 requestId' })
+        return res.status(400).send(errorResponse('缺少 requestId', 'MISSING_PARAMS'))
       }
 
       // Find the Friend record
@@ -214,7 +211,7 @@ export default async function friendRoutes(fastify) {
       })
 
       if (!friendRequest) {
-        return res.status(404).send({ success: false, reason: '好友请求不存在或已处理' })
+        return res.status(404).send(errorResponse('好友请求不存在或已处理', 'NOT_FOUND'))
       }
 
       // Delete the Friend record
@@ -222,12 +219,9 @@ export default async function friendRoutes(fastify) {
         where: { id: requestId }
       })
 
-      return res.status(200).send({
-        success: true,
-        message: "已拒绝请求"
-      })
+      return res.send(successResponse({ message: "已拒绝请求" }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -243,12 +237,12 @@ export default async function friendRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Validate input
       if (!friendOpenid) {
-        return res.status(400).send({ success: false, reason: '缺少 friendOpenid' })
+        return res.status(400).send(errorResponse('缺少 friendOpenid', 'MISSING_PARAMS'))
       }
 
       // Find friend user by openid
@@ -257,7 +251,7 @@ export default async function friendRoutes(fastify) {
       })
 
       if (!friendUser) {
-        return res.status(404).send({ success: false, reason: '用户不存在' })
+        return res.status(404).send(errorResponse('用户不存在', 'USER_NOT_FOUND'))
       }
 
       // Delete both Friend records (user->friend and friend->user)
@@ -270,12 +264,9 @@ export default async function friendRoutes(fastify) {
         }
       })
 
-      return res.status(200).send({
-        success: true,
-        message: "已删除好友"
-      })
+      return res.send(successResponse({ message: "已删除好友" }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -289,7 +280,7 @@ export default async function friendRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Find all Friend records where userId = current user's id AND status = ACCEPTED
@@ -311,8 +302,7 @@ export default async function friendRoutes(fastify) {
       })
 
       // Return list with friendSince date
-      return res.status(200).send({
-        success: true,
+      return res.send(successResponse({
         friends: friends.map(f => ({
           id: f.id,
           openid: f.friend.openid,
@@ -320,9 +310,9 @@ export default async function friendRoutes(fastify) {
           avatar: f.friend.avatar,
           friendSince: f.createdAt
         }))
-      })
+      }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -336,7 +326,7 @@ export default async function friendRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Find all Friend records where friendId = current user's id AND status = PENDING
@@ -358,8 +348,7 @@ export default async function friendRoutes(fastify) {
       })
 
       // Return list with createdAt
-      return res.status(200).send({
-        success: true,
+      return res.send(successResponse({
         requests: requests.map(r => ({
           id: r.id,
           openid: r.user.openid,
@@ -367,9 +356,9 @@ export default async function friendRoutes(fastify) {
           avatar: r.user.avatar,
           createdAt: r.createdAt
         }))
-      })
+      }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -383,7 +372,7 @@ export default async function friendRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Find all Friend records where userId = current user's id AND status = PENDING
@@ -405,8 +394,7 @@ export default async function friendRoutes(fastify) {
       })
 
       // Return list with createdAt
-      return res.status(200).send({
-        success: true,
+      return res.send(successResponse({
         sentRequests: sentRequests.map(r => ({
           id: r.id,
           openid: r.friend.openid,
@@ -414,9 +402,9 @@ export default async function friendRoutes(fastify) {
           avatar: r.friend.avatar,
           createdAt: r.createdAt
         }))
-      })
+      }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -433,12 +421,12 @@ export default async function friendRoutes(fastify) {
       // Get authenticated user
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Validate input
       if (!openid) {
-        return res.status(400).send({ success: false, reason: '缺少 openid' })
+        return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
       }
 
       // Check: requesting user is friends with :openid (has ACCEPTED record)
@@ -447,7 +435,7 @@ export default async function friendRoutes(fastify) {
       })
 
       if (!friendUser) {
-        return res.status(404).send({ success: false, reason: '用户不存在' })
+        return res.status(404).send(errorResponse('用户不存在', 'USER_NOT_FOUND'))
       }
 
       const friendship = await prisma.friend.findFirst({
@@ -459,7 +447,7 @@ export default async function friendRoutes(fastify) {
       })
 
       if (!friendship) {
-        return res.status(403).send({ success: false, reason: '你们不是好友关系' })
+        return res.status(403).send(errorResponse('你们不是好友关系', 'NOT_FRIENDS'))
       }
 
       // Query DreamWall where openid = :openid, visibility = 'public', status = 'approved'
@@ -483,8 +471,7 @@ export default async function friendRoutes(fastify) {
         }
       })
 
-      return res.status(200).send({
-        success: true,
+      return res.send(successResponse({
         posts: posts.map(p => ({
           id: p.id,
           sessionId: p.sessionId,
@@ -502,9 +489,64 @@ export default async function friendRoutes(fastify) {
           total,
           totalPages: Math.ceil(total / parseInt(limit))
         }
-      })
+      }))
     } catch (error) {
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
+    }
+  })
+
+  // GET /api/friends/search - 搜索用户 (需登录)
+  fastify.get('/friends/search', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    try {
+      const { query, excludeId } = req.query
+
+      if (!query || typeof query !== 'string' || query.trim().length === 0) {
+        return res.status(400).send(errorResponse('搜索词不能为空', 'MISSING_QUERY'))
+      }
+
+      const searchQuery = query.trim()
+
+      // Get authenticated user
+      const tokenUser = await authService.getUser(req.userId)
+      if (!tokenUser) {
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
+      }
+
+      // Find users matching nickname (case-insensitive)
+      const users = await prisma.user.findMany({
+        where: {
+          nickname: {
+            contains: searchQuery,
+            mode: 'insensitive'
+          },
+          // Exclude current user
+          id: excludeId && typeof excludeId === 'string' ? { not: excludeId } : undefined
+        },
+        select: {
+          openid: true,
+          nickname: true,
+          avatar: true,
+          isMember: true
+        },
+        take: 20
+      })
+
+      // Return with openid as id for frontend compatibility
+      return res.send(successResponse({
+        users: users.map(u => ({
+          id: u.openid,  // Use openid as id for navigation
+          openid: u.openid,
+          nickname: u.nickname,
+          avatar: u.avatar,
+          isMember: u.isMember
+        }))
+      }))
+    } catch (error) {
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 }

@@ -39,7 +39,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
     try {
       const res = await wallApi.getComments(postId)
       if (res.success) {
-        setComments(res.comments)
+        setComments(res.data?.comments || [])
       }
     } catch (err) {
       console.error('Failed to load comments:', err)

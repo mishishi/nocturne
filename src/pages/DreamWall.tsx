@@ -342,6 +342,7 @@ export function DreamWall() {
         authorOpenid: post.openid,
         postId: post.id,
         isFriend: post.isFriend,
+        dreamSnippet: post.dreamFragment,
       }
     })
   }

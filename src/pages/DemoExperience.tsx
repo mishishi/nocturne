@@ -35,6 +35,11 @@ export function DemoExperience() {
   const [storyReady, setStoryReady] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Detect prefers-reduced-motion
+  const prefersReducedMotion = useRef(
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+
   const clearTimer = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current)
@@ -49,6 +54,10 @@ export function DemoExperience() {
   // Phase: dream -> questions
   useEffect(() => {
     if (phase !== 'dream') return
+    if (prefersReducedMotion.current) {
+      setPhase('questions')
+      return
+    }
     timerRef.current = setTimeout(() => {
       setPhase('questions')
     }, 3000)
@@ -59,6 +68,10 @@ export function DemoExperience() {
     if (phase !== 'questions') return
     // Reset visibility when index changes so typewriter re-triggers
     setShowQuestion(false)
+    if (prefersReducedMotion.current) {
+      setShowQuestion(true)
+      return
+    }
     timerRef.current = setTimeout(() => {
       setShowQuestion(true)
     }, 500)
@@ -67,6 +80,10 @@ export function DemoExperience() {
   // Auto-fill answer after question appears
   useEffect(() => {
     if (!showQuestion || phase !== 'questions') return
+    if (prefersReducedMotion.current) {
+      setShowAnswer(true)
+      return
+    }
     timerRef.current = setTimeout(() => {
       setShowAnswer(true)
     }, 1500)
@@ -75,6 +92,11 @@ export function DemoExperience() {
   // Move to next question or reveal after answer
   useEffect(() => {
     if (!showAnswer || phase !== 'questions') return
+    if (prefersReducedMotion.current) {
+      setAnswerDone(true)
+      setShowAnswer(false)
+      return
+    }
     timerRef.current = setTimeout(() => {
       setAnswerDone(true)
       setShowAnswer(false)
@@ -84,6 +106,18 @@ export function DemoExperience() {
   // After answer done, move to next question or reveal
   useEffect(() => {
     if (!answerDone || phase !== 'questions') return
+    if (prefersReducedMotion.current) {
+      setAnswerDone(false)
+      if (questionIndex < DEMO_QUESTIONS.length - 1) {
+        setQuestionIndex(prev => prev + 1)
+        setShowQuestion(false)
+      } else {
+        setPhase('reveal')
+        setShowReveal(true)
+        setStoryReady(true)
+      }
+      return
+    }
     timerRef.current = setTimeout(() => {
       setAnswerDone(false)
       if (questionIndex < DEMO_QUESTIONS.length - 1) {

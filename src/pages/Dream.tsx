@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore, DREAM_TAGS } from '../hooks/useDreamStore'
 import { useVoiceWaveform } from '../hooks/useVoiceWaveform'
@@ -52,6 +52,14 @@ declare global {
 }
 
 const DRAFT_KEY = 'yeelin_draft'
+const DRAFT_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+interface DreamDraft {
+  dreamText: string
+  selectedEmotion: string | null
+  dreamElements: string[]
+  savedAt: number
+}
 
 // Dream elements for quick selection
 const DREAM_ELEMENTS = [
@@ -98,16 +106,14 @@ export function Dream() {
   const { startWaveform, stopWaveform, canvasRef } = useVoiceWaveform()
   const [searchParams] = useSearchParams()
 
-  // Generate decorative star positions once
-  const decorStars = useMemo(() =>
-    Array.from({ length: 6 }, (_, i) => ({
-      left: `${15 + Math.random() * 70}%`,
-      top: `${10 + Math.random() * 60}%`,
-      animationDelay: `${Math.random() * 3}s`,
-      animationDuration: `${2 + Math.random() * 2}s`,
-      key: i
-    })), []
-  )
+  // Decorative stars - positions regenerated on each render (not expensive)
+  const decorStars = Array.from({ length: 6 }, (_, i) => ({
+    left: `${15 + Math.random() * 70}%`,
+    top: `${10 + Math.random() * 60}%`,
+    animationDelay: `${Math.random() * 3}s`,
+    animationDuration: `${2 + Math.random() * 2}s`,
+    key: i
+  }))
 
   // Check if this is a new dream request - clear old draft if so
   useEffect(() => {
@@ -127,13 +133,28 @@ export function Dream() {
 
   // Restore draft on mount
   useEffect(() => {
-    const savedDraft = localStorage.getItem(DRAFT_KEY)
-    if (savedDraft && !draftRestored) {
-      setDreamText(savedDraft)
-      setDraftRestored(true)
-      // If we have draft, skip to describe step
-      if (savedDraft.length > 10) {
-        setStep('describe')
+    const savedDraftRaw = localStorage.getItem(DRAFT_KEY)
+    if (savedDraftRaw && !draftRestored) {
+      try {
+        const draft: DreamDraft = JSON.parse(savedDraftRaw)
+        // Check if draft is within 24h expiry
+        if (Date.now() - draft.savedAt < DRAFT_EXPIRY_MS) {
+          setDreamText(draft.dreamText)
+          setSelectedEmotion(draft.selectedEmotion)
+          setDreamElementsLocal(draft.dreamElements)
+          setDreamElements(draft.dreamElements)
+          setDraftRestored(true)
+          // Skip to appropriate step based on what was saved
+          if (draft.dreamText.length > 10) {
+            setStep('describe')
+          }
+        } else {
+          // Draft expired, clear it
+          localStorage.removeItem(DRAFT_KEY)
+        }
+      } catch {
+        // Invalid JSON, clear corrupted draft
+        localStorage.removeItem(DRAFT_KEY)
       }
     }
   }, [draftRestored, setDreamText])
@@ -143,7 +164,13 @@ export function Dream() {
     const timeoutId = setTimeout(() => {
       const currentText = useDreamStore.getState().currentSession.dreamText
       if (currentText && currentText !== lastSavedRef.current) {
-        localStorage.setItem(DRAFT_KEY, currentText)
+        const draft: DreamDraft = {
+          dreamText: currentText,
+          selectedEmotion,
+          dreamElements,
+          savedAt: Date.now()
+        }
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
         lastSavedRef.current = currentText
       }
     }, 2000)
@@ -151,7 +178,13 @@ export function Dream() {
     const saveOnUnmount = () => {
       const currentText = useDreamStore.getState().currentSession.dreamText
       if (currentText && currentText !== lastSavedRef.current) {
-        localStorage.setItem(DRAFT_KEY, currentText)
+        const draft: DreamDraft = {
+          dreamText: currentText,
+          selectedEmotion,
+          dreamElements,
+          savedAt: Date.now()
+        }
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
       }
     }
 
@@ -161,7 +194,7 @@ export function Dream() {
       window.removeEventListener('beforeunload', saveOnUnmount)
       saveOnUnmount()
     }
-  }, [currentSession.dreamText])
+  }, [currentSession.dreamText, selectedEmotion, dreamElements])
 
   // Speech recognition setup
   useEffect(() => {

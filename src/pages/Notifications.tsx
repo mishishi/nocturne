@@ -88,18 +88,17 @@ export function Notifications() {
         break
     }
 
-    // Mark as read if not already
+    // Optimistically mark as read before navigating
     if (!notification.isRead) {
-      try {
-        await notificationApi.markOneRead(notification.id)
-        setNotifications(prev =>
-          prev.map(n =>
-            n.id === notification.id ? { ...n, isRead: true } : n
-          )
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === notification.id ? { ...n, isRead: true } : n
         )
-      } catch (err) {
+      )
+      // Fire API call without await — don't block navigation
+      notificationApi.markOneRead(notification.id).catch(err => {
         console.error('Failed to mark as read:', err)
-      }
+      })
     }
 
     navigate(path)
@@ -129,7 +128,7 @@ export function Notifications() {
         <header className={styles.header}>
           <button
             className={styles.backButton}
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             aria-label="返回"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -12,6 +12,7 @@ import styles from './History.module.css'
 const SWIPE_THRESHOLD = 100
 const MIN_SWIPE_DISTANCE = 20
 const UNDO_TIMEOUT = 5000
+const SWIPE_HINT_KEY = 'yeelin_swipe_hint_shown'
 
 export function History() {
   const navigate = useNavigate()
@@ -32,6 +33,7 @@ export function History() {
   // Swipe-to-delete state
   const [swipedItemId, setSwipedItemId] = useState<string | null>(null)
   const [swipeOffset, setSwipeOffset] = useState(0)
+  const [showSwipeHint, setShowSwipeHint] = useState(false)
   const touchStartX = useRef<number>(0)
   const touchStartY = useRef<number>(0)
 
@@ -56,8 +58,9 @@ export function History() {
 
       setIsSyncing(true)
       try {
-        const { sessions } = await api.getHistory(openid)
+        const { data } = await api.getHistory(openid)
         if (!isMounted) return
+        const sessions = data?.sessions
 
         if (sessions && sessions.length > 0) {
           // Build backend map for merging
@@ -77,6 +80,7 @@ export function History() {
               story: backend.story,
               dreamSnippet: backend.dreamFragment?.slice(0, 100) + (backend.dreamFragment?.length > 100 ? '...' : '') || '',
               sessionId: backend.sessionId || item.sessionId,
+              openid: backend.openid,
             }
           })
 
@@ -96,7 +100,8 @@ export function History() {
                 story: s.story,
                 questions: [],
                 answers: [],
-                tags: []
+                tags: [],
+                openid: s.openid,
               })
             }
           })
@@ -116,6 +121,17 @@ export function History() {
     syncHistoryFromBackend()
     return () => { isMounted = false }
   }, [])
+
+  // Check if swipe hint should be shown (first time user has items)
+  useEffect(() => {
+    if (history.length > 0) {
+      const hasSeenHint = localStorage.getItem(SWIPE_HINT_KEY)
+      if (!hasSeenHint) {
+        setShowSwipeHint(true)
+        localStorage.setItem(SWIPE_HINT_KEY, 'true')
+      }
+    }
+  }, [history.length])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -421,7 +437,25 @@ export function History() {
 
         {/* Header */}
         <header className={styles.header}>
-          <span className={styles.badge}>梦境档案</span>
+          <div className={styles.headerIcon}>
+            <svg viewBox="0 0 60 60" fill="none">
+              {/* Book/Scroll representing story archive */}
+              <path d="M10 12h40c2 0 4 2 4 4v32c0 2-2 4-4 4H14c-2 0-4-2-4-4V16c0-2 2-4 4-4z" fill="url(#historyBookGrad)" />
+              <path d="M14 18h32M14 26h32M14 34h24" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="44" cy="44" r="10" fill="url(#historyStarGrad)" />
+              <path d="M44 38l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1 2-4z" fill="rgba(255,255,255,0.9)" />
+              <defs>
+                <linearGradient id="historyBookGrad" x1="10" y1="12" x2="50" y2="52">
+                  <stop offset="0%" stopColor="#B8A9C9" />
+                  <stop offset="100%" stopColor="#8B7BA8" />
+                </linearGradient>
+                <radialGradient id="historyStarGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FFD666" />
+                  <stop offset="100%" stopColor="#F4D35E" />
+                </radialGradient>
+              </defs>
+            </svg>
+          </div>
           {isSyncing && <span className={styles.syncIndicator} aria-label="正在同步">🔄</span>}
           <h1 className={styles.title}>你的故事集</h1>
           <p className={styles.subtitle}>
@@ -589,7 +623,30 @@ export function History() {
             </Link>
           </div>
         ) : (
-          <div className={styles.historyList}>
+          <>
+            {/* Swipe hint for first-time users */}
+            {showSwipeHint && filteredHistory.length > 0 && (
+              <div className={styles.swipeHint} role="status" aria-live="polite">
+                <span className={styles.swipeHintIcon}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 8L10 12L14 16" />
+                    <path d="M10 8L6 12L10 16" />
+                  </svg>
+                </span>
+                <span>向左滑动可删除</span>
+                <button
+                  className={styles.swipeHintClose}
+                  onClick={() => setShowSwipeHint(false)}
+                  aria-label="关闭提示"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            )}
+            <div className={styles.historyList}>
             {filteredHistory.map((item, index) => {
               const isExpanded = expandedId === item.id
               const isSwiped = swipedItemId === item.id
@@ -849,6 +906,7 @@ export function History() {
               )
             })}
           </div>
+          </>
         )}
       </div>
 

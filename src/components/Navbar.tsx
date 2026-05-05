@@ -6,7 +6,7 @@ import styles from './Navbar.module.css'
 
 export function Navbar() {
   const location = useLocation()
-  const { user } = useDreamStore()
+  useDreamStore()
   const notificationCount = useNotificationCount()
   const friendRequests = useFriendRequestCount()
 

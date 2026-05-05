@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { authApi, api } from '../services/api'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import styles from './Register.module.css'
 
 export function Register() {
@@ -89,11 +90,11 @@ export function Register() {
           }
         }
 
-        setUser(user, token)
+        setUser(user, token, guestOpenid)
         localStorage.setItem('yeelin_openid', user.openid)
         navigate('/')
       } else {
-        setError(result.data?.reason || result.reason || '注册失败')
+        setError(result.message || '注册失败')
         setStep('credentials')
       }
     } catch (err) {
@@ -212,8 +213,9 @@ export function Register() {
 
               {error && <p className={styles.error}>{error}</p>}
 
-              <label className={styles.termsCheckbox}>
+              <label className={styles.termsCheckbox} htmlFor="terms-checkbox">
                 <input
+                  id="terms-checkbox"
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
@@ -290,7 +292,7 @@ export function Register() {
 
               <button type="submit" className={styles.submitButton} disabled={isLoading}>
                 {isLoading ? (
-                  <span className={styles.loadingSpinner} />
+                  <LoadingSpinner />
                 ) : (
                   <>
                     进入夜棂

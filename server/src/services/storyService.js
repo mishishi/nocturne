@@ -153,6 +153,8 @@ export const storyService = {
       title = titleMatch[1]
       storyContent = fullContent.replace(/《[^》]+》\s*/, '').trim()
     }
+    // Remove leading punctuation (comma, period, etc.) that may appear after title removal
+    storyContent = storyContent.replace(/^[，,。.、;；:：]+/, '').trim()
 
     yield { type: 'done', title: '《' + title + '》', content: storyContent }
   },
@@ -210,6 +212,8 @@ export const storyService = {
       // Remove title line from story content
       storyContent = content.replace(/《[^》]+》\s*/, '').trim()
     }
+    // Remove leading punctuation that may appear after title removal
+    storyContent = storyContent.replace(/^[，,。.、;；:：]+/, '').trim()
 
     console.timeEnd('generateStory')
     return {

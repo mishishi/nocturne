@@ -273,11 +273,25 @@ model PrivateMessage {
 
 model CheckIn {
   id        String   @id @default(cuid())
-  openid    String
+  userId    String
   date      String   // 'YYYY-MM-DD' format
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [openid], references: [openid])
+  user      User     @relation(fields: [userId], references: [id])
 
-  @@unique([openid, date])
-  @@index([openid, date])
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model AdminOperationLog {
+  id          String   @id @default(cuid())
+  adminOpenid String   // 管理员 openid
+  action      String   // APPROVE_POST, REJECT_POST, BATCH_APPROVE, BATCH_REJECT, DELETE_COMMENT
+  targetType  String   // post, comment
+  targetId    String?  // 单一操作的目标ID
+  targetIds   String[] // 批量操作的目标ID列表 (JSON 数组存储)
+  reason      String?  // 拒绝原因（仅拒绝操作）
+  createdAt   DateTime @default(now())
+
+  @@index([adminOpenid, createdAt])
+  @@index([action, createdAt])
 }

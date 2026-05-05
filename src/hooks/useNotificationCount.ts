@@ -61,10 +61,21 @@ export function useNotificationCount() {
     // Refresh every 60 seconds
     intervalRef.current = setInterval(updateCount, 60000)
 
+    // Refresh immediately when page becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Invalidate cache to force fresh fetch
+        cachedCount = null
+        updateCount()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
       }
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [user?.openid])
 

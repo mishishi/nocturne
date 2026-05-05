@@ -1,6 +1,7 @@
 import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { successResponse, errorResponse } from '../config/response.js'
 
 // Helper to check if two users are friends
 async function areFriends(userId1, userId2) {
@@ -24,7 +25,7 @@ export default async function messageRoutes(fastify) {
     try {
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Get all ACCEPTED friendships for current user
@@ -91,13 +92,10 @@ export default async function messageRoutes(fastify) {
         return new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt)
       })
 
-      return res.status(200).send({
-        success: true,
-        conversations
-      })
+      return res.send(successResponse({ conversations }))
     } catch (error) {
       console.error('Get conversations error:', error)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -113,7 +111,7 @@ export default async function messageRoutes(fastify) {
 
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Validate: must be friends
@@ -122,12 +120,12 @@ export default async function messageRoutes(fastify) {
       })
 
       if (!friendUser) {
-        return res.status(404).send({ success: false, reason: '用户不存在' })
+        return res.status(404).send(errorResponse('用户不存在', 'USER_NOT_FOUND'))
       }
 
       const isFriendship = await areFriends(tokenUser.id, friendUser.id)
       if (!isFriendship) {
-        return res.status(403).send({ success: false, reason: '你们不是好友关系' })
+        return res.status(403).send(errorResponse('你们不是好友关系', 'NOT_FRIENDS'))
       }
 
       const skip = (parseInt(page) - 1) * parseInt(limit)
@@ -157,8 +155,7 @@ export default async function messageRoutes(fastify) {
         }
       })
 
-      return res.status(200).send({
-        success: true,
+      return res.send(successResponse({
         messages: messages.map(m => ({
           id: m.id,
           fromOpenid: m.fromOpenid,
@@ -174,10 +171,10 @@ export default async function messageRoutes(fastify) {
           total,
           totalPages: Math.ceil(total / parseInt(limit))
         }
-      })
+      }))
     } catch (error) {
       console.error('Get messages error:', error)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -192,21 +189,21 @@ export default async function messageRoutes(fastify) {
 
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Validate input
       if (!toOpenid || !content) {
-        return res.status(400).send({ success: false, reason: '缺少收件人或内容' })
+        return res.status(400).send(errorResponse('缺少收件人或内容', 'MISSING_PARAMS'))
       }
 
       if (content.trim().length === 0) {
-        return res.status(400).send({ success: false, reason: '消息内容不能为空' })
+        return res.status(400).send(errorResponse('消息内容不能为空', 'INVALID_CONTENT'))
       }
 
       // Cannot message self
       if (toOpenid === tokenUser.openid) {
-        return res.status(400).send({ success: false, reason: '不能给自己发消息' })
+        return res.status(400).send(errorResponse('不能给自己发消息', 'INVALID_RECIPIENT'))
       }
 
       // Validate: must be friends
@@ -215,12 +212,12 @@ export default async function messageRoutes(fastify) {
       })
 
       if (!friendUser) {
-        return res.status(404).send({ success: false, reason: '用户不存在' })
+        return res.status(404).send(errorResponse('用户不存在', 'USER_NOT_FOUND'))
       }
 
       const isFriendship = await areFriends(tokenUser.id, friendUser.id)
       if (!isFriendship) {
-        return res.status(403).send({ success: false, reason: '你们不是好友关系' })
+        return res.status(403).send(errorResponse('你们不是好友关系', 'NOT_FRIENDS'))
       }
 
       // Create message
@@ -232,8 +229,7 @@ export default async function messageRoutes(fastify) {
         }
       })
 
-      return res.status(200).send({
-        success: true,
+      return res.send(successResponse({
         message: {
           id: message.id,
           fromOpenid: message.fromOpenid,
@@ -243,10 +239,10 @@ export default async function messageRoutes(fastify) {
           createdAt: message.createdAt,
           isMine: true
         }
-      })
+      }))
     } catch (error) {
       console.error('Send message error:', error)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -261,7 +257,7 @@ export default async function messageRoutes(fastify) {
 
       const tokenUser = await authService.getUser(req.userId)
       if (!tokenUser) {
-        return res.status(401).send({ success: false, reason: '用户未找到' })
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
       // Find the message
@@ -270,12 +266,12 @@ export default async function messageRoutes(fastify) {
       })
 
       if (!message) {
-        return res.status(404).send({ success: false, reason: '消息不存在' })
+        return res.status(404).send(errorResponse('消息不存在', 'NOT_FOUND'))
       }
 
       // Only the recipient can mark as read
       if (message.toOpenid !== tokenUser.openid) {
-        return res.status(403).send({ success: false, reason: '无法标记该消息为已读' })
+        return res.status(403).send(errorResponse('无法标记该消息为已读', 'FORBIDDEN'))
       }
 
       // Mark as read
@@ -284,12 +280,10 @@ export default async function messageRoutes(fastify) {
         data: { isRead: true }
       })
 
-      return res.status(200).send({
-        success: true
-      })
+      return res.send(successResponse({ success: true }))
     } catch (error) {
       console.error('Mark read error:', error)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 }

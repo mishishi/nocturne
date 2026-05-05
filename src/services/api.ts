@@ -105,17 +105,24 @@ export async function retryWrapper<T>(
  * 只对网络错误和 5xx 服务器错误重试
  */
 function shouldRetry(error: unknown): boolean {
+  // AbortError（超时导致）
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return true
+  }
+  // 网络错误（如无法连接）
   if (error instanceof TypeError && error.message.includes('fetch')) {
-    // 网络错误
+    return true
+  }
+  if (error instanceof TypeError && error.message.includes('network')) {
     return true
   }
   if (error instanceof Error) {
-    // 检查是否是 5xx 错误
-    if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503') || error.message.includes('504')) {
+    // 检查是否是网络超时（某些环境下可能包含 timeout 文本）
+    if (error.message.toLowerCase().includes('timeout')) {
       return true
     }
-    // 检查是否是网络超时
-    if (error.message.includes('aborted') || error.message.includes('timeout')) {
+    // 检查是否是中止错误
+    if (error.message.toLowerCase().includes('aborted')) {
       return true
     }
   }

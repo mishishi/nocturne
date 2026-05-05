@@ -23,12 +23,13 @@ export function FriendProfile() {
     try {
       const result = await friendApi.getFriendPosts(openid, pageNum, 20)
       if (result.success) {
+        const posts = result.data?.posts || []
         if (reset) {
-          setPosts(result.posts)
+          setPosts(posts)
         } else {
-          setPosts(prev => [...prev, ...result.posts])
+          setPosts(prev => [...prev, ...posts])
         }
-        setHasMore(result.posts.length === 20)
+        setHasMore(posts.length === 20)
       }
     } catch (err) {
       console.error('Failed to load friend posts:', err)

@@ -15,31 +15,31 @@ export default async function storyFeedbackRoutes(fastify) {
     // Get authenticated user
     const tokenUser = await authService.getUser(req.userId)
     if (!tokenUser) {
-      return res.status(401).send({ success: false, reason: '用户未找到' })
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
     }
 
     // If openid is provided, verify it matches the authenticated user
     if (openid && openid !== tokenUser.openid) {
-      return res.status(403).send({ success: false, reason: '无权为他人提交反馈' })
+      return res.status(403).send(errorResponse('无权为他人提交反馈', 'FORBIDDEN'))
     }
 
     // Validate required fields
     if (!sessionId) {
-      return res.status(400).send({ success: false, reason: '缺少 sessionId' })
+      return res.status(400).send(errorResponse('缺少 sessionId', 'MISSING_PARAMS'))
     }
 
     if (!overallRating) {
-      return res.status(400).send({ success: false, reason: '缺少 overallRating' })
+      return res.status(400).send(errorResponse('缺少 overallRating', 'MISSING_PARAMS'))
     }
 
     // Validate overallRating range (1-5)
     if (typeof overallRating !== 'number' || overallRating < 1 || overallRating > 5) {
-      return res.status(400).send({ success: false, reason: 'overallRating 必须在 1-5 之间' })
+      return res.status(400).send(errorResponse('overallRating 必须在 1-5 之间', 'INVALID_RATING'))
     }
 
     // Validate comment length (max 200 chars)
     if (comment && comment.length > 200) {
-      return res.status(400).send({ success: false, reason: '评论字数不超过 200' })
+      return res.status(400).send(errorResponse('评论字数不超过 200', 'INVALID_CONTENT'))
     }
 
     // Validate elementRatings if provided
@@ -47,11 +47,11 @@ export default async function storyFeedbackRoutes(fastify) {
       const validRatings = ['character', 'location', 'object', 'emotion', 'plot']
       for (const key of Object.keys(elementRatings)) {
         if (!validRatings.includes(key)) {
-          return res.status(400).send({ success: false, reason: `无效的 elementRatings 字段: ${key}` })
+          return res.status(400).send(errorResponse(`无效的 elementRatings 字段: ${key}`, 'INVALID_FIELD'))
         }
         const val = elementRatings[key]
         if (typeof val !== 'number' || val < 1 || val > 5) {
-          return res.status(400).send({ success: false, reason: `elementRatings.${key} 必须在 1-5 之间` })
+          return res.status(400).send(errorResponse(`elementRatings.${key} 必须在 1-5 之间`, 'INVALID_RATING'))
         }
       }
     }
@@ -62,7 +62,7 @@ export default async function storyFeedbackRoutes(fastify) {
     })
 
     if (!session) {
-      return res.status(404).send({ success: false, reason: 'Session not found' })
+      return res.status(404).send(errorResponse('Session not found', 'NOT_FOUND'))
     }
 
     // Check if already submitted
@@ -71,7 +71,7 @@ export default async function storyFeedbackRoutes(fastify) {
     })
 
     if (existingFeedback) {
-      return res.status(409).send({ success: false, reason: '该故事已提交过反馈' })
+      return res.status(409).send(errorResponse('该故事已提交过反馈', 'ALREADY_EXISTS'))
     }
 
     // Use authenticated user's openid (already verified above)
@@ -111,7 +111,7 @@ export default async function storyFeedbackRoutes(fastify) {
     })
 
     if (!feedback) {
-      return res.status(404).send({ success: false, reason: '反馈不存在' })
+      return res.status(404).send(errorResponse('反馈不存在', 'NOT_FOUND'))
     }
 
     return res.send(successResponse({
@@ -191,7 +191,7 @@ export default async function storyFeedbackRoutes(fastify) {
       }))
     } catch (err) {
       console.error('Failed to fetch feedbacks:', err)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -201,7 +201,7 @@ export default async function storyFeedbackRoutes(fastify) {
     const { openid } = req.query
 
     if (!openid) {
-      return res.status(400).send({ success: false, reason: '缺少openid参数' })
+      return res.status(400).send(errorResponse('缺少openid参数', 'MISSING_PARAMS'))
     }
 
     try {
@@ -227,7 +227,7 @@ export default async function storyFeedbackRoutes(fastify) {
       }))
     } catch (err) {
       console.error('Failed to check feedback:', err)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -316,7 +316,7 @@ export default async function storyFeedbackRoutes(fastify) {
       }))
     } catch (err) {
       console.error('Failed to generate analytics:', err)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 
@@ -329,7 +329,7 @@ export default async function storyFeedbackRoutes(fastify) {
     const { openid } = req.query
 
     if (!openid) {
-      return res.status(400).send({ success: false, reason: '缺少 openid' })
+      return res.status(400).send(errorResponse('缺少 openid', 'MISSING_PARAMS'))
     }
 
     try {
@@ -467,7 +467,7 @@ export default async function storyFeedbackRoutes(fastify) {
       }))
     } catch (err) {
       console.error('Failed to generate recommendations:', err.message, err.stack)
-      return res.status(500).send({ success: false, reason: '服务器错误' })
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
 }

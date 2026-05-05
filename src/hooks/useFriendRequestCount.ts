@@ -1,15 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { friendApi } from '../services/api'
+import { friendApi, FriendRequestItem } from '../services/api'
 import { useDreamStore } from './useDreamStore'
-
-interface FriendRequestItem {
-  id: string
-  fromOpenid: string
-  fromNickname: string
-  fromAvatar: string | null
-  status: string
-  createdAt: string
-}
 
 // Shared cache to prevent duplicate API calls
 let cachedRequests: FriendRequestItem[] = []
@@ -30,7 +21,7 @@ async function fetchFriendRequests(openid: string): Promise<FriendRequestItem[]>
   fetchPromise = (async () => {
     try {
       const res = await friendApi.getFriendRequests()
-      const requests = res.success ? res.requests : []
+      const requests = res.success ? (res.data.requests || []) : []
       cachedRequests = requests
       cacheUserOpenid = openid
       return requests

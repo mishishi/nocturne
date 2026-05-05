@@ -83,15 +83,16 @@ export function ReEngagementModal({ onClose }: ReEngagementModalProps) {
   )
 }
 
-// Call this on app start to update last active date
+// Call this on app start and on close to update last active date
 export function updateLastActiveDate() {
   const today = new Date().toISOString()
   localStorage.setItem(LAST_ACTIVE_KEY, today)
 }
 
 // Check if should show re-engagement modal
-export function shouldShowReEngagement(hasSeenModal: boolean): boolean {
-  if (hasSeenModal) return false
+// hasSeenModal: whether modal was already shown in this browser session
+export function shouldShowReEngagement(hasSeenModalThisSession: boolean): boolean {
+  if (hasSeenModalThisSession) return false
 
   const lastActive = localStorage.getItem(LAST_ACTIVE_KEY)
   if (!lastActive) return false
@@ -102,4 +103,13 @@ export function shouldShowReEngagement(hasSeenModal: boolean): boolean {
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
   return diffDays >= INACTIVE_THRESHOLD_DAYS
+}
+
+// Session-level flag to prevent repeated shows in same browser session
+const REENGAGEMENT_SESSION_KEY = 'yeelin_reengagement_shown'
+export function markReEngagementShown() {
+  sessionStorage.setItem(REENGAGEMENT_SESSION_KEY, 'true')
+}
+export function hasShownReEngagementThisSession(): boolean {
+  return sessionStorage.getItem(REENGAGEMENT_SESSION_KEY) === 'true'
 }

@@ -38,7 +38,7 @@ export function Questions() {
   const voiceErrorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sseCleanupRef = useRef<(() => void) | null>(null)
 
-  const { questions, answers, currentQuestionIndex, sessionId, dreamText } = currentSession
+  const { questions, answers, currentQuestionIndex, sessionId } = currentSession
 
   const currentQuestion = questions[currentQuestionIndex]
 
@@ -95,13 +95,13 @@ export function Questions() {
 
       const result = await api.submitAnswer(sessionId, currentAnswer)
       clearTimeout(timeoutId)
-      if (result.data?.story) {
-        setStory(result.data.story.title, result.data.story.content)
-        setShowReveal(true)
-        setLoading(false)
-        setIsWaitingForAI(false)
-        return
-      } else if (result.data?.nextQuestion) {
+
+      // 检查 isLastQuestion 来决定是否进入下一题或生成故事
+      if (result.data?.isLastQuestion) {
+        // 最后一题，触发生成故事流程
+        handleFinalSubmit()
+      } else {
+        // 还有下一题
         setAnswer(currentQuestionIndex + 1, '')
         nextQuestion()
         setCurrentAnswer('')
@@ -188,23 +188,12 @@ export function Questions() {
         let result
         try {
           result = await api.submitAnswer(sessionId, answerToSubmit)
-        } catch (e) {
-          console.error('[Questions] submitAnswer error at index', currentIdx, ':', e.message)
+        } catch (e: any) {
+          console.error('[Questions] submitAnswer error at index', currentIdx, ':', e?.message)
           throw e // Re-throw to stop the loop
         }
         console.log('[Questions] Result:', JSON.stringify(result.data))
         clearTimeout(timeoutId)
-
-        if (result.data?.story) {
-          // Story already generated (edge case)
-          setStory(result.data.story.title, result.data.story.content)
-          setStreamedTitle(result.data.story.title)
-          setStreamedContent(result.data.story.content)
-          setStoryReady(true)
-          setLoading(false)
-          setIsWaitingForAI(false)
-          return
-        }
 
         currentIdx = result.data?.nextIndex ?? currentIdx + 1
         console.log('[Questions] nextIndex set to:', currentIdx, 'loop condition:', currentIdx < questions.length)
@@ -272,16 +261,6 @@ export function Questions() {
     setShowReveal(false)
     setStoryReady(false)
     navigate(`/story/${sessionId}`)
-  }
-
-  const handleVoicePermissionDenied = () => {
-    // Clear any existing timeout
-    if (voiceErrorTimeoutRef.current) {
-      clearTimeout(voiceErrorTimeoutRef.current)
-      voiceErrorTimeoutRef.current = null
-    }
-    setVoiceError('麦克风权限被拒绝，无法使用语音输入')
-    setShowPermissionGuide(true)
   }
 
   // Clear voice error only when modal is closed

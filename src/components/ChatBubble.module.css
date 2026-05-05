@@ -71,3 +71,9 @@
 .theirs .timestamp {
   color: var(--color-silver-dim);
 }
+
+.sendingIndicator {
+  margin-left: var(--space-2);
+  opacity: 0.7;
+  font-size: var(--text-xs);
+}

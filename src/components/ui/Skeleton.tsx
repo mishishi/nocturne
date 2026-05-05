@@ -19,7 +19,7 @@ export function Skeleton({ variant = 'text', width, height, className = '' }: Sk
 
 export function DreamFormSkeleton() {
   return (
-    <div className={styles.card} role="status" aria-live="polite" aria-label="正在加载">
+    <div className={styles.card} role="status" aria-live="polite" aria-label="正在加载" aria-busy="true">
       <div className={styles.cardSkeleton}>
         <div className={styles.cardHeader}>
           <Skeleton variant="avatar" className={styles.avatar} />
@@ -40,7 +40,7 @@ export function DreamFormSkeleton() {
 
 export function DreamWallSkeleton() {
   return (
-    <div className={styles.wallSkeleton} role="status" aria-live="polite" aria-label="正在加载梦境">
+    <div className={styles.wallSkeleton} role="status" aria-live="polite" aria-label="正在加载梦境" aria-busy="true">
       {[1, 2, 3].map((i) => (
         <div key={i} className={styles.wallCard}>
           <div className={styles.wallCardHeader}>
@@ -69,7 +69,7 @@ export function DreamWallSkeleton() {
 
 export function FriendsSkeleton() {
   return (
-    <div className={styles.friendsSkeleton} role="status" aria-live="polite" aria-label="正在加载好友">
+    <div className={styles.friendsSkeleton} role="status" aria-live="polite" aria-label="正在加载好友" aria-busy="true">
       {[1, 2, 3, 4, 5].map((i) => (
         <div key={i} className={styles.friendCardSkeleton}>
           <Skeleton variant="avatar" className={styles.friendAvatar} />
@@ -85,7 +85,7 @@ export function FriendsSkeleton() {
 
 export function StoryContentSkeleton() {
   return (
-    <div className={styles.storyContentSkeleton} role="status" aria-live="polite" aria-label="正在加载故事内容">
+    <div className={styles.storyContentSkeleton} role="status" aria-live="polite" aria-label="正在加载故事内容" aria-busy="true">
       <div className={styles.storySkeletonHeader}>
         <Skeleton variant="title" className={styles.storySkeletonTitle} />
         <div className={styles.storySkeletonMeta}>

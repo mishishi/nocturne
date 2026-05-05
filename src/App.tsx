@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { registerToastCallback } from './hooks/useDreamStore'
+import { registerToastCallback, unregisterToastCallback } from './hooks/useDreamStore'
 import { Toast } from './components/ui/Toast'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
@@ -65,7 +65,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function App() {
   const location = useLocation()
-  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement, user, syncAchievementsFromServer } = useDreamStore()
+  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, user, syncAchievementsFromServer } = useDreamStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
@@ -142,12 +142,6 @@ function App() {
     }
   }, [recentlyUnlocked, playSound])
 
-  // Retroactive achievement check on app start (catches stories loaded from backend)
-  useEffect(() => {
-    if (history.length > 0 && !achievements.includes('first_dream')) {
-      unlockAchievement('first_dream')
-    }
-  }, [])
 
   // Sync achievements from server on app start (for users who logged in on other devices)
   useEffect(() => {
@@ -163,6 +157,7 @@ function App() {
       setToastType(type)
       setToastVisible(true)
     })
+    return () => unregisterToastCallback()
   }, [])
 
   // Get the first recently unlocked achievement to show

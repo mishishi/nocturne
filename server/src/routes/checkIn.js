@@ -22,13 +22,13 @@ function getYesterdayDate() {
 }
 
 // Helper: calculate consecutive days from today (or yesterday if today not checked in)
-async function calculateConsecutiveDays(openid) {
+async function calculateConsecutiveDays(userId) {
   const today = getTodayDate()
   const yesterday = getYesterdayDate()
 
   // Get all check-ins for this user, ordered by date descending
   const checkIns = await prisma.checkIn.findMany({
-    where: { openid },
+    where: { userId },
     orderBy: { date: 'desc' }
   })
 
@@ -78,9 +78,9 @@ export default async function checkInRoutes(fastify) {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const openid = req.userId // From auth middleware
+    const userId = req.userId // From auth middleware
 
-    if (!openid) {
+    if (!userId) {
       return res.status(401).send(errorResponse('未授权', 'UNAUTHORIZED'))
     }
 
@@ -90,8 +90,8 @@ export default async function checkInRoutes(fastify) {
       // Check if already checked in today
       const existingCheckIn = await prisma.checkIn.findUnique({
         where: {
-          openid_date: {
-            openid,
+          userId_date: {
+            userId,
             date: today
           }
         }
@@ -99,7 +99,7 @@ export default async function checkInRoutes(fastify) {
 
       if (existingCheckIn) {
         // Already checked in today, return existing record
-        const consecutiveDays = await calculateConsecutiveDays(openid)
+        const consecutiveDays = await calculateConsecutiveDays(userId)
         return res.send(successResponse({
           consecutiveDays,
           alreadyCheckedIn: true
@@ -109,12 +109,12 @@ export default async function checkInRoutes(fastify) {
       // Create new check-in record
       const checkIn = await prisma.checkIn.create({
         data: {
-          openid,
+          userId,
           date: today
         }
       })
 
-      const consecutiveDays = await calculateConsecutiveDays(openid)
+      const consecutiveDays = await calculateConsecutiveDays(userId)
 
       return res.send(successResponse({
         consecutiveDays,
@@ -122,6 +122,7 @@ export default async function checkInRoutes(fastify) {
       }))
     } catch (error) {
       console.error('Check-in error:', error)
+      console.error('userId:', userId, 'today:', today)
       return res.status(500).send(errorResponse('签到失败', 'SERVER_ERROR'))
     }
   })
@@ -132,9 +133,9 @@ export default async function checkInRoutes(fastify) {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const openid = req.userId // From auth middleware
+    const userId = req.userId // From auth middleware
 
-    if (!openid) {
+    if (!userId) {
       return res.status(401).send(errorResponse('未授权', 'UNAUTHORIZED'))
     }
 
@@ -144,14 +145,14 @@ export default async function checkInRoutes(fastify) {
       // Check if checked in today
       const todayCheckIn = await prisma.checkIn.findUnique({
         where: {
-          openid_date: {
-            openid,
+          userId_date: {
+            userId,
             date: today
           }
         }
       })
 
-      const consecutiveDays = await calculateConsecutiveDays(openid)
+      const consecutiveDays = await calculateConsecutiveDays(userId)
 
       return res.send(successResponse({
         checkedInToday: !!todayCheckIn,
@@ -159,6 +160,7 @@ export default async function checkInRoutes(fastify) {
       }))
     } catch (error) {
       console.error('Get check-in status error:', error)
+      console.error('userId:', userId, 'today:', today)
       return res.status(500).send(errorResponse('获取签到状态失败', 'SERVER_ERROR'))
     }
   })
@@ -169,15 +171,15 @@ export default async function checkInRoutes(fastify) {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const openid = req.userId // From auth middleware
+    const userId = req.userId // From auth middleware
 
-    if (!openid) {
+    if (!userId) {
       return res.status(401).send(errorResponse('未授权', 'UNAUTHORIZED'))
     }
 
     try {
       const checkIns = await prisma.checkIn.findMany({
-        where: { openid },
+        where: { userId },
         orderBy: { date: 'desc' },
         select: {
           id: true,

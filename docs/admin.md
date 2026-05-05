@@ -16,7 +16,7 @@
 
 ### GET /api/admin/stats
 
-获取审核统计数据。
+获取审核统计数据（包含趋势数据）。
 
 **需要认证：** 是（管理员）
 
@@ -27,10 +27,24 @@
   "data": {
     "pendingPosts": 5,
     "totalPosts": 128,
-    "totalComments": 342
+    "totalComments": 342,
+    "trends": {
+      "postsLast7Days": 23,
+      "postsGrowth": 15,
+      "approvedLast7Days": 20,
+      "rejectedLast7Days": 3
+    }
   }
 }
 ```
+
+**趋势数据说明：**
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `postsLast7Days` | number | 最近7天新增帖子数 |
+| `postsGrowth` | number | 相对上一个7天周期的增长率（百分比） |
+| `approvedLast7Days` | number | 最近7天审核通过的帖子数 |
+| `rejectedLast7Days` | number | 最近7天审核拒绝的帖子数 |
 
 ---
 
@@ -103,6 +117,7 @@
 1. 验证帖子存在且状态为 `pending`
 2. 将帖子状态更新为 `approved`
 3. 帖子将在梦墙显示
+4. 记录操作日志到 `AdminOperationLog`
 
 ---
 
@@ -149,6 +164,80 @@
 2. 将帖子状态更新为 `rejected`
 3. 向帖子作者发送 `POST_REJECTED` 类型通知
 4. 用户在通知中心看到拒绝原因
+5. 记录操作日志到 `AdminOperationLog`
+
+---
+
+### POST /api/admin/posts/batch-approve
+
+批量通过审核帖子。
+
+**需要认证：** 是（管理员）
+
+**请求 Body：**
+```json
+{
+  "postIds": ["clx123...", "clx456..."]
+}
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| postIds | string[] | 是 | 要通过的帖子 ID 数组 |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "approved": true,
+    "count": 5
+  }
+}
+```
+
+**业务逻辑：**
+1. 只通过状态为 `pending` 的帖子
+2. 批量更新帖子状态为 `approved`
+3. 记录操作日志到 `AdminOperationLog`（包含所有操作的帖子 ID）
+
+---
+
+### POST /api/admin/posts/batch-reject
+
+批量拒绝审核帖子。
+
+**需要认证：** 是（管理员）
+
+**请求 Body：**
+```json
+{
+  "postIds": ["clx123...", "clx456..."],
+  "reason": "内容违规"
+}
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| postIds | string[] | 是 | 要拒绝的帖子 ID 数组 |
+| reason | string | 是 | 拒绝原因 |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "rejected": true,
+    "count": 5
+  }
+}
+```
+
+**业务逻辑：**
+1. 只拒绝状态为 `pending` 的帖子
+2. 批量更新帖子状态为 `rejected`
+3. 向所有被拒绝帖子的作者发送 `POST_REJECTED` 类型通知
+4. 记录操作日志到 `AdminOperationLog`（包含所有操作的帖子 ID 和拒绝原因）
 
 ---
 
@@ -258,3 +347,45 @@
 - 外部链接（http/https/www 等）
 - 广告内容（加我、联系我、代刷等）
 - 极端情绪（想死、恨死等）
+
+---
+
+## 操作日志
+
+系统记录所有管理后台操作到 `AdminOperationLog` 表。
+
+### 数据库模型
+
+```prisma
+model AdminOperationLog {
+  id          String   @id @default(cuid())
+  adminOpenid String   // 管理员 openid
+  action      String   // APPROVE_POST, REJECT_POST, BATCH_APPROVE, BATCH_REJECT, DELETE_COMMENT
+  targetType  String   // post, comment
+  targetId    String?  // 单一操作的目标ID
+  targetIds   String[] // 批量操作的目标ID列表
+  reason      String?  // 拒绝原因（仅拒绝操作）
+  createdAt   DateTime @default(now())
+}
+```
+
+### 日志字段说明
+
+| 字段 | 说明 |
+|------|------|
+| `adminOpenid` | 执行操作的管理员 openid |
+| `action` | 操作类型 |
+| `targetType` | 目标类型（post/comment） |
+| `targetId` | 单一操作的帖子/评论 ID |
+| `targetIds` | 批量操作的 ID 列表 |
+| `reason` | 拒绝原因（仅拒绝操作） |
+
+### 操作类型
+
+| action 值 | 说明 |
+|-----------|------|
+| `APPROVE_POST` | 通过单个帖子 |
+| `REJECT_POST` | 拒绝单个帖子 |
+| `BATCH_APPROVE` | 批量通过帖子 |
+| `BATCH_REJECT` | 批量拒绝帖子 |
+| `DELETE_COMMENT` | 删除评论 |

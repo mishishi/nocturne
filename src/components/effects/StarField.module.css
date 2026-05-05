@@ -37,3 +37,10 @@
     transform: scale(1.15);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .star {
+    animation: none;
+    opacity: 0.4;
+  }
+}

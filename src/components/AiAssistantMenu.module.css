@@ -1,0 +1,111 @@
+.aiMenu {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13, 27, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  min-width: 180px;
+  z-index: var(--z-dropdown);
+  animation: fadeInUp var(--duration-fast) var(--ease-dream);
+  box-shadow: var(--shadow-elevated);
+}
+
+.aiMenu::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: rgba(13, 27, 42, 0.95);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-moonlight);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.menuItem:hover {
+  background: rgba(244, 211, 94, 0.1);
+  color: var(--color-golden);
+}
+
+.menuItem:active {
+  background: rgba(244, 211, 94, 0.15);
+  transform: scale(0.98);
+}
+
+.menuItem:focus-visible {
+  outline: 2px solid var(--color-golden);
+  outline-offset: -2px;
+}
+
+.menuItemDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.menuItemDisabled:hover {
+  background: none;
+  color: var(--color-moonlight);
+}
+
+.selectedVoice {
+  background: rgba(244, 211, 94, 0.15);
+  color: var(--color-golden);
+}
+
+.voiceSubMenu {
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border-light);
+  margin-top: var(--space-2);
+}
+
+.subMenuLabel {
+  display: block;
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.75rem;
+  color: var(--color-silver-dim);
+}
+
+.pointsHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.75rem;
+  color: var(--color-silver);
+  border-top: 1px solid var(--color-border-light);
+  margin-top: var(--space-2);
+}
+
+.pointsHint strong {
+  color: var(--color-golden);
+  margin: 0 2px;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
