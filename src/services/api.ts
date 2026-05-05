@@ -1165,3 +1165,28 @@ export const checkInApi = {
     return res.json()
   }
 }
+
+export const achievementApi = {
+  // Get user's achievements from server
+  async getAchievements(): Promise<ApiResponse<{ medals: string[] }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/achievements`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取成就失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Sync achievements to server (merge with existing)
+  async syncAchievements(medals: string[]): Promise<ApiResponse<{ medals: string[] }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/achievements/sync`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify({ medals })
+    })
+    if (!res.ok) throw new Error(`同步成就失败: ${res.status}`)
+    return res.json()
+  }
+}

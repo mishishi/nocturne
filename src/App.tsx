@@ -55,7 +55,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function App() {
   const location = useLocation()
-  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement } = useDreamStore()
+  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement, user, syncAchievementsFromServer } = useDreamStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
@@ -112,6 +112,13 @@ function App() {
   useEffect(() => {
     if (history.length > 0 && !achievements.includes('first_dream')) {
       unlockAchievement('first_dream')
+    }
+  }, [])
+
+  // Sync achievements from server on app start (for users who logged in on other devices)
+  useEffect(() => {
+    if (user) {
+      syncAchievementsFromServer()
     }
   }, [])
 

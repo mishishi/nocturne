@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { checkInApi, wallApi } from '../services/api'
+import { checkInApi, wallApi, achievementApi } from '../services/api'
 import { useAuthStore } from './useAuthStore'
 
 export interface DreamSession {
@@ -186,6 +186,8 @@ interface DreamState {
   removeFriend: (friendId: string) => void
   // Check-in actions
   setCheckInStatus: (checkedInToday: boolean, consecutiveDays: number) => void
+  // Achievement actions
+  syncAchievementsFromServer: () => Promise<void>
 }
 
 // Helper to check 7-day streak
@@ -479,8 +481,13 @@ export const useDreamStore = create<DreamState>()(
       unlockAchievement: (id) =>
         set((state) => {
           if (state.achievements.includes(id)) return state
+          const newAchievements = [...state.achievements, id]
+          // Sync to server in background
+          achievementApi.syncAchievements(newAchievements).catch(err => {
+            console.error('Failed to sync achievement to server:', err)
+          })
           return {
-            achievements: [...state.achievements, id],
+            achievements: newAchievements,
             recentlyUnlocked: [...state.recentlyUnlocked, id]
           }
         }),
@@ -489,6 +496,22 @@ export const useDreamStore = create<DreamState>()(
         set((state) => ({
           recentlyUnlocked: state.recentlyUnlocked.filter(item => item !== id)
         })),
+
+      syncAchievementsFromServer: async () => {
+        try {
+          const response = await achievementApi.getAchievements()
+          if (response.success && response.data) {
+            const serverMedals = response.data.medals || []
+            set((state) => {
+              // Merge server medals with local (union of both)
+              const mergedMedals = [...new Set([...state.achievements, ...serverMedals])]
+              return { achievements: mergedMedals }
+            })
+          }
+        } catch (err) {
+          console.error('Failed to sync achievements from server:', err)
+        }
+      },
 
       addPoints: (amount) =>
         set((state) => ({
@@ -535,6 +558,10 @@ export const useDreamStore = create<DreamState>()(
         // Also update the auth store
         useAuthStore.getState().setUser(user, token)
         set({ user, token: token ?? null })
+        // Sync achievements from server when user logs in
+        if (user) {
+          useDreamStore.getState().syncAchievementsFromServer()
+        }
       },
 
       logout: () => {
