@@ -258,6 +258,7 @@ const history = await api.getHistory(openid)
   "success": true,
   "interpretation": "这是一段关于...的梦境解读",
   "depthLevel": "standard",
+  "hasAuxiliaryClue": true,
   "pointsUsed": 10,
   "remainingPoints": 20
 }
@@ -281,7 +282,8 @@ const history = await api.getHistory(openid)
 - 检查积分是否足够（10 积分/次）
 - 收集 session 的问题和回答作为上下文
 - 获取用户的解读偏好设置（基于历史反馈调整深度）
-- 调用 storyService.generateInterpretation 生成解读（传入深度级别）
+- 获取用户的历史梦境数据构建辅助线索（发布到梦墙的故事 + 问答记录）
+- 调用 storyService.generateInterpretation 生成解读（传入深度级别和辅助线索）
 - 扣除用户积分
 - 保存解读到 Story.interpretation
 
@@ -290,6 +292,14 @@ const history = await api.getHistory(openid)
 - 如果用户历史反馈中不准确率超过 40%，自动切换到详细模式
 - 详细模式（detailed）：更深入的分析，更多探索角度，max_tokens 翻倍
 - 标准模式（standard）：基础深度分析
+
+**辅助线索关联机制：**
+- 系统分析用户历史梦境数据（已发布的梦墙故事 + 问答记录）
+- 提取梦境主题偏好（如：飞翔与自由、人际关系等）
+- 识别重复出现的元素（如：动物、场景、情绪词）
+- 推断用户近期情绪倾向（积极/消极/中性）
+- 将辅助线索以"参考"形式加入 AI prompt，帮助生成更个性化的解读
+- 辅助线索仅作参考，AI 保持开放性解读
 
 **积分规则：**
 - 每次解读消耗 10 积分

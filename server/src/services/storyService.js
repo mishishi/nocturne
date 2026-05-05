@@ -255,9 +255,9 @@ export const storyService = {
     }
   },
 
-  async generateInterpretation(storyTitle, storyContent, dreamFragment, answers, depthLevel = 'standard') {
+  async generateInterpretation(storyTitle, storyContent, dreamFragment, answers, depthLevel = 'standard', auxiliaryClue = '') {
     const apiKey = process.env.MINIMAX_API_KEY
-    if (!apiKey) throw new Error('MINIMAX_API_KEY not configured')
+    if (!apiKey) throw new Error('MINIMMAX_API_KEY not configured')
 
     // Build context from dream fragment and Q&A
     const detailsText = answers.map((a, i) => `问题${i + 1}: ${a.question}\n回答: ${a.answer}`).join('\n')
@@ -265,6 +265,9 @@ export const storyService = {
     // 根据深度级别选择不同的 prompt
     const promptTemplate = depthLevel === 'detailed' ? INTERPRETATION_DETAILED_PROMPT : INTERPRETATION_PROMPT
     const maxTokens = depthLevel === 'detailed' ? 1200 : 600
+
+    // 构建完整 prompt
+    const baseContent = `\n\n故事标题：${storyTitle}\n\n${storyContent}\n\n用户梦境碎片：${dreamFragment}\n\n用户补充细节：\n${detailsText}${auxiliaryClue}`
 
     const response = await fetch(API_URL, {
       method: 'POST',
@@ -275,7 +278,7 @@ export const storyService = {
       body: JSON.stringify({
         model: 'MiniMax-M2.7-highspeed',
         messages: [
-          { role: 'user', content: promptTemplate + `\n\n故事标题：${storyTitle}\n\n${storyContent}\n\n用户梦境碎片：${dreamFragment}\n\n用户补充细节：\n${detailsText}` }
+          { role: 'user', content: promptTemplate + baseContent }
         ],
         max_tokens: maxTokens,
         temperature: 0.7
@@ -297,6 +300,7 @@ export const storyService = {
     return {
       interpretation: content.trim(),
       depthLevel,
+      hasAuxiliaryClue: !!auxiliaryClue,
       tokens: {
         prompt: data.usage ? data.usage.prompt_tokens : 0,
         completion: data.usage ? data.usage.completion_tokens : 0

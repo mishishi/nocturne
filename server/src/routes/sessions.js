@@ -2,6 +2,7 @@ import { sessionService } from '../services/sessionService.js'
 import { questionService } from '../services/questionService.js'
 import { storyService } from '../services/storyService.js'
 import { interpretationPreferenceService } from '../services/interpretationPreferenceService.js'
+import { auxiliaryClueService } from '../services/auxiliaryClueService.js'
 import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
@@ -193,13 +194,17 @@ export default async function sessionRoutes(fastify) {
     // Get user's interpretation preference (adjusts depth based on past feedback)
     const depthLevel = await interpretationPreferenceService.getDepthLevel(tokenUser.openid)
 
-    // Generate interpretation with appropriate depth
-    const { interpretation, tokens } = await storyService.generateInterpretation(
+    // Get user's auxiliary clues from historical data
+    const auxiliaryClue = await auxiliaryClueService.buildClueContext(tokenUser.openid, sessionId)
+
+    // Generate interpretation with appropriate depth and auxiliary clues
+    const { interpretation, tokens, hasAuxiliaryClue } = await storyService.generateInterpretation(
       story.title,
       story.content,
       session.dreamFragment,
       answers.map(a => ({ question: a.questionText, answer: a.answerText })),
-      depthLevel
+      depthLevel,
+      auxiliaryClue
     )
 
     // Deduct points and save interpretation
@@ -220,6 +225,7 @@ export default async function sessionRoutes(fastify) {
     return res.send(successResponse({
       interpretation,
       depthLevel,
+      hasAuxiliaryClue,
       pointsUsed: COST,
       remainingPoints: user.points - COST
     }))
