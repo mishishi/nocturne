@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { MobileHeader } from './components/MobileHeader'
 import { BottomNav } from './components/BottomNav'
@@ -22,6 +22,7 @@ import { Favorites } from './pages/Favorites'
 import { Profile } from './pages/Profile'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
+import { ForgotPassword } from './pages/ForgotPassword'
 import { Friends } from './pages/Friends'
 import { FriendProfile } from './pages/FriendProfile'
 import { DreamWall } from './pages/DreamWall'
@@ -33,11 +34,52 @@ import { DemoExperience } from './pages/DemoExperience'
 import { StreamingEffectsDemo } from './pages/StreamingEffectsDemo'
 import { StreamingLayoutDemo } from './pages/StreamingLayoutDemo'
 
+// Page title mapping
+const PAGE_TITLES: Record<string, string> = {
+  '/': '夜棂 - 穿越梦境的星门',
+  '/dream': '记录梦境 - 夜棂',
+  '/demo': '体验梦境 - 夜棂',
+  '/questions': '回答问题 - 夜棂',
+  '/history': '历史记录 - 夜棂',
+  '/favorites': '我的收藏 - 夜棂',
+  '/wall': '梦墙 - 夜棂',
+  '/login': '登录 - 夜棂',
+  '/register': '注册 - 夜棂',
+  '/forgot-password': '忘记密码 - 夜棂',
+  '/profile': '个人中心 - 夜棂',
+  '/friends': '好友列表 - 夜棂',
+  '/notifications': '通知 - 夜棂',
+  '/chat': '聊天 - 夜棂',
+  '/admin': '管理后台 - 夜棂'
+}
+
 function App() {
+  const location = useLocation()
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, history, achievements, unlockAchievement } = useDreamStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
+
+  // Update page title based on route
+  useEffect(() => {
+    const path = location.pathname
+    // Check for exact match first
+    if (PAGE_TITLES[path]) {
+      document.title = PAGE_TITLES[path]
+      return
+    }
+    // Check for pattern matches (e.g., /story/:sessionId)
+    if (path.startsWith('/story/')) {
+      document.title = '故事详情 - 夜棂'
+      return
+    }
+    if (path.startsWith('/friends/')) {
+      document.title = '好友主页 - 夜棂'
+      return
+    }
+    // Default title
+    document.title = '夜棂 - 穿越梦境的星门'
+  }, [location])
 
   const handleDraftConfirm = () => {
     localStorage.removeItem('yeelin_draft')
@@ -105,6 +147,7 @@ function App() {
             <Route path="/wall" element={<PageErrorBoundary><DreamWall /></PageErrorBoundary>} />
             <Route path="/login" element={<PageErrorBoundary><Login /></PageErrorBoundary>} />
             <Route path="/register" element={<PageErrorBoundary><Register /></PageErrorBoundary>} />
+            <Route path="/forgot-password" element={<PageErrorBoundary><ForgotPassword /></PageErrorBoundary>} />
             <Route path="/profile" element={
               <PageErrorBoundary><ProtectedRoute><Profile /></ProtectedRoute></PageErrorBoundary>
             } />

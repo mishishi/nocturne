@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { authApi, api } from '../services/api'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import styles from './Login.module.css'
 
 export function Login() {
@@ -121,8 +122,8 @@ export function Login() {
         if (guestOpenid && guestOpenid !== user.openid) {
           try {
             const result = await api.migrateSession(guestOpenid)
-            if (result.success && result.migrated > 0) {
-              showToast(`已保留 ${result.migrated} 个未完成的梦境`)
+            if (result.success && (result.data?.migrated ?? 0) > 0) {
+              showToast(`已保留 ${result.data?.migrated} 个未完成的梦境`)
             }
           } catch (err) {
             console.error('Session migration failed:', err)
@@ -134,7 +135,7 @@ export function Login() {
         localStorage.setItem('yeelin_openid', user.openid)
         navigate(user.isAdmin ? '/admin' : from, { replace: true })
       } else {
-        setError(result.data?.reason || result.reason || '登录失败')
+        setError((result as any)?.reason || '登录失败')
       }
     } catch (err) {
       setError('网络错误，请检查网络连接')
@@ -353,14 +354,14 @@ export function Login() {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <span className={styles.loadingSpinner} />
+                    <LoadingSpinner />
                   ) : (
                     '进入夜棂'
                   )}
                 </button>
 
                 <div className={styles.formFooter}>
-                  <span className={styles.link}>忘记密码？</span>
+                  <Link to="/forgot-password" className={styles.link}>忘记密码？</Link>
                   <span className={styles.separator}>|</span>
                   <a href="/register" className={styles.link}>注册账号</a>
                 </div>

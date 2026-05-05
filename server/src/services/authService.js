@@ -169,6 +169,41 @@ export const authService = {
   },
 
   /**
+   * Get user by phone
+   */
+  async getUserByPhone(phone) {
+    return prisma.user.findUnique({ where: { phone } })
+  },
+
+  /**
+   * Send password reset code (demo version - returns fixed code)
+   */
+  async sendResetCode(phone) {
+    // Demo version: always return fixed code
+    // Real version: generate random 6-digit code, store in Redis with 5min expiry
+    return { code: '123456' }
+  },
+
+  /**
+   * Reset password with verification code (demo version)
+   */
+  async resetPassword(phone, code, newPassword) {
+    // Demo version: only verify code === '123456'
+    // Real version: verify code from Redis, check expiry
+    if (code !== '123456') {
+      throw new Error('验证码错误')
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
+    await prisma.user.update({
+      where: { phone },
+      data: { passwordHash }
+    })
+
+    return { success: true }
+  },
+
+  /**
    * Verify token and return user
    */
   async verifyToken(token) {

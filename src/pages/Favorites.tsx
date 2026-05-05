@@ -29,11 +29,11 @@ export function Favorites() {
     try {
       const result = await wallApi.getFavorites({ page: pageNum, limit: 20 })
       if (append) {
-        setPosts(prev => [...prev, ...result.posts])
+        setPosts(prev => [...prev, ...(result.data?.posts || [])])
       } else {
-        setPosts(result.posts)
+        setPosts(result.data?.posts || [])
       }
-      setHasMore(result.pagination.hasMore)
+      setHasMore(result.data?.pagination?.hasMore ?? false)
     } catch (err) {
       console.error('Failed to fetch favorites:', err)
     } finally {
@@ -58,7 +58,7 @@ export function Favorites() {
       try {
         const res = await wallApi.getStoryFavorites()
         if (res.success) {
-          setStoryFavorites(res.stories)
+          setStoryFavorites(res.data?.stories || [])
         }
       } catch (err) {
         console.error('Failed to fetch story favorites:', err)
@@ -180,7 +180,25 @@ export function Favorites() {
 
         {/* Header */}
         <header className={styles.header}>
-          <span className={styles.badge}>我的收藏</span>
+          <div className={styles.headerIcon}>
+            <svg viewBox="0 0 60 60" fill="none">
+              {/* Bookmark with star representing favorites */}
+              <path d="M15 8h30l-4 44h-22l-4-44z" fill="url(#favBookmarkGrad)" />
+              <path d="M22 18h16M22 26h12" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="30" cy="38" r="8" fill="url(#favStarGrad)" />
+              <path d="M30 33l1.5 3 3.5.5-2.5 2.5.5 3.5-3-1.5-3 1.5.5-3.5-2.5-2.5 3.5-.5 1.5-3z" fill="rgba(255,255,255,0.95)" />
+              <defs>
+                <linearGradient id="favBookmarkGrad" x1="15" y1="8" x2="41" y2="52">
+                  <stop offset="0%" stopColor="#7EB8DA" />
+                  <stop offset="100%" stopColor="#5A9BC7" />
+                </linearGradient>
+                <radialGradient id="favStarGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FFD666" />
+                  <stop offset="100%" stopColor="#F4D35E" />
+                </radialGradient>
+              </defs>
+            </svg>
+          </div>
           <h1 className={styles.title}>收藏列表</h1>
           <p className={styles.subtitle}>
             {posts.length > 0 || storyFavorites.length > 0

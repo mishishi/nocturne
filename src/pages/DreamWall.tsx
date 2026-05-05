@@ -28,6 +28,7 @@ export function DreamWall() {
   const [favoritingId, setFavoritingId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
   const [searchHint, setSearchHint] = useState<{
     show: boolean
     message: string
@@ -60,13 +61,13 @@ export function DreamWall() {
         return
       }
 
-      const posts = result.posts || []
+      const posts = result.data?.posts || []
       if (reset) {
         setPosts(posts)
       } else {
         setPosts(prev => [...prev, ...posts])
       }
-      setHasMore(result.pagination?.hasMore ?? false)
+      setHasMore(result.data?.pagination?.hasMore ?? false)
     } catch (err) {
       console.error('Failed to load posts:', err)
       setPosts([])
@@ -87,7 +88,7 @@ export function DreamWall() {
       const result = await wallApi.getMyPosts(openid)
       if (result.success) {
         // Transform my posts to match DreamWallPost format
-        const transformed: DreamWallPost[] = result.posts.map(p => ({
+        const transformed: DreamWallPost[] = (result.data?.posts || []).map(p => ({
           id: p.id,
           sessionId: p.sessionId || '',
           storyTitle: p.storyTitle,
@@ -129,13 +130,13 @@ export function DreamWall() {
         return
       }
 
-      const newPosts = result.posts || []
+      const newPosts = result.data?.posts || []
       if (reset) {
         setPosts(newPosts)
       } else {
         setPosts(prev => [...prev, ...newPosts])
       }
-      setHasMore(result.pagination?.hasMore ?? false)
+      setHasMore(result.data?.pagination?.hasMore ?? false)
     } catch (err) {
       console.error('Failed to load friend posts:', err)
       setPosts([])
@@ -199,8 +200,10 @@ export function DreamWall() {
 
   // Debounced search effect
   useEffect(() => {
+    setIsSearching(true)
     const timer = setTimeout(() => {
       setSearchKeyword(searchQuery)
+      setIsSearching(false)
       // Show hint when searching in weekly tab with no results
       if (activeTab === 'featured' && searchQuery && posts.length === 0) {
         setSearchHint({
@@ -378,14 +381,28 @@ export function DreamWall() {
         <header className={styles.header}>
           <div className={styles.moonIcon}>
             <svg viewBox="0 0 60 60" fill="none">
-              <circle cx="30" cy="30" r="25" fill="url(#wallMoonGrad)" />
-              <circle cx="22" cy="22" r="4" fill="rgba(255,255,255,0.3)" />
-              <circle cx="35" cy="28" r="3" fill="rgba(255,255,255,0.2)" />
-              <circle cx="25" cy="35" r="3.5" fill="rgba(255,255,255,0.25)" />
+              {/* Central crescent moon - the dream */}
+              <path d="M35 10c-8 0-15 6-17 14s2 16 10 18c-3-5-2-12 2-16s11-5 17-2c-6-7-14-11-22-10-4-7-3-15 4-20 4-3 9-3 14 1 5-4 12-4 17 1 4 5 5 12 1 17 5 2 9 6 10 12 2 7-1 14-6 19 6 0 11 5 13 11 3 7 0 15-6 19-7 4-16 3-22-3-6 4-14 4-20 0s-8-14-5-21c-6 1-12-1-16-6 5 1 10-1 13-5s3-11 0-16c-5 5-13 6-18 2s-6-11-3-17c4-6 12-8 18-5-2-5-1-11 4-14s11-2 15 2c5-5 13-6 18-2s6 12 3 18c5-2 11-1 15 3s4 11 1 16c6-2 13 0 17 5-4-1-8 1-10 4z" fill="url(#wallMoonGrad)" opacity="0.15"/>
+              <path d="M30 8c-10 0-18 7-20 16s3 18 12 20c-4-5-3-12 1-17 4-4 11-5 17-2-5-7-12-10-20-9-4-7-3-15 3-19 4-3 9-3 14 1 5-4 12-4 17 1 4 5 5 12 1 17 5 2 9 6 10 12 2 7-1 14-6 19 6 0 11 5 13 11 3 7 0 15-6 19-7 4-16 3-22-3-6 4-14 4-20 0s-8-14-5-21c-6 1-12-1-16-6 5 1 10-1 13-5s3-11 0-16c-5 5-13 6-18 2s-6-11-3-17c4-6 12-8 18-5-2-5-1-11 4-14s11-2 15 2z" fill="url(#wallMoonGrad)" />
+              {/* Dream bubbles floating outward */}
+              <circle cx="12" cy="18" r="4" fill="url(#wallBubbleGrad)" opacity="0.8" />
+              <circle cx="48" cy="15" r="3" fill="url(#wallBubbleGrad)" opacity="0.7" />
+              <circle cx="10" cy="42" r="3.5" fill="url(#wallBubbleGrad)" opacity="0.75" />
+              <circle cx="50" cy="40" r="4" fill="url(#wallBubbleGrad)" opacity="0.8" />
+              <circle cx="20" cy="52" r="3" fill="url(#wallBubbleGrad)" opacity="0.65" />
+              <circle cx="40" cy="50" r="3.5" fill="url(#wallBubbleGrad)" opacity="0.7" />
+              {/* Tiny sparkle dots */}
+              <circle cx="25" cy="10" r="1.5" fill="#F4D35E" opacity="0.6" />
+              <circle cx="8" cy="30" r="1" fill="#F4D35E" opacity="0.5" />
+              <circle cx="52" cy="28" r="1.5" fill="#F4D35E" opacity="0.5" />
               <defs>
-                <radialGradient id="wallMoonGrad" cx="50%" cy="50%" r="50%">
+                <linearGradient id="wallMoonGrad" x1="10" y1="8" x2="50" y2="52">
                   <stop offset="0%" stopColor="#FFD666" />
                   <stop offset="100%" stopColor="#F4D35E" />
+                </linearGradient>
+                <radialGradient id="wallBubbleGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#7EB8DA" />
+                  <stop offset="100%" stopColor="#5A9BC7" />
                 </radialGradient>
               </defs>
             </svg>
@@ -473,6 +490,7 @@ export function DreamWall() {
                 </svg>
               </button>
             )}
+            {isSearching && <span className={styles.searching}>搜索中...</span>}
           </div>
         )}
 

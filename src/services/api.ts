@@ -2,6 +2,39 @@
 // In development, use mock API for UI testing
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+
+// ============ 统一响应类型 ============
+export interface ApiSuccessResponse<T> {
+  success: true
+  data: T
+  message?: string
+  timestamp: string
+}
+
+export interface ApiErrorResponse {
+  success: false
+  error: {
+    code: string
+    message: string
+    details?: unknown
+  }
+  timestamp: string
+}
+
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
+
+// 通用分页类型
+export interface Pagination {
+  page: number
+  limit: number
+  total: number
+  hasMore: boolean
+}
+
+// 验证响应是否成功
+export function isApiSuccess<T>(res: ApiResponse<T>): res is ApiSuccessResponse<T> {
+  return res.success === true
+}
 const FETCH_TIMEOUT = 15000
 const LONG_FETCH_TIMEOUT = 60000 // For AI generation endpoints (questions, story, interpretation)
 
@@ -48,6 +81,7 @@ export interface User {
   avatar?: string
   phone?: string
   isMember: boolean
+  isAdmin?: boolean
   memberSince?: string
   points: number
   medals: string[]
@@ -91,9 +125,18 @@ export interface FriendRequestItem {
   createdAt: string
 }
 
+// Session API
+export interface Session {
+  id: string
+  date: string
+  dreamFragment: string
+  storyTitle: string
+  story: string
+}
+
 export const api = {
   // Create session
-  async createSession(openid: string): Promise<{ sessionId: string; status: string }> {
+  async createSession(openid: string): Promise<ApiResponse<{ sessionId: string; status: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -104,7 +147,7 @@ export const api = {
   },
 
   // Submit dream and get all questions
-  async submitDream(sessionId: string, content: string, styleTag: string): Promise<{ success: boolean; questions: string[]; questionIndex: number }> {
+  async submitDream(sessionId: string, content: string, styleTag: string): Promise<ApiResponse<{ questions: string[]; questionIndex: number }>> {
     const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/dream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -115,12 +158,11 @@ export const api = {
   },
 
   // Submit answer and get next question or story
-  async submitAnswer(sessionId: string, answer: string): Promise<{
-    success: boolean
+  async submitAnswer(sessionId: string, answer: string): Promise<ApiResponse<{
     nextQuestion?: string
     nextIndex?: number
-    story?: { title: string; content: string }
-  }> {
+    isLastQuestion?: boolean
+  }>> {
     const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/answer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -131,34 +173,30 @@ export const api = {
   },
 
   // Get story
-  async getStory(sessionId: string): Promise<{ story: { title: string; content: string } }> {
+  async getStory(sessionId: string): Promise<ApiResponse<{ story: { title: string; content: string } }>> {
     const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/story`)
     if (!res.ok) throw new Error(`获取故事失败: ${res.status}`)
     return res.json()
   },
 
   // Get user history
-  async getHistory(openid: string, page = 1, limit = 20): Promise<{ sessions: Array<{
-    id: string
-    date: string
-    dreamFragment: string
-    storyTitle: string
-    story: string
-  }>; pagination: { page: number; limit: number; total: number; hasMore: boolean } }> {
+  async getHistory(openid: string, page = 1, limit = 20): Promise<ApiResponse<{
+    sessions: Session[]
+    pagination: Pagination
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/sessions/users/${openid}/history?page=${page}&limit=${limit}`)
     if (!res.ok) throw new Error(`获取历史失败: ${res.status}`)
     return res.json()
   },
 
   // Request dream interpretation
-  async interpret(sessionId: string): Promise<{
-    success: boolean
+  async interpret(sessionId: string): Promise<ApiResponse<{
     interpretation?: string
     pointsUsed?: number
     remainingPoints?: number
     alreadyExists?: boolean
     reason?: string
-  }> {
+  }>> {
     const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/interpret`, {
       method: 'POST',
       headers: {
@@ -172,19 +210,17 @@ export const api = {
   },
 
   // Get existing interpretation
-  async getInterpretation(sessionId: string): Promise<{ interpretation: string | null }> {
+  async getInterpretation(sessionId: string): Promise<ApiResponse<{ interpretation: string | null }>> {
     const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/interpretation`)
     if (!res.ok) throw new Error(`获取解读失败: ${res.status}`)
     return res.json()
   },
 
   // Migrate guest sessions to logged-in user
-  async migrateSession(guestOpenid: string): Promise<{
-    success: boolean
+  async migrateSession(guestOpenid: string): Promise<ApiResponse<{
     migrated: number
     sessionIds?: string[]
-    reason?: string
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/sessions/migrate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -231,7 +267,6 @@ export const api = {
 export type ShareType = 'poster' | 'moment' | 'link' | 'friend'
 
 export interface ShareResult {
-  success: boolean
   pointsEarned?: number
   totalPoints?: number
   consecutiveDays?: number
@@ -252,7 +287,7 @@ export interface UserStats {
 
 export const shareApi = {
   // Log a share action and get rewards
-  async logShare(openid: string, type: ShareType): Promise<ShareResult> {
+  async logShare(openid: string, type: ShareType): Promise<ApiResponse<ShareResult>> {
     const res = await fetchWithTimeout(`${API_BASE}/share/log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -263,7 +298,7 @@ export const shareApi = {
   },
 
   // Get user sharing stats
-  async getStats(openid: string): Promise<UserStats> {
+  async getStats(openid: string): Promise<ApiResponse<UserStats>> {
     const res = await fetchWithTimeout(`${API_BASE}/share/stats/${openid}`, {
       headers: authHeaders()
     })
@@ -272,7 +307,7 @@ export const shareApi = {
   },
 
   // Create an invite code
-  async createInvite(openid: string): Promise<{ success: boolean; inviteCode: string; inviteUrl: string }> {
+  async createInvite(openid: string): Promise<ApiResponse<{ inviteCode: string; inviteUrl: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/share/invite`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -283,7 +318,7 @@ export const shareApi = {
   },
 
   // Use an invite code (friend accepts invite)
-  async useInvite(inviteCode: string, openid: string): Promise<{ success: boolean; inviterOpenid?: string; reason?: string }> {
+  async useInvite(inviteCode: string, openid: string): Promise<ApiResponse<{ inviterOpenid?: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/share/use-invite`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -297,7 +332,7 @@ export const shareApi = {
 // Auth API
 export const authApi = {
   // WeChat login
-  async wechatLogin(openid: string): Promise<{ success: boolean; user: User; token: string }> {
+  async wechatLogin(openid: string): Promise<ApiResponse<{ user: User; token: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/wechat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -308,7 +343,7 @@ export const authApi = {
   },
 
   // Phone + password login
-  async phoneLogin(phone: string, password: string): Promise<{ success: boolean; user?: User; token?: string; reason?: string }> {
+  async phoneLogin(phone: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/phone-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -319,7 +354,7 @@ export const authApi = {
   },
 
   // Register with phone + password
-  async register(phone: string, password: string, nickname?: string): Promise<{ success: boolean; user?: User; token?: string; reason?: string }> {
+  async register(phone: string, password: string, nickname?: string): Promise<ApiResponse<{ user: User; token: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -330,7 +365,7 @@ export const authApi = {
   },
 
   // Update user profile
-  async updateProfile(openid: string, data: { nickname?: string; avatar?: string }): Promise<{ success: boolean; user: User }> {
+  async updateProfile(openid: string, data: { nickname?: string; avatar?: string }): Promise<ApiResponse<{ user: User }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/update-profile`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -341,14 +376,14 @@ export const authApi = {
   },
 
   // Get user by openid
-  async getUser(openid: string): Promise<{ success: boolean; user: User }> {
+  async getUser(openid: string): Promise<ApiResponse<{ user: User }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/user/${openid}`)
     if (!res.ok) throw new Error(`获取用户失败: ${res.status}`)
     return res.json()
   },
 
   // Verify token
-  async verifyToken(token: string): Promise<{ success: boolean; user?: User; reason?: string }> {
+  async verifyToken(token: string): Promise<ApiResponse<{ user: User }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/verify-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -356,13 +391,35 @@ export const authApi = {
     })
     if (!res.ok) throw new Error(`验证Token失败: ${res.status}`)
     return res.json()
+  },
+
+  // Send password reset code
+  async sendResetCode(phone: string): Promise<ApiResponse<{ success: boolean; message?: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/send-reset-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    })
+    if (!res.ok) throw new Error(`发送验证码失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Reset password with verification code
+  async resetPassword(phone: string, code: string, password: string): Promise<ApiResponse<{ success: boolean; message?: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, code, password })
+    })
+    if (!res.ok) throw new Error(`重置密码失败: ${res.status}`)
+    return res.json()
   }
 }
 
 // Friend API
 export const friendApi = {
   // Send friend request
-  async sendFriendRequest(friendOpenid: string): Promise<{ success: boolean; message: string; reason?: string }> {
+  async sendFriendRequest(friendOpenid: string): Promise<ApiResponse<{ success: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -373,7 +430,7 @@ export const friendApi = {
   },
 
   // Accept friend request
-  async acceptFriendRequest(requestId: string): Promise<{ success: boolean; message: string }> {
+  async acceptFriendRequest(requestId: string): Promise<ApiResponse<{ success: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/accept`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -384,7 +441,7 @@ export const friendApi = {
   },
 
   // Reject friend request
-  async rejectFriendRequest(requestId: string): Promise<{ success: boolean; message: string }> {
+  async rejectFriendRequest(requestId: string): Promise<ApiResponse<{ success: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -395,7 +452,7 @@ export const friendApi = {
   },
 
   // Remove friend
-  async removeFriend(friendOpenid: string): Promise<{ success: boolean; message: string }> {
+  async removeFriend(friendOpenid: string): Promise<ApiResponse<{ success: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/${friendOpenid}`, {
       method: 'DELETE',
       headers: authHeaders()
@@ -405,7 +462,7 @@ export const friendApi = {
   },
 
   // Get friend list
-  async getFriends(): Promise<{ success: boolean; friends: FriendListItem[] }> {
+  async getFriends(): Promise<ApiResponse<{ friends: FriendListItem[] }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends`, {
       headers: authHeaders()
     })
@@ -414,7 +471,7 @@ export const friendApi = {
   },
 
   // Get pending friend requests
-  async getFriendRequests(): Promise<{ success: boolean; requests: FriendRequestItem[] }> {
+  async getFriendRequests(): Promise<ApiResponse<{ requests: FriendRequestItem[] }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/requests`, {
       headers: authHeaders()
     })
@@ -423,7 +480,7 @@ export const friendApi = {
   },
 
   // Get sent friend requests
-  async getSentRequests(): Promise<{ success: boolean; sentRequests: FriendRequestItem[] }> {
+  async getSentRequests(): Promise<ApiResponse<{ sentRequests: FriendRequestItem[] }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/sent`, {
       headers: authHeaders()
     })
@@ -432,11 +489,10 @@ export const friendApi = {
   },
 
   // Get friend's public posts
-  async getFriendPosts(openid: string, page = 1, limit = 20): Promise<{
-    success: boolean
+  async getFriendPosts(openid: string, page = 1, limit = 20): Promise<ApiResponse<{
     posts: DreamWallPost[]
-    pagination: { page: number; limit: number; total: number }
-  }> {
+    pagination: Pagination
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/${openid}/posts?page=${page}&limit=${limit}`, {
       headers: authHeaders()
     })
@@ -445,7 +501,7 @@ export const friendApi = {
   },
 
   // Block user
-  async blockUser(userId: string, blockedId: string): Promise<{ success: boolean }> {
+  async blockUser(userId: string, blockedId: string): Promise<ApiResponse<{ blocked: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/block`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -456,7 +512,7 @@ export const friendApi = {
   },
 
   // Search users
-  async searchUsers(query: string, excludeId?: string): Promise<{ success: boolean; users: Array<{ id: string; nickname?: string; avatar?: string; isMember: boolean }> }> {
+  async searchUsers(query: string, excludeId?: string): Promise<ApiResponse<{ users: Array<{ id: string; nickname?: string; avatar?: string; isMember: boolean }> }>> {
     const params = new URLSearchParams({ query })
     if (excludeId) params.append('excludeId', excludeId)
     const res = await fetchWithTimeout(`${API_BASE}/friends/search?${params}`, {
@@ -467,7 +523,7 @@ export const friendApi = {
   },
 
   // Get friend count
-  async getFriendCount(userId: string): Promise<{ success: boolean; count: number }> {
+  async getFriendCount(userId: string): Promise<ApiResponse<{ count: number }>> {
     const res = await fetchWithTimeout(`${API_BASE}/friends/count/${userId}`, {
       headers: authHeaders()
     })
@@ -516,10 +572,10 @@ export const wallApi = {
     limit?: number
     keyword?: string
     openid?: string
-  }): Promise<{
+  }): Promise<ApiResponse<{
     posts: DreamWallPost[]
-    pagination: { page: number; limit: number; total: number; hasMore: boolean }
-  }> {
+    pagination: Pagination
+  }>> {
     const { tab = 'all', page = 1, limit = 20, keyword, openid } = params
     const queryParams = new URLSearchParams({ tab, page: String(page), limit: String(limit) })
     if (keyword) queryParams.set('keyword', keyword)
@@ -533,10 +589,10 @@ export const wallApi = {
   async getFriendFeed(params: {
     page?: number
     limit?: number
-  }): Promise<{
+  }): Promise<ApiResponse<{
     posts: DreamWallPost[]
-    pagination: { page: number; limit: number; total: number; hasMore: boolean }
-  }> {
+    pagination: Pagination
+  }>> {
     const { page = 1, limit = 20 } = params
     const res = await fetchWithTimeout(`${API_BASE}/wall/friends?page=${page}&limit=${limit}`, {
       headers: authHeaders()
@@ -551,7 +607,7 @@ export const wallApi = {
     sessionId: string
     isAnonymous?: boolean
     visibility?: 'public' | 'private'
-  }): Promise<{ success: boolean; post?: { id: string }; message?: string }> {
+  }): Promise<ApiResponse<{ post: { id: string } }>> {
     const res = await fetchWithTimeout(`${API_BASE}/wall`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -562,8 +618,7 @@ export const wallApi = {
   },
 
   // Get my posts (需登录)
-  async getMyPosts(openid: string): Promise<{
-    success: boolean
+  async getMyPosts(openid: string): Promise<ApiResponse<{
     posts: Array<{
       id: string
       sessionId: string
@@ -579,7 +634,7 @@ export const wallApi = {
       isFeatured: boolean
       createdAt: string
     }>
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/wall/my?openid=${openid}`, {
       headers: authHeaders()
     })
@@ -588,7 +643,7 @@ export const wallApi = {
   },
 
   // Toggle like (需登录)
-  async toggleLike(postId: string, openid: string): Promise<{ success: boolean; liked: boolean }> {
+  async toggleLike(postId: string, openid: string): Promise<ApiResponse<{ liked: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/wall/${postId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -599,7 +654,7 @@ export const wallApi = {
   },
 
   // Toggle favorite (需登录)
-  async toggleFavorite(postId: string, openid: string): Promise<{ success: boolean; favorited: boolean }> {
+  async toggleFavorite(postId: string, openid: string): Promise<ApiResponse<{ favorited: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/wall/${postId}/favorite`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -610,7 +665,7 @@ export const wallApi = {
   },
 
   // Toggle story favorite (需登录)
-  async toggleStoryFavorite(sessionId: string): Promise<{ success: boolean; favorited: boolean }> {
+  async toggleStoryFavorite(sessionId: string): Promise<ApiResponse<{ favorited: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/wall/favorites/story/${sessionId}`, {
       method: 'POST',
       headers: authHeaders()
@@ -620,8 +675,7 @@ export const wallApi = {
   },
 
   // Get story favorites (需登录)
-  async getStoryFavorites(): Promise<{
-    success: boolean
+  async getStoryFavorites(): Promise<ApiResponse<{
     stories: Array<{
       sessionId: string
       storyTitle: string
@@ -629,7 +683,7 @@ export const wallApi = {
       createdAt: string
       date: string
     }>
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/wall/favorites/story`, {
       headers: authHeaders()
     })
@@ -641,10 +695,10 @@ export const wallApi = {
   async getFavorites(params: {
     page?: number
     limit?: number
-  }): Promise<{
+  }): Promise<ApiResponse<{
     posts: DreamWallPost[]
-    pagination: { page: number; limit: number; total: number; hasMore: boolean }
-  }> {
+    pagination: Pagination
+  }>> {
     const { page = 1, limit = 20 } = params
     const res = await fetchWithTimeout(`${API_BASE}/wall/favorites?page=${page}&limit=${limit}`, {
       headers: authHeaders()
@@ -654,8 +708,7 @@ export const wallApi = {
   },
 
   // Get comments (public, no auth needed)
-  async getComments(postId: string, page = 1, limit = 20): Promise<{
-    success: boolean
+  async getComments(postId: string, page = 1, limit = 20): Promise<ApiResponse<{
     comments: Array<{
       id: string
       content: string
@@ -678,7 +731,7 @@ export const wallApi = {
       }>
     }>
     pagination: { page: number; limit: number; total: number }
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/wall/${postId}/comments?page=${page}&limit=${limit}`)
     if (!res.ok) throw new Error(`获取评论失败: ${res.status}`)
     return res.json()
@@ -690,8 +743,7 @@ export const wallApi = {
     content: string
     isAnonymous?: boolean
     parentId?: string | null
-  }): Promise<{
-    success: boolean
+  }): Promise<ApiResponse<{
     comment: {
       id: string
       content: string
@@ -703,7 +755,7 @@ export const wallApi = {
       parentId: string | null
       replies: []
     }
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/wall/${postId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -711,9 +763,8 @@ export const wallApi = {
     })
     if (!res.ok) throw new Error(`添加评论失败: ${res.status}`)
     return res.json()
-  },
-
   }
+}
 
 // Story Feedback API
 export const storyFeedbackApi = {
@@ -730,7 +781,7 @@ export const storyFeedbackApi = {
       plot?: number
     }
     comment?: string
-  }): Promise<{ success: boolean }> {
+  }): Promise<ApiResponse<{ submitted: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/story-feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -741,7 +792,7 @@ export const storyFeedbackApi = {
   },
 
   // Get all feedbacks for a session
-  async getAll(sessionId: string): Promise<{
+  async getAll(sessionId: string): Promise<ApiResponse<{
     feedbacks: Array<{
       id: string
       overallRating: number
@@ -766,15 +817,14 @@ export const storyFeedbackApi = {
         plot?: number
       }
     }
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/story-feedback/${sessionId}/all`)
     if (!res.ok) throw new Error(`获取反馈失败: ${res.status}`)
     return res.json()
   },
 
   // Check if user has submitted feedback for a session
-  async check(sessionId: string, openid: string): Promise<{
-    success: boolean
+  async check(sessionId: string, openid: string): Promise<ApiResponse<{
     hasSubmitted: boolean
     feedback: {
       id: string
@@ -789,15 +839,14 @@ export const storyFeedbackApi = {
       comment?: string
       createdAt: string
     } | null
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/story-feedback/${sessionId}/check?openid=${encodeURIComponent(openid)}`)
     if (!res.ok) throw new Error(`检查反馈失败: ${res.status}`)
     return res.json()
   },
 
   // Get AI quality analytics
-  async getAnalytics(): Promise<{
-    success: boolean
+  async getAnalytics(): Promise<ApiResponse<{
     analytics: {
       totalFeedbacks: number
       overallAvg: number
@@ -813,15 +862,14 @@ export const storyFeedbackApi = {
       weakestValue: number | null
       suggestions: string[]
     }
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/story-feedback/analytics`)
     if (!res.ok) throw new Error(`获取分析失败: ${res.status}`)
     return res.json()
   },
 
   // Get personalized recommendations
-  async getRecommendations(openid: string): Promise<{
-    success: boolean
+  async getRecommendations(openid: string): Promise<ApiResponse<{
     recommendations: Array<{
       id: string
       sessionId: string
@@ -835,7 +883,7 @@ export const storyFeedbackApi = {
       reason: string
     }>
     hasPreferences: boolean
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/story-feedback/recommendations?openid=${openid}`, {
       headers: authHeaders()
     })
@@ -859,12 +907,11 @@ export interface Notification {
 
 export const notificationApi = {
   // Get notification list
-  async getNotifications(page = 1, limit = 20): Promise<{
-    success: boolean
+  async getNotifications(page = 1, limit = 20): Promise<ApiResponse<{
     notifications: Notification[]
     unreadCount: number
-    pagination: { page: number; limit: number; total: number; hasMore: boolean }
-  }> {
+    pagination: Pagination
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/notifications?page=${page}&limit=${limit}`, {
       method: 'GET',
       headers: authHeaders()
@@ -874,7 +921,7 @@ export const notificationApi = {
   },
 
   // Get unread count
-  async getUnreadCount(): Promise<{ success: boolean; unreadCount: number }> {
+  async getUnreadCount(): Promise<ApiResponse<{ unreadCount: number }>> {
     const res = await fetchWithTimeout(`${API_BASE}/notifications/unread-count`, {
       method: 'GET',
       headers: authHeaders()
@@ -884,7 +931,7 @@ export const notificationApi = {
   },
 
   // Mark all as read
-  async markAllRead(): Promise<{ success: boolean }> {
+  async markAllRead(): Promise<ApiResponse<{ marked: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/notifications/mark-read`, {
       method: 'POST',
       headers: authHeaders()
@@ -894,7 +941,7 @@ export const notificationApi = {
   },
 
   // Mark single notification as read
-  async markOneRead(notificationId: string): Promise<{ success: boolean }> {
+  async markOneRead(notificationId: string): Promise<ApiResponse<{ marked: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/notifications/${notificationId}/read`, {
       method: 'POST',
       headers: authHeaders()
@@ -931,7 +978,7 @@ export interface Conversation {
 
 export const messageApi = {
   // Get conversation list
-  async getConversations(): Promise<{ success: boolean; conversations: Conversation[] }> {
+  async getConversations(): Promise<ApiResponse<{ conversations: Conversation[] }>> {
     const res = await fetchWithTimeout(`${API_BASE}/messages/conversations`, {
       method: 'GET',
       headers: authHeaders()
@@ -941,11 +988,10 @@ export const messageApi = {
   },
 
   // Get messages with a specific friend
-  async getMessages(friendOpenid: string, page = 1, limit = 50): Promise<{
-    success: boolean
+  async getMessages(friendOpenid: string, page = 1, limit = 50): Promise<ApiResponse<{
     messages: Message[]
     pagination: { page: number; limit: number; total: number; totalPages: number }
-  }> {
+  }>> {
     const res = await fetchWithTimeout(
       `${API_BASE}/messages/${encodeURIComponent(friendOpenid)}?page=${page}&limit=${limit}`,
       {
@@ -958,7 +1004,7 @@ export const messageApi = {
   },
 
   // Send a message
-  async sendMessage(toOpenid: string, content: string): Promise<{ success: boolean; message: Message }> {
+  async sendMessage(toOpenid: string, content: string): Promise<ApiResponse<{ message: Message }>> {
     const res = await fetchWithTimeout(`${API_BASE}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -969,7 +1015,7 @@ export const messageApi = {
   },
 
   // Mark a message as read
-  async markRead(messageId: string): Promise<{ success: boolean }> {
+  async markRead(messageId: string): Promise<ApiResponse<{ marked: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/messages/${messageId}/read`, {
       method: 'POST',
       headers: authHeaders()
@@ -1010,7 +1056,7 @@ export interface AdminComment {
 
 export const adminApi = {
   // Get admin stats
-  async getStats(): Promise<{ success: boolean; data: AdminStats }> {
+  async getStats(): Promise<ApiResponse<AdminStats>> {
     const res = await fetchWithTimeout(`${API_BASE}/admin/stats`, {
       headers: authHeaders()
     })
@@ -1019,13 +1065,10 @@ export const adminApi = {
   },
 
   // Get pending posts
-  async getPendingPosts(page = 1, limit = 20): Promise<{
-    success: boolean
-    data: {
-      posts: PendingPost[]
-      pagination: { page: number; limit: number; total: number; hasMore: boolean }
-    }
-  }> {
+  async getPendingPosts(page = 1, limit = 20): Promise<ApiResponse<{
+    posts: PendingPost[]
+    pagination: { page: number; limit: number; total: number; hasMore: boolean }
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/admin/posts/pending?page=${page}&limit=${limit}`, {
       headers: authHeaders()
     })
@@ -1034,7 +1077,7 @@ export const adminApi = {
   },
 
   // Approve post
-  async approvePost(postId: string): Promise<{ success: boolean; data: { approved: boolean } }> {
+  async approvePost(postId: string): Promise<ApiResponse<{ approved: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/admin/posts/${postId}/approve`, {
       method: 'POST',
       headers: authHeaders()
@@ -1044,7 +1087,7 @@ export const adminApi = {
   },
 
   // Reject post
-  async rejectPost(postId: string, reason: string): Promise<{ success: boolean; data: { rejected: boolean } }> {
+  async rejectPost(postId: string, reason: string): Promise<ApiResponse<{ rejected: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/admin/posts/${postId}/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -1055,13 +1098,10 @@ export const adminApi = {
   },
 
   // Get all comments
-  async getComments(params: { page?: number; limit?: number; wallId?: string }): Promise<{
-    success: boolean
-    data: {
-      comments: AdminComment[]
-      pagination: { page: number; limit: number; total: number; hasMore: boolean }
-    }
-  }> {
+  async getComments(params: { page?: number; limit?: number; wallId?: string }): Promise<ApiResponse<{
+    comments: AdminComment[]
+    pagination: { page: number; limit: number; total: number; hasMore: boolean }
+  }>> {
     const { page = 1, limit = 50, wallId } = params
     const queryParams = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (wallId) queryParams.set('wallId', wallId)
@@ -1073,7 +1113,7 @@ export const adminApi = {
   },
 
   // Delete comment
-  async deleteComment(commentId: string): Promise<{ success: boolean; data: { deleted: boolean } }> {
+  async deleteComment(commentId: string): Promise<ApiResponse<{ deleted: boolean }>> {
     const res = await fetchWithTimeout(`${API_BASE}/admin/comments/${commentId}`, {
       method: 'DELETE',
       headers: authHeaders()
@@ -1092,11 +1132,10 @@ export interface CheckInRecord {
 
 export const checkInApi = {
   // Check in for today
-  async checkIn(): Promise<{
-    success: boolean
+  async checkIn(): Promise<ApiResponse<{
     consecutiveDays: number
     alreadyCheckedIn?: boolean
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/checkin`, {
       method: 'POST',
       headers: authHeaders()
@@ -1106,11 +1145,10 @@ export const checkInApi = {
   },
 
   // Get check-in status
-  async getStatus(): Promise<{
-    success: boolean
+  async getStatus(): Promise<ApiResponse<{
     checkedInToday: boolean
     consecutiveDays: number
-  }> {
+  }>> {
     const res = await fetchWithTimeout(`${API_BASE}/checkin/status`, {
       headers: authHeaders()
     })
@@ -1119,10 +1157,7 @@ export const checkInApi = {
   },
 
   // Get check-in history
-  async getHistory(): Promise<{
-    success: boolean
-    records: CheckInRecord[]
-  }> {
+  async getHistory(): Promise<ApiResponse<{ records: CheckInRecord[] }>> {
     const res = await fetchWithTimeout(`${API_BASE}/checkin/history`, {
       headers: authHeaders()
     })

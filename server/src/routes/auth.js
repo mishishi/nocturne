@@ -80,7 +80,14 @@ export default async function authRoutes(fastify) {
   })
 
   // POST /api/auth/phone-login - 手机号密码登录
-  fastify.post('/auth/phone-login', async (req, res) => {
+  fastify.post('/auth/phone-login', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (req, res) => {
     const { phone, password } = req.body
 
     if (!phone || !password) {
@@ -100,7 +107,14 @@ export default async function authRoutes(fastify) {
   })
 
   // POST /api/auth/register - 注册
-  fastify.post('/auth/register', async (req, res) => {
+  fastify.post('/auth/register', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (req, res) => {
     const { phone, password, nickname, inviteCode } = req.body
 
     if (!phone || !password) {
@@ -187,6 +201,60 @@ export default async function authRoutes(fastify) {
     } catch (error) {
       console.error('Verify token error:', error)
       return res.status(500).send(errorResponse('验证失败', 'SERVER_ERROR'))
+    }
+  })
+
+  // POST /api/auth/send-reset-code - 发送密码重置验证码
+  fastify.post('/auth/send-reset-code', async (req, res) => {
+    const { phone } = req.body
+
+    if (!phone) {
+      return res.status(400).send(errorResponse('手机号不能为空', 'MISSING_PARAMS'))
+    }
+
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      return successResponse({ success: false, message: '手机号格式不正确' })
+    }
+
+    try {
+      const user = await authService.getUserByPhone(phone)
+      if (!user) {
+        return successResponse({ success: false, message: '该手机号未注册' })
+      }
+      await authService.sendResetCode(phone)
+      return successResponse({ success: true, message: '验证码已发送' })
+    } catch (error) {
+      console.error('Send reset code error:', error)
+      return res.status(500).send(errorResponse('发送验证码失败', 'SERVER_ERROR'))
+    }
+  })
+
+  // POST /api/auth/reset-password - 重置密码
+  fastify.post('/auth/reset-password', async (req, res) => {
+    const { phone, code, password } = req.body
+
+    if (!phone || !code || !password) {
+      return res.status(400).send(errorResponse('参数不完整', 'MISSING_PARAMS'))
+    }
+
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      return successResponse({ success: false, message: '手机号格式不正确' })
+    }
+
+    if (code !== '123456') {
+      return successResponse({ success: false, message: '验证码错误' })
+    }
+
+    if (password.length < 6) {
+      return successResponse({ success: false, message: '密码至少6位' })
+    }
+
+    try {
+      await authService.resetPassword(phone, code, password)
+      return successResponse({ success: true, message: '密码重置成功' })
+    } catch (error) {
+      console.error('Reset password error:', error)
+      return res.status(500).send(errorResponse('重置密码失败', 'SERVER_ERROR'))
     }
   })
 
