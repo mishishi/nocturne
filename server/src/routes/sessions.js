@@ -156,88 +156,105 @@ export default async function sessionRoutes(fastify) {
       await authMiddleware(req, res)
     }
   }, async (req, res) => {
-    const { sessionId } = req.params
-    const { visibility } = req.body || {}
+    try {
+      const { sessionId } = req.params
+      const { visibility } = req.body || {}
 
-    // Validate visibility if provided
-    const validVisibilities = ['private', 'friends', 'public']
-    const interpretationVisibility = visibility && validVisibilities.includes(visibility)
-      ? visibility
-      : 'private'
+      // Validate visibility if provided
+      const validVisibilities = ['private', 'friends', 'public']
+      const interpretationVisibility = visibility && validVisibilities.includes(visibility)
+        ? visibility
+        : 'private'
 
-    // Get authenticated user from token
-    const tokenUser = await authService.getUser(req.userId)
-    if (!tokenUser) {
-      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
-    }
+      // Get authenticated user from token
+      const tokenUser = await authService.getUser(req.userId)
+      if (!tokenUser) {
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
+      }
 
-    // Get session with story and answers
-    const session = await sessionService.getSession(sessionId)
-    if (!session) return res.status(404).send(errorResponse('Session not found', 'NOT_FOUND'))
+      // Get session with story and answers
+      const session = await sessionService.getSession(sessionId)
+      if (!session) return res.status(404).send(errorResponse('Session not found', 'NOT_FOUND'))
 
-    const story = await prisma.story.findUnique({ where: { sessionId } })
-    if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
+      const story = await prisma.story.findUnique({ where: { sessionId } })
+      if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
 
-    // Check if interpretation already exists
-    if (story.interpretation) {
-      return res.send(successResponse({ interpretation: story.interpretation, alreadyExists: true }))
-    }
+      // Check if interpretation already exists
+      if (story.interpretation) {
+        return res.send(successResponse({ interpretation: story.interpretation, alreadyExists: true }))
+      }
 
-    // Check user points (interpretation costs 10 points)
-    const user = await prisma.user.findUnique({ where: { openid: tokenUser.openid } })
-    if (!user) return res.status(404).send(errorResponse('User not found', 'NOT_FOUND'))
+      // Check user points (interpretation costs 10 points)
+      const user = await prisma.user.findUnique({ where: { openid: tokenUser.openid } })
+      if (!user) return res.status(404).send(errorResponse('User not found', 'NOT_FOUND'))
 
-    const COST = 10
-    if (user.points < COST) {
-      return res.send(errorResponse(`解读需要 ${COST} 积分，你的积分不足`, 'INSUFFICIENT_POINTS'))
-    }
+      // Capture shouldShowModal BEFORE updating interpretationAutoShow
+      const shouldShowModal = user.interpretationAutoShow
 
-    // Get answers for context
-    const answers = await prisma.answer.findMany({
-      where: { sessionId },
-      orderBy: { questionIndex: 'asc' }
-    })
+      const COST = 10
+      if (user.points < COST) {
+        return res.send(errorResponse(`解读需要 ${COST} 积分，你的积分不足`, 'INSUFFICIENT_POINTS'))
+      }
 
-    // Get user's interpretation preference (adjusts depth based on past feedback)
-    const depthLevel = await interpretationPreferenceService.getDepthLevel(tokenUser.openid)
+      // Get answers for context
+      const answers = await prisma.answer.findMany({
+        where: { sessionId },
+        orderBy: { questionIndex: 'asc' }
+      })
 
-    // Get user's auxiliary clues from historical data
-    const auxiliaryClue = await auxiliaryClueService.buildClueContext(tokenUser.openid, sessionId)
+      // Get user's interpretation preference (adjusts depth based on past feedback)
+      const depthLevel = await interpretationPreferenceService.getDepthLevel(tokenUser.openid)
 
-    // Generate interpretation with appropriate depth and auxiliary clues
-    const { interpretation, tokens, hasAuxiliaryClue } = await storyService.generateInterpretation(
-      story.title,
-      story.content,
-      session.dreamFragment,
-      answers.map(a => ({ question: a.questionText, answer: a.answerText })),
-      depthLevel,
-      auxiliaryClue
-    )
+      // Get user's auxiliary clues from historical data
+      const auxiliaryClue = await auxiliaryClueService.buildClueContext(tokenUser.openid, sessionId)
 
-    // Deduct points and save interpretation
-    await prisma.user.update({
-      where: { openid: tokenUser.openid },
-      data: { points: { decrement: COST } }
-    })
+      // Generate interpretation with appropriate depth and auxiliary clues
+      const { interpretation, tokens, hasAuxiliaryClue } = await storyService.generateInterpretation(
+        story.title,
+        story.content,
+        session.dreamFragment,
+        answers.map(a => ({ question: a.questionText, answer: a.answerText })),
+        depthLevel,
+        auxiliaryClue
+      )
 
-    await prisma.story.update({
-      where: { sessionId },
-      data: {
+      // Deduct points and save interpretation
+      await prisma.user.update({
+        where: { openid: tokenUser.openid },
+        data: { points: { decrement: COST } }
+      })
+
+      // Update interpretationAutoShow to false (user has seen the feature)
+      if (user.interpretationAutoShow) {
+        await prisma.user.update({
+          where: { openid: tokenUser.openid },
+          data: { interpretationAutoShow: false }
+        })
+      }
+
+      await prisma.story.update({
+        where: { sessionId },
+        data: {
+          interpretation,
+          interpretationVisibility,
+          promptTokens: story.promptTokens + (tokens.prompt || 0),
+          completionTokens: story.completionTokens + (tokens.completion || 0)
+        }
+      })
+
+      return res.send(successResponse({
         interpretation,
         interpretationVisibility,
-        promptTokens: story.promptTokens + (tokens.prompt || 0),
-        completionTokens: story.completionTokens + (tokens.completion || 0)
-      }
-    })
-
-    return res.send(successResponse({
-      interpretation,
-      interpretationVisibility,
-      depthLevel,
-      hasAuxiliaryClue,
-      pointsUsed: COST,
-      remainingPoints: user.points - COST
-    }))
+        depthLevel,
+        hasAuxiliaryClue,
+        pointsUsed: COST,
+        remainingPoints: user.points - COST,
+        shouldShowModal
+      }))
+    } catch (error) {
+      console.error('[interpret] Error:', error)
+      return res.status(500).send(errorResponse('服务器错误: ' + error.message, 'SERVER_ERROR'))
+    }
   })
 
   // PATCH /api/sessions/:sessionId/interpretation-visibility - 更新解读可见性 (需登录)
@@ -291,9 +308,41 @@ export default async function sessionRoutes(fastify) {
   // GET /api/sessions/:sessionId/interpretation - 获取已有解读
   fastify.get('/sessions/:sessionId/interpretation', async (req, res) => {
     const { sessionId } = req.params
+    const authHeader = req.headers.authorization
+
     const story = await prisma.story.findUnique({ where: { sessionId } })
     if (!story) return res.status(404).send(errorResponse('Story not found', 'NOT_FOUND'))
-    return res.send(successResponse({ interpretation: story.interpretation || null }))
+
+    const response = {
+      interpretation: story.interpretation || null,
+      interpretationVisibility: story.interpretationVisibility || 'private'
+    }
+
+    // 如果有认证信息，返回额外数据（人格标签、历史对比）
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.slice(7)
+        const decoded = Buffer.from(token.replace('yeelin_', ''), 'base64').toString()
+        const payload = JSON.parse(decoded)
+
+        // 获取用户信息
+        const tokenUser = await authService.getUser(payload.userId)
+        if (tokenUser) {
+          const clues = await auxiliaryClueService.getUserClues(tokenUser.openid, sessionId)
+          if (clues.personalityTag) {
+            response.personalityTag = clues.personalityTag
+          }
+          if (clues.historyComparison) {
+            response.historyComparison = clues.historyComparison
+          }
+        }
+      } catch (e) {
+        // Ignore auth errors, just return basic interpretation
+        console.error('Error getting interpretation context:', e.message)
+      }
+    }
+
+    return res.send(successResponse(response))
   })
 
   // POST /api/sessions/:sessionId/interpretation-feedback - 提交解读反馈

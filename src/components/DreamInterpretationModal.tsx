@@ -6,12 +6,14 @@ import styles from './DreamInterpretationModal.module.css'
 interface DreamInterpretationModalProps {
   interpretation: string
   sessionId: string
+  personalityTag?: { name: string; description: string }
+  historyComparison?: string
   onClose: () => void
 }
 
 type FeedbackState = 'idle' | 'submitting' | 'submitted' | 'error'
 
-export function DreamInterpretationModal({ interpretation, sessionId, onClose }: DreamInterpretationModalProps) {
+export function DreamInterpretationModal({ interpretation, sessionId, personalityTag, historyComparison, onClose }: DreamInterpretationModalProps) {
   const sections = parseInterpretation(interpretation)
   const [feedbackState, setFeedbackState] = useState<FeedbackState>('idle')
   const [selectedRating, setSelectedRating] = useState<boolean | null>(null)
@@ -62,7 +64,7 @@ export function DreamInterpretationModal({ interpretation, sessionId, onClose }:
     }
   }
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
@@ -86,6 +88,25 @@ export function DreamInterpretationModal({ interpretation, sessionId, onClose }:
               以下解读仅供参考，每人的梦境都有独特的个人意义。希望这些视角能帮助你更好地了解自己。
             </p>
           </div>
+
+          {/* Personality Tag */}
+          {personalityTag && (
+            <div className={styles.personalityTag}>
+              <span className={styles.tagBadge}>{personalityTag.name}</span>
+              <span className={styles.tagDesc}>{personalityTag.description}</span>
+            </div>
+          )}
+
+          {/* History Comparison */}
+          {historyComparison && (
+            <div className={styles.historyComparison}>
+              <svg className={styles.historyIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span>{historyComparison}</span>
+            </div>
+          )}
 
           {sections.symbolism && (
             <div className={styles.section}>
@@ -211,20 +232,15 @@ export function DreamInterpretationModal({ interpretation, sessionId, onClose }:
 }
 
 // Loading spinner modal
-export function DreamInterpretationLoadingModal({ onClose }: { onClose: () => void }) {
+export function DreamInterpretationLoadingModal() {
   return createPortal(
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay}>
+      <div className={styles.modal}>
         <div className={styles.header}>
           <h3 className={styles.title}>
             <span className={styles.titleIcon}>🌙</span>
             梦境解读
           </h3>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="关闭">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
         </div>
 
         <div className={styles.content}>

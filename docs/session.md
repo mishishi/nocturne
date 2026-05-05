@@ -262,7 +262,8 @@ const history = await api.getHistory(openid)
   "depthLevel": "standard",
   "hasAuxiliaryClue": true,
   "pointsUsed": 10,
-  "remainingPoints": 20
+  "remainingPoints": 20,
+  "shouldShowModal": true
 }
 
 // 积分不足
@@ -305,6 +306,11 @@ const history = await api.getHistory(openid)
 
 **积分规则：**
 - 每次解读消耗 10 积分
+
+**shouldShowModal 标志：**
+- 首次生成解读时返回 `shouldShowModal: true`，前端应显示解读弹窗
+- 后续查看已存在的解读时返回 `shouldShowModal: false`，前端应显示折叠的解读卡片
+- 该标志基于用户的 `interpretationAutoShow` 字段，在首次生成解读后会被设为 false
 
 **前端调用：**
 

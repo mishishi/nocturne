@@ -1,10 +1,10 @@
-const { prisma } = require('../utils/prisma')
+import { prisma } from '../config/database.js'
 
 /**
  * 用户解读偏好服务
  * 根据用户历史反馈，动态调整解读的详细程度
  */
-const interpretationPreferenceService = {
+export const interpretationPreferenceService = {
   /**
    * 获取用户的解读偏好设置
    * @param {string} openid - 用户openid
@@ -53,5 +53,3 @@ const interpretationPreferenceService = {
     return pref.depthLevel
   }
 }
-
-module.exports = interpretationPreferenceService

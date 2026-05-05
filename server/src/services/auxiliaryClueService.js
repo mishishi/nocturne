@@ -1,15 +1,64 @@
-const { prisma } = require('../utils/prisma')
+import { prisma } from '../config/database.js'
+
+// 人格标签定义
+const PERSONALITY_TYPES = {
+  EXPLORER: {
+    name: '探索者型',
+    patterns: [/飞|翔|漂浮|天空/, /冒险|探索|未知/],
+    description: '你是一个敢于突破边界、追求自由的梦境探索者'
+  },
+  EMOTIONAL_EXPLORER: {
+    name: '情感探索型',
+    patterns: [/水|海|湖|河|游泳|潜水/],
+    description: '你倾向于在梦境中深入情感和潜意识的世界'
+  },
+  STRESS_COPER: {
+    name: '压力应对型',
+    patterns: [/追逐|逃跑|追|逃/],
+    description: '你的梦境常常反映现实中未被处理的压力'
+  },
+  SOCIAL_CONNECTOR: {
+    name: '人际连结型',
+    patterns: [/朋友|家人|父母|同伴|聚会/],
+    description: '你重视人际关系，梦境常反映社交层面的思考'
+  },
+  SECURITY_GUARDIAN: {
+    name: '安全守护型',
+    patterns: [/家|房子|房间|门|窗|床/],
+    description: '你关注安全感和归属感，梦境反映对稳定的渴望'
+  },
+  CREATIVE_DREAMER: {
+    name: '创意梦想家',
+    patterns: [/奇幻|魔法|超能力|变形/],
+    description: '你的梦境充满想象力，是创意的源泉'
+  },
+  NATURE_LOVER: {
+    name: '自然亲近型',
+    patterns: [/森林| mountains?|花园|动物/],
+    description: '你与自然有深刻的连结，梦境常出现在自然场景中'
+  }
+}
+
+const HISTORY_ELEMENT_PATTERNS = {
+  '飞翔': /飞|翔|漂浮|天空/,
+  '水域': /水|海|湖|河|游泳|潜水/,
+  '追逐': /追逐|逃跑|追|逃/,
+  '社交': /朋友|家人|父母|聚会|同事/,
+  '家居': /家|房子|房间|门|窗/,
+  '自然': /森林|花园| mountains?|动物/,
+  '奇幻': /魔法|超能力|变形|奇异/
+}
 
 /**
  * 辅助线索服务
  * 关联用户历史梦境数据，为解读提供个性化参考
  */
-const auxiliaryClueService = {
+export const auxiliaryClueService = {
   /**
    * 获取用户的历史线索摘要
    * @param {string} openid - 用户 openid
    * @param {string} currentSessionId - 当前 session ID（排除在外）
-   * @returns {Object} { dreamPatterns, recurringElements, emotionalBaseline }
+   * @returns {Object} { dreamPatterns, recurringElements, emotionalBaseline, personalityTag, historyComparison }
    */
   async getUserClues(openid, currentSessionId) {
     // 获取用户最近发布到梦墙的故事（已审核通过的）
@@ -53,10 +102,18 @@ const auxiliaryClueService = {
     // 情绪基线
     const emotionalBaseline = this.inferEmotionalBaseline(recentAnswers)
 
+    // 人格标签
+    const personalityTag = this.generatePersonalityTag(dreamPatterns, recurringElements)
+
+    // 历史对比
+    const historyComparison = this.generateHistoryComparison(wallPosts, recurringElements)
+
     return {
       dreamPatterns,
       recurringElements,
       emotionalBaseline,
+      personalityTag,
+      historyComparison,
       hasHistory: wallPosts.length > 0 || recentAnswers.length > 0
     }
   },
@@ -183,6 +240,104 @@ const auxiliaryClueService = {
   },
 
   /**
+   * 生成人格标签
+   * @param {string[]} dreamPatterns - 梦境模式
+   * @param {string[]} recurringElements - 重复元素
+   * @returns {Object} { name, description }
+   */
+  generatePersonalityTag(dreamPatterns, recurringElements) {
+    const combinedPatterns = [
+      ...(dreamPatterns || []),
+      ...(recurringElements || [])
+    ].join('')
+
+    // 按优先级匹配
+    const priorityOrder = [
+      'EXPLORER',
+      'EMOTIONAL_EXPLORER',
+      'STRESS_COPER',
+      'SOCIAL_CONNECTOR',
+      'SECURITY_GUARDIAN',
+      'CREATIVE_DREAMER',
+      'NATURE_LOVER'
+    ]
+
+    for (const type of priorityOrder) {
+      const config = PERSONALITY_TYPES[type]
+      for (const pattern of config.patterns) {
+        if (pattern.test(combinedPatterns)) {
+          return {
+            name: config.name,
+            description: config.description
+          }
+        }
+      }
+    }
+
+    // 默认返回
+    return {
+      name: '梦境旅行者',
+      description: '你的梦境丰富多彩，充满无限可能'
+    }
+  },
+
+  /**
+   * 生成历史对比信息
+   * @param {Array} wallPosts - 墙帖列表
+   * @param {string[]} recurringElements - 重复元素
+   * @returns {string|null} 历史对比文案
+   */
+  generateHistoryComparison(wallPosts, recurringElements) {
+    if (!recurringElements || recurringElements.length === 0) {
+      return null
+    }
+
+    // 统计当前帖子中各元素出现次数（排除重复）
+    const currentCounts = {}
+    wallPosts.forEach(post => {
+      const text = (post.storyFull || '') + (post.storySnippet || '')
+      for (const [element, pattern] of Object.entries(HISTORY_ELEMENT_PATTERNS)) {
+        if (pattern.test(text) && !currentCounts[element]) {
+          currentCounts[element] = 1
+        }
+      }
+    })
+
+    // 查找出现2次以上的元素
+    const frequentElements = recurringElements.filter(el =>
+      Object.keys(HISTORY_ELEMENT_PATTERNS).some(key =>
+        HISTORY_ELEMENT_PATTERNS[key].test(el)
+      )
+    )
+
+    if (frequentElements.length === 0) {
+      return null
+    }
+
+    // 生成对比文案
+    const comparisons = frequentElements.slice(0, 2).map(element => {
+      // 计算总次数（包括当前session）
+      let totalCount = currentCounts[element] || 0
+
+      // 简化元素名
+      const elementNames = {
+        '飞翔': '飞翔',
+        '水域': '水域场景',
+        '追逐': '追逐场景',
+        '社交': '社交场景',
+        '家居': '家居场景',
+        '自然': '自然场景',
+        '奇幻': '奇幻元素'
+      }
+
+      const displayName = elementNames[element] || element
+      return `这是你第 ${totalCount + 1} 次梦到${displayName}`
+    })
+
+    return comparisons.join('，')
+  },
+
+  /**
    * 构建辅助线索上下文
    * @param {string} openid - 用户 openid
    * @param {string} currentSessionId - 当前 session ID
@@ -219,5 +374,3 @@ const auxiliaryClueService = {
       : ''
   }
 }
-
-module.exports = auxiliaryClueService

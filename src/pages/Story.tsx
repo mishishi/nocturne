@@ -11,6 +11,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { SharePoster } from '../components/SharePoster'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamInterpretationModal, DreamInterpretationLoadingModal } from '../components/DreamInterpretationModal'
+import { InterpretationCard } from '../components/InterpretationCard'
 import { DreamIllustration } from '../components/DreamIllustration'
 import { StoryFeedbackForm } from '../components/StoryFeedbackForm'
 import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
@@ -18,6 +19,7 @@ import { CommentThread } from '../components/CommentThread'
 import { FriendRequestButton } from '../components/FriendRequestButton'
 import { StoryContentSkeleton } from '../components/ui/Skeleton'
 import { shareApi, api, wallApi, apiWithRetry } from '../services/api'
+import { ExpandableCard } from '../components/ExpandableCard'
 import styles from './Story.module.css'
 
 const PUBLISHED_SESSIONS_KEY = 'yeelin_published_sessions'
@@ -40,6 +42,9 @@ export function Story() {
   const [showContent, setShowContent] = useState(false)
   const [showInterpretation, setShowInterpretation] = useState(false)
   const [interpretation, setInterpretation] = useState<string | null>(null)
+  const [personalityTag, setPersonalityTag] = useState<{ name: string; description: string } | null>(null)
+  const [historyComparison, setHistoryComparison] = useState<string | null>(null)
+  const [isFirstInterpretationView, setIsFirstInterpretationView] = useState(true)
   const [isInterpreting, setIsInterpreting] = useState(false)
   const [isGeneratingImage] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
@@ -279,6 +284,38 @@ export function Story() {
     }
   // Re-run when wallContext changes OR when urlSessionId changes
   }, [wallContext.sessionId, wallContext.storyFull, wallContext.fromDreamWall, urlSessionId])
+
+  // Fetch existing interpretation when story loads (for history/dream wall stories)
+  useEffect(() => {
+    const targetSessionId = wallContext.sessionId || urlSessionId
+    if (!targetSessionId) return
+
+    const loadInterpretation = async () => {
+      try {
+        const result = await api.getInterpretation(targetSessionId)
+        if (result.success && result.data?.interpretation) {
+          setInterpretation(result.data.interpretation)
+          setPersonalityTag(result.data.personalityTag || null)
+          setHistoryComparison(result.data.historyComparison || null)
+
+          // Auto-show modal on first view, show hint on subsequent views
+          const viewedKey = `interpretation_viewed_${targetSessionId}`
+          const isFirstView = !sessionStorage.getItem(viewedKey)
+          setIsFirstInterpretationView(isFirstView)
+
+          if (isFirstView) {
+            // First view: auto-show modal and mark as viewed
+            sessionStorage.setItem(viewedKey, 'true')
+            setShowInterpretation(true)
+          }
+          // Subsequent views: show hint banner (handled in JSX)
+        }
+      } catch (err) {
+        console.error('[Story] Failed to fetch interpretation:', err)
+      }
+    }
+    loadInterpretation()
+  }, [wallContext.sessionId, urlSessionId])
 
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle || wallContext.storyTitle
   const story = wallContext.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
@@ -523,8 +560,23 @@ export function Story() {
       const result = await api.interpret(sessionId)
 
       if (result.success && result.data?.interpretation) {
-        setInterpretation(result.data.interpretation)
-        setShowInterpretation(true)
+        // Fetch full interpretation data including personalityTag and historyComparison
+        const interpretationResult = await api.getInterpretation(sessionId)
+
+        if (interpretationResult.success && interpretationResult.data) {
+          setInterpretation(interpretationResult.data.interpretation || null)
+          setPersonalityTag(interpretationResult.data.personalityTag || null)
+          setHistoryComparison(interpretationResult.data.historyComparison || null)
+        }
+
+        // Mark interpretation as viewed so subsequent visits show hint
+        sessionStorage.setItem(`interpretation_viewed_${sessionId}`, 'true')
+        setIsFirstInterpretationView(false)
+
+        // Show modal if shouldShowModal (first time), otherwise card will be shown
+        if (result.data.shouldShowModal) {
+          setShowInterpretation(true)
+        }
 
         // Show points used toast with earning hint
         if (result.data.pointsUsed) {
@@ -769,12 +821,43 @@ export function Story() {
         </article>
 
         {/* Dream Reference */}
-        <details className={styles.dreamRef}>
-          <summary aria-label="查看原始梦境碎片">查看原始梦境碎片</summary>
+        <ExpandableCard
+          icon={
+            <svg className={styles.dreamIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          }
+          title="查看原始梦境碎片"
+        >
           <div className={styles.dreamContent}>
             {dreamText}
           </div>
-        </details>
+        </ExpandableCard>
+
+        {/* Interpretation Card - shown when interpretation exists and modal is not open */}
+        {interpretation && !showInterpretation && isFirstInterpretationView && (
+          <InterpretationCard
+            interpretation={interpretation}
+            personalityTag={personalityTag || undefined}
+            historyComparison={historyComparison || undefined}
+            sessionId={sessionId}
+            onExpanded={() => setShowInterpretation(true)}
+          />
+        )}
+
+        {/* Interpretation Hint Banner - for subsequent views */}
+        {interpretation && !showInterpretation && !isFirstInterpretationView && (
+          <ExpandableCard
+            icon="🌙"
+            title="梦境解读已生成"
+            defaultExpanded={false}
+            onExpanded={() => setShowInterpretation(true)}
+          >
+            <div className={styles.hintContent}>
+              <p className={styles.hintText}>点击展开查看完整的梦境解读内容</p>
+            </div>
+          </ExpandableCard>
+        )}
 
         {/* Nested Comment Thread - for Dream Wall posts */}
         {wallContext.postId ? (
@@ -971,83 +1054,127 @@ export function Story() {
               </Button>
               {showAiMenu && (
                 <div className={styles.shareMenu} role="menu" aria-label="AI 助手选项" ref={aiMenuRef}>
-                  <button
-                    className={styles.shareMenuItem}
-                    onClick={() => {
-                      handleSpeakStory()
-                      setShowAiMenu(false)
-                    }}
-                    role="menuitem"
-                    tabIndex={0}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                      {isSpeaking ? (
-                        <>
-                          <rect x="6" y="4" width="4" height="16" rx="1" />
-                          <rect x="14" y="4" width="4" height="16" rx="1" />
-                        </>
-                      ) : (
-                        <>
-                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                        </>
-                      )}
-                    </svg>
-                    {isSpeaking ? '停止朗读' : '听故事朗读'}
-                  </button>
-                  {voices.length > 1 && !isSpeaking && (
-                    <div className={styles.voiceSubMenu}>
-                      <span className={styles.subMenuLabel}>选择声音</span>
-                      {voices
-                        .filter(v => v.name.toLowerCase().includes('google'))
-                        .slice(0, 6)
-                        .map((voice) => (
-                          <button
-                            key={voice.name}
-                            className={`${styles.shareMenuItem} ${selectedVoice?.name === voice.name ? styles.selectedVoice : ''}`}
-                            onClick={() => {
-                              setVoice(voice)
-                            }}
-                            role="menuitem"
-                            tabIndex={0}
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
-                              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                            </svg>
-                            {voice.name.length > 18 ? voice.name.substring(0, 18) + '...' : voice.name}
-                          </button>
-                        ))}
+                  <div className={styles.menuPanel}>
+                    {/* Header */}
+                    <div className={styles.menuHeader}>
+                      <div className={styles.menuHeaderIcon}>🌙</div>
+                      <div className={styles.menuHeaderText}>
+                        <p className={styles.menuHeaderTitle}>AI 梦境助手</p>
+                        <p className={styles.menuHeaderSubtitle}>探索梦境的奥秘</p>
+                      </div>
                     </div>
-                  )}
-                  {user && (
-                    <div className={styles.pointsHint}>
-                      剩余积分: <strong>{user.points ?? 0}</strong> | 解读需 <strong>10</strong> 积分
-                    </div>
-                  )}
-                  <button
-                    className={`${styles.shareMenuItem} ${!user || user.points < 10 ? styles.menuItemDisabled : ''}`}
-                    onClick={() => {
-                      if (!user || user.points < 10) return
-                      handleInterpret()
-                      setShowAiMenu(false)
-                    }}
-                    role="menuitem"
-                    tabIndex={0}
-                    title={!user ? '请先登录' : user.points < 10 ? '积分不足' : ''}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-                      {!user ? (
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      ) : (
-                        <>
-                          <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
-                          <path d="M9 21h6" />
-                        </>
-                      )}
-                    </svg>
-                    {isInterpreting ? '解读生成中...' : user ? 'AI 梦境解读' : '登录后使用'}
-                  </button>
+
+                    {/* Speak Button */}
+                    <button
+                      className={styles.shareMenuItem}
+                      onClick={() => {
+                        handleSpeakStory()
+                        setShowAiMenu(false)
+                      }}
+                      role="menuitem"
+                      tabIndex={0}
+                    >
+                      <div className={styles.menuItemIcon}>
+                        {isSpeaking ? (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="6" y="4" width="4" height="16" rx="1" />
+                            <rect x="14" y="4" width="4" height="16" rx="1" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className={styles.menuItemLabel}>
+                        <span className={styles.menuPrimary}>{isSpeaking ? '停止朗读' : '听故事朗读'}</span>
+                        {isSpeaking && <span className={styles.menuSecondary}>正在播放中...</span>}
+                      </div>
+                      {isSpeaking && <div className={styles.speakingIndicator} />}
+                    </button>
+
+                    {/* Voice Selection */}
+                    {voices.length >= 1 && !isSpeaking && (
+                      <div className={styles.voiceSubMenu}>
+                        <div className={styles.voiceSubMenuInner}>
+                          <div className={styles.subMenuLabel}>
+                            <div className={styles.subMenuDot} />
+                            选择声音
+                          </div>
+                          <div className={styles.voiceList}>
+                            {voices
+                              .filter(v => v.name.toLowerCase().includes('google'))
+                              .slice(0, 6)
+                              .map((voice) => (
+                                <button
+                                  key={voice.name}
+                                  className={`${styles.voiceButton} ${selectedVoice?.name === voice.name ? styles.selectedVoice : ''}`}
+                                  onClick={() => setVoice(voice)}
+                                  role="menuitem"
+                                  tabIndex={0}
+                                >
+                                  <div className={styles.voiceIcon}>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                    </svg>
+                                  </div>
+                                  <span className={styles.voiceName}>
+                                    {voice.name.length > 20 ? voice.name.substring(0, 20) + '…' : voice.name}
+                                  </span>
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Points Hint */}
+                    {user && (
+                      <div className={styles.pointsHint}>
+                        <span>剩余积分</span>
+                        <strong>{user.points ?? 0}</strong>
+                        <div className={styles.pointsDivider} />
+                        <span>解读消耗</span>
+                        <strong>10</strong>
+                      </div>
+                    )}
+
+                    {/* Interpret Button */}
+                    <button
+                      className={`${styles.shareMenuItem} ${!user || user.points < 10 ? styles.menuItemDisabled : ''}`}
+                      onClick={() => {
+                        if (!user || user.points < 10) return
+                        handleInterpret()
+                        setShowAiMenu(false)
+                      }}
+                      role="menuitem"
+                      tabIndex={0}
+                      title={!user ? '请先登录' : user.points < 10 ? '积分不足' : ''}
+                    >
+                      <div className={styles.menuItemIcon}>
+                        {!user ? (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" />
+                            <path d="M9 21h6" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className={styles.menuItemLabel}>
+                        <span className={styles.menuPrimary}>
+                          {isInterpreting ? '解读生成中…' : user ? 'AI 梦境解读' : '登录后使用'}
+                        </span>
+                        {user && user.points < 10 && (
+                          <span className={styles.menuSecondary}>积分不足</span>
+                        )}
+                      </div>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1093,15 +1220,15 @@ export function Story() {
       <Toast message={toastMessage} visible={toastVisible} onClose={handleToastClose} type={toastType} />
 
       {/* Dream Interpretation Loading Modal */}
-      {isInterpreting && (
-        <DreamInterpretationLoadingModal onClose={() => setIsInterpreting(false)} />
-      )}
+      {isInterpreting && <DreamInterpretationLoadingModal />}
 
       {/* Dream Interpretation Modal */}
       {showInterpretation && interpretation && (
         <DreamInterpretationModal
           interpretation={interpretation}
           sessionId={sessionId}
+          personalityTag={personalityTag || undefined}
+          historyComparison={historyComparison || undefined}
           onClose={() => setShowInterpretation(false)}
         />
       )}

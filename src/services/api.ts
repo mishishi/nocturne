@@ -287,6 +287,7 @@ export const api = {
     pointsUsed?: number
     remainingPoints?: number
     alreadyExists?: boolean
+    shouldShowModal?: boolean
     reason?: string
   }>> {
     const res = await fetchWithLongTimeout(`${API_BASE}/sessions/${sessionId}/interpret`, {
@@ -302,8 +303,15 @@ export const api = {
   },
 
   // Get existing interpretation
-  async getInterpretation(sessionId: string): Promise<ApiResponse<{ interpretation: string | null }>> {
-    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/interpretation`)
+  async getInterpretation(sessionId: string): Promise<ApiResponse<{
+    interpretation: string | null
+    interpretationVisibility?: string
+    personalityTag?: { name: string; description: string }
+    historyComparison?: string
+  }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/interpretation`, {
+      headers: authHeaders()
+    })
     if (!res.ok) throw new Error(`获取解读失败: ${res.status}`)
     return res.json()
   },
@@ -327,7 +335,9 @@ export const api = {
   async getInterpretationFeedback(
     sessionId: string
   ): Promise<ApiResponse<{ feedback: { id: string; isAccurate: boolean; comment?: string } | null }>> {
-    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/interpretation-feedback`)
+    const res = await fetchWithTimeout(`${API_BASE}/sessions/${sessionId}/interpretation-feedback`, {
+      headers: authHeaders()
+    })
     if (!res.ok) throw new Error(`获取反馈状态失败: ${res.status}`)
     return res.json()
   },

@@ -46,16 +46,14 @@ export default async function dreamWallRoutes(fastify) {
         ]
       }
 
+      // For featured tab, sort by engagement score (likeCount + commentCount * 2)
+      // Fetch extra posts to ensure we have enough after sorting by engagement
       const [posts, total] = await Promise.all([
         prisma.dreamWall.findMany({
           where: featuredWhere,
-          orderBy: [
-            { likeCount: 'desc' },
-            { commentCount: 'desc' },
-            { createdAt: 'desc' }
-          ],
-          skip,
-          take: parseInt(limit),
+          orderBy: { createdAt: 'desc' },
+          skip: 0,
+          take: 100, // Fetch enough posts for reliable engagement sorting
           include: {
             likes: { take: 1, select: { openid: true } },
             favorites: { take: 1, select: { openid: true } },
@@ -66,6 +64,17 @@ export default async function dreamWallRoutes(fastify) {
           where: featuredWhere
         })
       ])
+
+      // Sort by engagement score (likeCount + commentCount * 2)
+      posts.sort((a, b) => {
+        const scoreA = a.likeCount + a.commentCount * 2
+        const scoreB = b.likeCount + b.commentCount * 2
+        if (scoreB !== scoreA) return scoreB - scoreA
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      })
+
+      // Apply pagination after sorting
+      const paginatedPosts = posts.slice(skip, skip + parseInt(limit))
 
       // Get friend relationships for the current user
       // Note: Friend.userId and Friend.friendId store User.id (internal cuid), not User.openid
@@ -116,7 +125,7 @@ export default async function dreamWallRoutes(fastify) {
 
       const isOwnPost = (post) => post.openid === userOpenid
 
-      const items = posts.map(post => ({
+      const items = paginatedPosts.map(post => ({
         id: post.id,
         sessionId: post.sessionId,
         openid: post.openid,

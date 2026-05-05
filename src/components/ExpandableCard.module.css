@@ -1,0 +1,169 @@
+/* ─── Expandable Card ─────────────────────────────────────────────── */
+
+.card {
+  position: relative;
+  background: linear-gradient(
+    165deg,
+    rgba(18, 10, 40, 0.97) 0%,
+    rgba(10, 15, 35, 0.98) 50%,
+    rgba(8, 12, 28, 0.99) 100%
+  );
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  margin-top: 16px;
+  box-shadow:
+    0 0 0 1px rgba(244, 211, 94, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 24px 64px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Nebula glow */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  background:
+    radial-gradient(ellipse 50% 30% at 50% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 30% 20% at 80% 100%, rgba(244, 211, 94, 0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Star field */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 15%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 25%, rgba(255, 255, 255, 0.25) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 75%, rgba(244, 211, 94, 0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 65%, rgba(255, 255, 255, 0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 55%, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: starTwinkle 5s ease-in-out infinite alternate;
+}
+
+@keyframes starTwinkle {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* ─── Header ─────────────────────────────────────────────────────── */
+
+.header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(244, 211, 94, 0.08);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.icon {
+  font-size: 20px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-moonlight);
+  margin: 0;
+}
+
+/* ─── Toggle Button ─────────────────────────────────────────────── */
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.toggleBtn:hover {
+  background: rgba(244, 211, 94, 0.1);
+  border-color: rgba(244, 211, 94, 0.2);
+}
+
+.toggleBtn svg {
+  width: 18px;
+  height: 18px;
+  color: var(--color-moonlight);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toggleBtn svg.expanded {
+  transform: rotate(180deg);
+  color: var(--color-golden);
+}
+
+/* ─── Content ─────────────────────────────────────────────────────── */
+
+.content {
+  position: relative;
+  z-index: 1;
+  padding: 0 18px 18px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .toggleBtn {
+    transition: none;
+  }
+
+  .header:hover {
+    background: transparent;
+  }
+
+  .toggleBtn svg {
+    transition: none;
+  }
+
+  .content {
+    animation: none;
+  }
+}

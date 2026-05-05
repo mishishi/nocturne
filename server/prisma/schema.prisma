@@ -25,6 +25,7 @@ model User {
   consecutiveShares Int      @default(0)    // 连续分享天数
   lastShareDate    DateTime?               // 上次分享日期
   lastViewedNotificationsAt DateTime?        // 上次查看通知时间
+  interpretationAutoShow Boolean @default(true) // 是否自动显示解读弹窗（首次后设为false）
   notifications    Notification[] @relation("Notifications")
   sessions         Session[]
   shareLogs        ShareLog[]
