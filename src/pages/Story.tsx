@@ -12,6 +12,7 @@ import { SharePoster } from '../components/SharePoster'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamInterpretationModal, DreamInterpretationLoadingModal } from '../components/DreamInterpretationModal'
 import { InterpretationCard } from '../components/InterpretationCard'
+import { DreamInterpretationPanel } from '../components/DreamInterpretationPanel'
 import { DreamIllustration } from '../components/DreamIllustration'
 import { StoryFeedbackForm } from '../components/StoryFeedbackForm'
 import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
@@ -42,6 +43,7 @@ export function Story() {
   const [showContent, setShowContent] = useState(false)
   const [showInterpretation, setShowInterpretation] = useState(false)
   const [interpretation, setInterpretation] = useState<string | null>(null)
+  const [interpretationData, setInterpretationData] = useState<import('../services/api').DreamInterpretationData | null>(null)
   const [personalityTag, setPersonalityTag] = useState<{ name: string; description: string } | null>(null)
   const [historyComparison, setHistoryComparison] = useState<string | null>(null)
   const [isFirstInterpretationView, setIsFirstInterpretationView] = useState(true)
@@ -290,11 +292,15 @@ export function Story() {
     const targetSessionId = wallContext.sessionId || urlSessionId
     if (!targetSessionId) return
 
+    // Skip if modal is already showing (don't overwrite state)
+    if (showInterpretation) return
+
     const loadInterpretation = async () => {
       try {
         const result = await api.getInterpretation(targetSessionId)
         if (result.success && result.data?.interpretation) {
           setInterpretation(result.data.interpretation)
+          setInterpretationData(result.data.interpretationData || null)
           setPersonalityTag(result.data.personalityTag || null)
           setHistoryComparison(result.data.historyComparison || null)
 
@@ -315,7 +321,7 @@ export function Story() {
       }
     }
     loadInterpretation()
-  }, [wallContext.sessionId, urlSessionId])
+  }, [wallContext.sessionId, urlSessionId, showInterpretation])
 
   const storyTitle = fromHistory?.storyTitle || currentSession.storyTitle || wallContext.storyTitle
   const story = wallContext.storyFull || dreamWallStory || fromHistory?.story || currentSession.story
@@ -565,6 +571,7 @@ export function Story() {
 
         if (interpretationResult.success && interpretationResult.data) {
           setInterpretation(interpretationResult.data.interpretation || null)
+          setInterpretationData(interpretationResult.data.interpretationData || null)
           setPersonalityTag(interpretationResult.data.personalityTag || null)
           setHistoryComparison(interpretationResult.data.historyComparison || null)
         }
@@ -1224,13 +1231,27 @@ export function Story() {
 
       {/* Dream Interpretation Modal */}
       {showInterpretation && interpretation && (
-        <DreamInterpretationModal
-          interpretation={interpretation}
-          sessionId={sessionId}
-          personalityTag={personalityTag || undefined}
-          historyComparison={historyComparison || undefined}
-          onClose={() => setShowInterpretation(false)}
-        />
+        interpretationData ? (
+          <DreamInterpretationPanel
+            dreamerPersonality={interpretationData.dreamerPersonality}
+            dreamerPersonalityDesc={interpretationData.dreamerPersonalityDesc}
+            emotionalTrend={interpretationData.emotionalTrend}
+            recurringSymbols={interpretationData.recurringSymbols}
+            sleepQualityScore={interpretationData.sleepQualityScore}
+            dreamActivityLevel={interpretationData.dreamActivityLevel}
+            tips={interpretationData.tips}
+            sessionId={sessionId}
+            onClose={() => setShowInterpretation(false)}
+          />
+        ) : (
+          <DreamInterpretationModal
+            interpretation={interpretation}
+            sessionId={sessionId}
+            personalityTag={personalityTag || undefined}
+            historyComparison={historyComparison || undefined}
+            onClose={() => setShowInterpretation(false)}
+          />
+        )
       )}
 
       {/* Share Poster Modal */}

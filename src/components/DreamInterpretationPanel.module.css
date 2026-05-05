@@ -1,0 +1,440 @@
+/* ─── Dream Interpretation Panel (Modal) ───────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px 20px 28px;
+  background: linear-gradient(180deg, rgba(13, 17, 35, 0.97) 0%, rgba(8, 11, 22, 0.99) 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.closeBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Star field background */
+.starField {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  animation: twinkle var(--duration) ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Header */
+.header {
+  position: relative;
+  text-align: center;
+  padding: 12px 0 20px;
+  z-index: 1;
+}
+
+.headerTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-moonlight);
+  margin: 0;
+  letter-spacing: 0.03em;
+}
+
+.headerEmoji {
+  font-size: 20px;
+}
+
+/* Personality Card */
+.personalityCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.personalityHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.personalityEmoji {
+  font-size: 24px;
+}
+
+.personalityName {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-golden);
+  margin: 0;
+}
+
+.personalityDesc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-silver);
+  margin: 0;
+  padding-left: 34px;
+}
+
+.emotionalInsight {
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 10px 0 0 34px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(212, 175, 55, 0.3);
+  font-style: italic;
+}
+
+/* Recurring Symbols Tags */
+.symbolsTags {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+
+.symbolsLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  padding-top: 6px;
+}
+
+.tagsScroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 4px 0;
+}
+
+.tagsScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.symbolTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--color-silver);
+  white-space: nowrap;
+}
+
+/* Stats Section */
+.statsSection {
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-silver-dim);
+  margin: 0 0 10px;
+  letter-spacing: 0.02em;
+}
+
+.sectionEmoji {
+  font-size: 13px;
+}
+
+.statsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 4px;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-silver);
+}
+
+.statBullet {
+  color: var(--color-golden);
+  margin-right: 6px;
+  font-size: 12px;
+}
+
+.statLabel {
+  color: var(--color-silver-dim);
+}
+
+.statValue {
+  color: var(--color-moonlight);
+  font-weight: 500;
+}
+
+/* Tips Section */
+.tipsSection {
+  margin-bottom: 20px;
+}
+
+.tipsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tipCard {
+  position: relative;
+  background: rgba(244, 211, 94, 0.04);
+  border: 1px solid rgba(244, 211, 94, 0.1);
+  border-radius: 10px;
+  padding: 12px 14px 12px 30px;
+}
+
+.tipQuote {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  font-size: 18px;
+  color: var(--color-golden);
+  opacity: 0.5;
+  line-height: 1;
+}
+
+.tipText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-moonlight);
+  margin: 0;
+}
+
+/* Share Button */
+.shareSection {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.shareButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.12) 0%, rgba(244, 211, 94, 0.04) 100%);
+  border: 1px solid rgba(244, 211, 94, 0.25);
+  border-radius: 24px;
+  color: var(--color-golden);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.shareButton:hover {
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.2) 0%, rgba(244, 211, 94, 0.08) 100%);
+  border-color: rgba(244, 211, 94, 0.4);
+  transform: translateY(-1px);
+}
+
+.shareButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.shareTip {
+  font-size: 11px;
+  color: var(--color-silver-dim);
+  text-align: center;
+  margin: 6px 0 0;
+}
+
+/* Feedback Section */
+.feedbackSection {
+  text-align: center;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.feedbackPrompt {
+  font-size: 12px;
+  color: var(--color-silver-dim);
+  margin: 0 0 10px;
+}
+
+.feedbackButtons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.feedbackBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--color-silver);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.feedbackBtn:hover {
+  transform: translateY(-1px);
+}
+
+.feedbackBtnGood:hover {
+  background: rgba(244, 211, 94, 0.08);
+  border-color: rgba(244, 211, 94, 0.25);
+  color: var(--color-golden);
+}
+
+.feedbackBtnBad:hover {
+  background: rgba(255, 100, 100, 0.08);
+  border-color: rgba(255, 100, 100, 0.25);
+  color: #ff8080;
+}
+
+.feedbackLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--color-silver-dim);
+  font-size: 12px;
+}
+
+.miniSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(244, 211, 94, 0.15);
+  border-top-color: var(--color-golden);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.feedbackThanks {
+  font-size: 12px;
+  color: var(--color-silver-dim);
+}
+
+/* Footer */
+.footer {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.footerLine {
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(244, 211, 94, 0.25) 50%, transparent 100%);
+  margin: 0 auto 8px;
+}
+
+.footerText {
+  font-size: 10px;
+  color: var(--color-silver-dim);
+  opacity: 0.7;
+}
