@@ -356,15 +356,53 @@ function AchievementHint({ history }: AchievementHintProps) {
         case 'week_streak': {
           // Check consecutive days from history dates
           if (history.length === 0) return null
-          const dates = history.map(h => h.date).slice(0, 7)
-          if (dates.length < 2) {
-            return {
-              icon: achievement.icon,
-              text: `已连续记录 ${dates.length} 天，再坚持 ${7 - dates.length} 天解锁`,
-              progress: dates.length / 7
+
+          // Sort history by date descending (most recent first)
+          const sortedHistory = [...history].sort((a, b) => {
+            return new Date(b.date).getTime() - new Date(a.date).getTime()
+          })
+
+          // Get dates from sorted history (most recent first)
+          const dates = sortedHistory.map(h => h.date)
+
+          // Calculate consecutive days from today/yesterday
+          let consecutiveDays = 0
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          for (let i = 0; i < dates.length; i++) {
+            const dreamDate = new Date(dates[i])
+            dreamDate.setHours(0, 0, 0, 0)
+
+            const expectedDate = new Date(today)
+            expectedDate.setDate(today.getDate() - i)
+
+            if (dreamDate.getTime() === expectedDate.getTime()) {
+              consecutiveDays++
+            } else if (i === 0) {
+              // If most recent dream is not today, check if it was yesterday
+              const yesterday = new Date(today)
+              yesterday.setDate(yesterday.getDate() - 1)
+              if (dreamDate.getTime() === yesterday.getTime()) {
+                consecutiveDays++
+              } else {
+                // No recent consecutive streak
+                break
+              }
+            } else {
+              break
             }
           }
-          return null // Already unlocked or not in consecutive streak
+
+          if (consecutiveDays >= 7) {
+            return null // Already unlocked
+          }
+
+          return {
+            icon: achievement.icon,
+            text: `已连续记录 ${consecutiveDays} 天，再坚持 ${7 - consecutiveDays} 天解锁`,
+            progress: consecutiveDays / 7
+          }
         }
         case 'story_collector': {
           const count = history.length
