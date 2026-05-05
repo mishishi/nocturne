@@ -257,6 +257,7 @@ const history = await api.getHistory(openid)
 {
   "success": true,
   "interpretation": "这是一段关于...的梦境解读",
+  "depthLevel": "standard",
   "pointsUsed": 10,
   "remainingPoints": 20
 }
@@ -279,9 +280,16 @@ const history = await api.getHistory(openid)
 - 验证 openid 对应的用户存在
 - 检查积分是否足够（10 积分/次）
 - 收集 session 的问题和回答作为上下文
-- 调用 storyService.generateInterpretation 生成解读
+- 获取用户的解读偏好设置（基于历史反馈调整深度）
+- 调用 storyService.generateInterpretation 生成解读（传入深度级别）
 - 扣除用户积分
 - 保存解读到 Story.interpretation
+
+**个性化深度机制：**
+- 系统跟踪用户对解读的反馈（准确/不准确）
+- 如果用户历史反馈中不准确率超过 40%，自动切换到详细模式
+- 详细模式（detailed）：更深入的分析，更多探索角度，max_tokens 翻倍
+- 标准模式（standard）：基础深度分析
 
 **积分规则：**
 - 每次解读消耗 10 积分
