@@ -5,14 +5,16 @@ import { Card } from '../components/ui/Card'
 import { OnboardingOverlay } from '../components/ui/OnboardingOverlay'
 import { AchievementCenter } from '../components/AchievementCenter'
 import { useDreamStore, ACHIEVEMENTS, type DreamSession } from '../hooks/useDreamStore'
+import { checkInApi } from '../services/api'
 import styles from './Home.module.css'
 
 const LAST_VISIT_KEY = 'yeelin_last_visit'
 
 export function Home() {
-  const { achievements, history, user, currentSession } = useDreamStore()
+  const { achievements, history, user, currentSession, checkedInToday, consecutiveDays, setCheckInStatus } = useDreamStore()
   const [showAchievementCenter, setShowAchievementCenter] = useState(false)
   const [isReturningUser, setIsReturningUser] = useState(false)
+  const [isCheckingIn, setIsCheckingIn] = useState(false)
   const handleOnboardingComplete = useCallback(() => {}, [])
 
   // Detect returning user (has visited before, not same day)
@@ -24,6 +26,39 @@ export function Home() {
     }
     localStorage.setItem(LAST_VISIT_KEY, today)
   }, [history.length])
+
+  // Fetch check-in status for logged-in users
+  useEffect(() => {
+    if (!user?.openid) return
+
+    const fetchCheckInStatus = async () => {
+      try {
+        const status = await checkInApi.getStatus()
+        if (status.success && status.data) {
+          setCheckInStatus(status.data.checkedInToday, status.data.consecutiveDays)
+        }
+      } catch (err) {
+        console.error('Failed to fetch check-in status:', err)
+      }
+    }
+    fetchCheckInStatus()
+  }, [user?.openid, setCheckInStatus])
+
+  // Handle check-in
+  const handleCheckIn = async () => {
+    if (!user?.openid || isCheckingIn) return
+    setIsCheckingIn(true)
+    try {
+      const result = await checkInApi.checkIn()
+      if (result.success && result.data) {
+        setCheckInStatus(result.data.alreadyCheckedIn ?? false, result.data.consecutiveDays)
+      }
+    } catch (err) {
+      console.error('Failed to check in:', err)
+    } finally {
+      setIsCheckingIn(false)
+    }
+  }
 
   const isNewUser = history.length === 0
   const lastDreamDate = history.length > 0 ? history[0].date : null
@@ -188,6 +223,40 @@ export function Home() {
           <AchievementHint history={history} />
         )}
       </section>
+
+      {/* Check-in Card - only for logged-in users */}
+      {user && (
+        <section className={styles.checkInSection}>
+          <div className={styles.checkInCard}>
+            <div className={styles.checkInLeft}>
+              <div className={styles.checkInStreak}>
+                <span className={styles.streakIcon}>{checkedInToday ? '✅' : '🔥'}</span>
+                <span className={styles.streakCount}>{consecutiveDays}</span>
+                <span className={styles.streakLabel}>天</span>
+              </div>
+              <p className={styles.checkInStatus}>
+                {checkedInToday ? '今日已签到' : '今日未签到'}
+              </p>
+            </div>
+            <div className={styles.checkInRight}>
+              {checkedInToday ? (
+                <div className={styles.checkInDone}>
+                  <span className={styles.checkInDoneIcon}>✨</span>
+                  <span>继续保持</span>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleCheckIn}
+                  disabled={isCheckingIn}
+                  size="sm"
+                >
+                  {isCheckingIn ? '签到中...' : '立即签到'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Sample Stories - only for new users */}
       {isNewUser && (
