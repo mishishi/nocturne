@@ -643,6 +643,8 @@ export function Dream() {
                   className={`${styles.elementCard} ${dreamElements.includes(element.id) ? styles.selected : ''}`}
                   onClick={() => handleElementsToggle(element.id)}
                   style={{ animationDelay: `${index * 0.03}s` }}
+                  aria-label={`${element.label}${dreamElements.includes(element.id) ? '，已选中' : ''}`}
+                  aria-pressed={dreamElements.includes(element.id)}
                 >
                   <span className={styles.elementIcon}>{element.icon}</span>
                   <span className={styles.elementLabel}>{element.label}</span>

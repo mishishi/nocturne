@@ -118,6 +118,8 @@ export function Library() {
                 key={theme.id}
                 className={`${styles.filterBtn} ${activeTheme === theme.id ? styles.active : ''}`}
                 onClick={() => setActiveTheme(theme.id)}
+                aria-label={`筛选${theme.label}主题`}
+                aria-pressed={activeTheme === theme.id}
               >
                 <span>{theme.emoji}</span>
                 <span>{theme.label}</span>

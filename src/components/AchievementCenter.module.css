@@ -224,11 +224,17 @@
 }
 
 .progressBar {
-  height: 4px;
+  height: 6px;
   background: var(--color-night-deep);
   border-radius: var(--radius-full);
   margin-top: var(--space-3);
   overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .progressBar {
+    height: 8px;
+  }
 }
 
 .progressFill {

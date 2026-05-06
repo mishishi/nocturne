@@ -111,16 +111,6 @@ export function Home() {
       <div className={styles.headerActions}>
         {user ? (
           <>
-            <button
-              onClick={() => {
-                localStorage.removeItem('yeelin_onboarding_shown')
-                window.location.reload()
-              }}
-              className={styles.resetOnboarding}
-              title="重新显示引导"
-            >
-              重新显示引导
-            </button>
             <Link to="/profile" className={styles.headerProfile}>
               <span className={styles.headerAvatar}>
                 {user.nickname?.charAt(0) || '我'}
@@ -130,16 +120,6 @@ export function Home() {
           </>
         ) : (
           <>
-            <button
-              onClick={() => {
-                localStorage.removeItem('yeelin_onboarding_shown')
-                window.location.reload()
-              }}
-              className={styles.resetOnboarding}
-              title="重新显示引导"
-            >
-              重新显示引导
-            </button>
             <Link to="/login" className={styles.headerLogin}>登录</Link>
             <Link to="/register" className={styles.headerRegister}>注册</Link>
           </>

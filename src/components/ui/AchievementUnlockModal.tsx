@@ -16,9 +16,13 @@ export function AchievementUnlockModal({ achievement, isOpen, onClose }: Achieve
 
   useEffect(() => {
     if (isOpen && achievement) {
-      // Haptic feedback if available
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100, 50, 200])
+      // Haptic feedback if available (wrapped in try-catch for silent failure)
+      try {
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100, 50, 200])
+        }
+      } catch {
+        // Silently ignore vibration errors
       }
 
       // Staggered animation sequence

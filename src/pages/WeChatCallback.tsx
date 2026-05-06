@@ -12,6 +12,7 @@ export function WeChatCallback() {
 
   // Toast state
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
+  const [isLoading, setIsLoading] = useState(true)
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ visible: true, message, type })
   }, [])
@@ -35,8 +36,12 @@ export function WeChatCallback() {
       const error = searchParams.get('wechat_error')
 
       if (error || !token || !userJson) {
-        // 登录失败，跳转回登录页
-        navigate('/login', { replace: true })
+        // 登录失败，显示错误并跳转回登录页
+        setIsLoading(false)
+        showToast('微信授权失败，请尝试其他登录方式', 'error')
+        setTimeout(() => {
+          navigate('/login', { replace: true })
+        }, 2000)
         return
       }
 
@@ -143,7 +148,7 @@ export function WeChatCallback() {
       <div className={styles.content}>
         <div className={styles.card}>
           <p style={{ color: 'var(--color-moonlight)', textAlign: 'center' }}>
-            正在进入夜棂...
+            {isLoading ? '正在进入夜棂...' : '授权失败，正在跳转...'}
           </p>
         </div>
       </div>

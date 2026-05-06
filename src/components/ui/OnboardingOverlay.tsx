@@ -68,9 +68,13 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
     if (isTransitioningRef.current) return
     isTransitioningRef.current = true
 
-    // Haptic on click
-    if (navigator.vibrate) {
-      navigator.vibrate(5)
+    // Haptic on click (wrapped in try-catch for silent failure)
+    try {
+      if (navigator.vibrate) {
+        navigator.vibrate(5)
+      }
+    } catch {
+      // Silently ignore vibration errors
     }
     setPhase('cta')
 
@@ -81,8 +85,12 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   }
 
   const handleStartRecording = () => {
-    if (navigator.vibrate) {
-      navigator.vibrate(10)
+    try {
+      if (navigator.vibrate) {
+        navigator.vibrate(10)
+      }
+    } catch {
+      // Silently ignore vibration errors
     }
     handleDismiss()
     navigate('/demo')
@@ -209,6 +217,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
         cancelText="继续"
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+        danger
       />
     </div>
   )
