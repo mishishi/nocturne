@@ -20,7 +20,7 @@ export function Friends() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Array<{ id: string; nickname?: string; avatar?: string; isMember: boolean }>>([])
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; openid: string; nickname?: string; avatar?: string; isMember: boolean }>>([])
   const [isSearching, setIsSearching] = useState(false)
   const [lastSearchQuery, setLastSearchQuery] = useState(() => {
     // 从 localStorage 恢复上次搜索词
@@ -61,13 +61,13 @@ export function Friends() {
         friendApi.getSentRequests()
       ])
       if (friendsRes.success) {
-        setFriends(friendsRes.data.friends)
+        setFriends(friendsRes.data?.friends ?? [])
       }
       if (requestsRes.success) {
-        setRequests(requestsRes.data.requests)
+        setRequests(requestsRes.data?.requests ?? [])
       }
       if (sentRes.success) {
-        setSentRequests(sentRes.data.sentRequests)
+        setSentRequests(sentRes.data?.sentRequests ?? [])
       }
     } catch (err) {
       console.error('Failed to load friends data:', err)
@@ -110,7 +110,7 @@ export function Friends() {
         // Reload data
         await loadData()
       } else {
-        showToast(result.message || '接受失败', 'error')
+        showToast(result.error?.message || '接受失败', 'error')
       }
     } catch (err) {
       console.error('Failed to accept request:', err)
@@ -130,7 +130,7 @@ export function Friends() {
         // Reload data
         await loadData()
       } else {
-        showToast(result.message || '拒绝失败', 'error')
+        showToast(result.error?.message || '拒绝失败', 'error')
       }
     } catch (err) {
       console.error('Failed to reject request:', err)
@@ -166,7 +166,7 @@ export function Friends() {
             if (removedFriend) {
               setFriends(prev => [...prev, removedFriend!])
             }
-            showToast(result.message || '删除失败', 'error')
+            showToast(result.error?.message || '删除失败', 'error')
           }
         } catch (err) {
           console.error('Failed to remove friend:', err)
@@ -189,7 +189,7 @@ export function Friends() {
     try {
       const result = await friendApi.searchUsers(searchQuery.trim(), user?.openid)
       if (result.success) {
-        setSearchResults(result.users)
+        setSearchResults(result.data?.users ?? [])
       } else {
         showToast('搜索失败', 'error')
         setSearchResults([])
@@ -212,7 +212,7 @@ export function Friends() {
         try {
           const result = await friendApi.searchUsers(lastSearchQuery, user?.openid)
           if (result.success) {
-            setSearchResults(result.users)
+            setSearchResults(result.data?.users ?? [])
           }
         } catch (err) {
           console.error('Failed to restore search:', err)

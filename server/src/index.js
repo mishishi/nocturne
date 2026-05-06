@@ -14,6 +14,7 @@ import messageRoutes from './routes/messages.js'
 import checkInRoutes from './routes/checkIn.js'
 import achievementRoutes from './routes/achievements.js'
 import adminRoutes from './routes/admin.js'
+import libraryRoutes from './routes/library.js'
 
 const fastify = Fastify({ logger: true })
 
@@ -52,6 +53,7 @@ fastify.register(messageRoutes, { prefix: '/api' })
 fastify.register(checkInRoutes, { prefix: '/api' })
 fastify.register(achievementRoutes, { prefix: '/api' })
 fastify.register(adminRoutes, { prefix: '/api' })
+fastify.register(libraryRoutes, { prefix: '/api' })
 
 // Error handler
 fastify.setErrorHandler((err, req, res) => {

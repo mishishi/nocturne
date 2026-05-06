@@ -55,8 +55,8 @@ export default async function dreamWallRoutes(fastify) {
           skip: 0,
           take: 100, // Fetch enough posts for reliable engagement sorting
           include: {
-            likes: { take: 1, select: { openid: true } },
-            favorites: { take: 1, select: { openid: true } },
+            likes: { select: { openid: true } },
+            favorites: { select: { openid: true } },
             session: { select: { dreamFragment: true } }
           }
         }),
@@ -168,8 +168,8 @@ export default async function dreamWallRoutes(fastify) {
         skip,
         take: parseInt(limit),
         include: {
-          likes: { take: 1, select: { openid: true } },
-          favorites: { take: 1, select: { openid: true } },
+          likes: { select: { openid: true } },
+          favorites: { select: { openid: true } },
           _count: { select: { comments: true } },
           session: { select: { dreamFragment: true } }
         }
@@ -376,6 +376,54 @@ export default async function dreamWallRoutes(fastify) {
     }
   })
 
+  // GET /api/wall/highlights - 获取今日精选 (公开)
+  fastify.get('/wall/highlights', async (req, res) => {
+    try {
+      // 获取今天的开始时间
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      const highlights = await prisma.dailyHighlight.findMany({
+        where: {
+          createdAt: { gte: today }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          // Include wall post data
+        }
+      })
+
+      const wallIds = highlights.map(h => h.wallId)
+
+      if (wallIds.length === 0) {
+        return res.send(successResponse({ highlights: [], count: 0 }))
+      }
+
+      const posts = await prisma.dreamWall.findMany({
+        where: {
+          id: { in: wallIds }
+        },
+        include: {
+          likes: { select: { openid: true } },
+          favorites: { select: { openid: true } },
+          session: { select: { dreamFragment: true } }
+        }
+      })
+
+      // 按 highlights 顺序排序
+      const orderedPosts = wallIds.map(id => posts.find(p => p.id === id)).filter(Boolean)
+
+      return res.send(successResponse({
+        highlights: orderedPosts,
+        count: orderedPosts.length
+      }))
+    } catch (error) {
+      console.error('Get highlights error:', error)
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
+    }
+  })
+
   // GET /api/wall/friends - 获取关注的人的帖子 (需登录)
   fastify.get('/wall/friends', {
     preHandler: async (req, res) => {
@@ -436,8 +484,8 @@ export default async function dreamWallRoutes(fastify) {
           skip,
           take: parseInt(limit),
           include: {
-            likes: { take: 1, select: { openid: true } },
-            favorites: { take: 1, select: { openid: true } },
+            likes: { select: { openid: true } },
+            favorites: { select: { openid: true } },
             _count: { select: { comments: true } }
           }
         }),
@@ -839,7 +887,7 @@ export default async function dreamWallRoutes(fastify) {
           include: {
             wall: {
               include: {
-                likes: { take: 1, select: { openid: true } }
+                likes: { select: { openid: true } }
               }
             }
           }

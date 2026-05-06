@@ -241,6 +241,477 @@
 
 ---
 
+## 每日精选
+
+### POST /api/admin/posts/:postId/feature
+
+将帖子设为精选，同时奖励作者 20 积分。
+
+**需要认证：** 是（管理员）
+
+**路径参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| postId | string | 帖子 ID |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "featured": true,
+    "rewardPoints": 20
+  }
+}
+```
+
+**业务逻辑：**
+1. 验证帖子存在且已审核通过
+2. 检查帖子是否已是精选（不能重复设为精选）
+3. 将 `isFeatured` 设为 `true`，记录 `featuredAt` 时间
+4. 创建 `DailyHighlight` 记录
+5. 给作者增加 20 积分
+6. 向帖子作者发送 `POST_FEATURED` 类型通知
+7. 记录操作日志到 `AdminOperationLog`
+
+---
+
+### DELETE /api/admin/posts/:postId/feature
+
+取消帖子精选状态。
+
+**需要认证：** 是（管理员）
+
+**路径参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| postId | string | 帖子 ID |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "unfeatured": true
+  }
+}
+```
+
+**业务逻辑：**
+1. 验证帖子存在且当前为精选状态
+2. 将 `isFeatured` 设为 `false`，清除 `featuredAt` 时间
+3. 删除 `DailyHighlight` 记录
+4. 记录操作日志到 `AdminOperationLog`
+
+---
+
+## 精选候选管理
+
+系统通过算法自动生成精选候选，管理员可以人工确认或拒绝。
+
+### 精选候选状态
+
+| 状态 | 说明 |
+|------|------|
+| `pending` | 待确认 |
+| `approved` | 已确认设为精选 |
+| `rejected` | 已拒绝 |
+
+### 热度评分算法
+
+```
+engagementScore = (likeCount * 1) + (commentCount * 2)
+```
+
+时间衰减：新帖子权重更高，7天前的帖子评分降低 50%。
+
+---
+
+### POST /api/admin/highlights/generate
+
+运行算法生成精选候选。
+
+**需要认证：** 是（管理员）
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "generated": 5,
+    "candidates": [
+      {
+        "id": "clx123...",
+        "wallId": "clx456...",
+        "engagementScore": 42,
+        "rank": 1,
+        "status": "pending",
+        "generatedAt": "2026-05-06T10:00:00.000Z",
+        "reviewedAt": null,
+        "reviewerOpenid": null,
+        "storyTitle": "梦到在云端飞翔",
+        "storySnippet": "今天我梦见自己长出了翅膀...",
+        "nickname": "小明",
+        "avatar": "https://...",
+        "likeCount": 30,
+        "commentCount": 6,
+        "createdAt": "2026-05-05T10:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+**业务逻辑：**
+1. 清除旧的 pending 状态的候选记录
+2. 查询最近 7 天内已审核通过的帖子
+3. 计算每篇帖子的 engagementScore（点赞*1 + 评论*2）
+4. 应用时间衰减（新帖子权重更高）
+5. 按评分降序排列，取前 10 名作为候选
+6. 保存到 HighlightCandidate 表
+
+---
+
+### GET /api/admin/highlights/candidates
+
+获取精选候选列表。
+
+**需要认证：** 是（管理员）
+
+**Query 参数：**
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| status | string | pending | 筛选状态 |
+| page | number | 1 | 页码 |
+| limit | number | 20 | 每页数量 |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "candidates": [...],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 5,
+      "hasMore": false
+    }
+  }
+}
+```
+
+---
+
+### POST /api/admin/highlights/:candidateId/approve
+
+确认精选候选，将帖子设为精选并奖励作者 20 积分。
+
+**需要认证：** 是（管理员）
+
+**路径参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| candidateId | string | 候选 ID |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "approved": true,
+    "featured": true,
+    "rewardPoints": 20
+  }
+}
+```
+
+**业务逻辑：**
+1. 验证候选存在且状态为 pending
+2. 更新候选状态为 approved
+3. 将对应帖子 isFeatured 设为 true，记录 featuredAt
+4. 创建 DailyHighlight 记录
+5. 给帖子作者增加 20 积分
+6. 发送 POST_FEATURED 通知
+7. 记录操作日志
+
+---
+
+### DELETE /api/admin/highlights/:candidateId
+
+拒绝精选候选。
+
+**需要认证：** 是（管理员）
+
+**路径参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| candidateId | string | 候选 ID |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "rejected": true
+  }
+}
+```
+
+**业务逻辑：**
+1. 验证候选存在
+2. 更新候选状态为 rejected
+3. 记录操作日志
+
+---
+
+### POST /api/admin/highlights/batch-approve
+
+批量确认精选候选。
+
+**需要认证：** 是（管理员）
+
+**请求 Body：**
+```json
+{
+  "candidateIds": ["clx123...", "clx456..."]
+}
+```
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "approved": true,
+    "count": 3,
+    "featured": 3,
+    "rewardPoints": 60
+  }
+}
+```
+
+**业务逻辑：**
+1. 只确认状态为 pending 的候选
+2. 批量更新候选状态为 approved
+3. 批量将对应帖子设为精选
+4. 批量奖励作者积分（每人 20 分）
+5. 批量发送通知
+6. 记录批量操作日志
+
+---
+
+## 故事资产管理
+
+用于管理梦境图书馆的故事资产，支持质量等级升级和自动候选生成。
+
+### 质量等级
+
+| 等级 | 说明 |
+|------|------|
+| `normal` | 普通 |
+| `premium` | 优质 |
+| `curated` | 精选 |
+
+### 候选生成条件
+
+| 目标等级 | 点赞数 | 评论数 |
+|----------|--------|--------|
+| `premium` | ≥10 | ≥3 |
+| `curated` | ≥30 | ≥10 |
+
+### 热度评分算法
+
+```
+engagementScore = likeCount * 1 + commentCount * 2
+```
+
+---
+
+### POST /api/admin/assets/generate-candidates
+
+运行算法生成故事资产候选列表。
+
+**需要认证：** 是（管理员）
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "generatedCount": 5,
+    "totalScanned": 128
+  }
+}
+```
+
+**业务逻辑：**
+1. 扫描所有已审核通过的梦墙帖子
+2. 跳过已是 premium 或 curated 的故事
+3. 跳过已有 pending 状态的候选
+4. 根据条件确定目标等级（premium 或 curated）
+5. 创建或更新 StoryAssetCandidate 记录
+
+---
+
+### GET /api/admin/assets/candidates
+
+获取故事资产候选列表。
+
+**需要认证：** 是（管理员）
+
+**Query 参数：**
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| status | string | pending | 筛选状态（pending/approved/rejected/all） |
+| page | number | 1 | 页码 |
+| limit | number | 20 | 每页数量 |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "candidates": [
+      {
+        "id": "clx123...",
+        "sessionId": "clx456...",
+        "storyTitle": "梦到在云端飞翔",
+        "targetLevel": "premium",
+        "likeCount": 15,
+        "commentCount": 4,
+        "engagementScore": 23,
+        "status": "pending",
+        "generatedAt": "2026-05-06T10:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 5,
+      "hasMore": false
+    }
+  }
+}
+```
+
+---
+
+### POST /api/admin/assets/candidates/:sessionId/approve
+
+确认候选，创建或升级故事资产。
+
+**需要认证：** 是（管理员）
+
+**路径参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| sessionId | string | 故事会话 ID |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "已确认候选"
+  }
+}
+```
+
+**业务逻辑：**
+1. 验证候选存在且状态为 pending
+2. 创建或更新 StoryAsset，质量等级设为目标等级
+3. 更新候选状态为 approved
+4. 记录审核人和审核时间
+
+---
+
+### DELETE /api/admin/assets/candidates/:sessionId
+
+拒绝候选。
+
+**需要认证：** 是（管理员）
+
+**路径参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| sessionId | string | 故事会话 ID |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "已拒绝候选"
+  }
+}
+```
+
+**业务逻辑：**
+1. 验证候选存在
+2. 更新候选状态为 rejected
+3. 记录审核人和审核时间
+
+---
+
+### POST /api/admin/assets/auto-upgrade
+
+自动升级达标故事的质量等级（点赞≥20 且评论≥5）。
+
+**需要认证：** 是（管理员）
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "upgradedCount": 3,
+    "totalScanned": 50
+  }
+}
+```
+
+---
+
+### PUT /api/admin/assets/:sessionId/upgrade
+
+手动提升故事质量等级。
+
+**需要认证：** 是（管理员）
+
+**路径参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| sessionId | string | 故事会话 ID |
+
+**请求 Body：**
+```json
+{
+  "qualityLevel": "premium"
+}
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| qualityLevel | string | 是 | 目标等级（normal/premium/curated） |
+
+**响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "asset": {
+      "id": "clx789...",
+      "sessionId": "clx456...",
+      "qualityLevel": "premium",
+      "createdAt": "2026-05-06T10:00:00.000Z"
+    }
+  }
+}
+```
+
+---
+
 ## 评论管理
 
 ### GET /api/admin/comments
@@ -389,3 +860,9 @@ model AdminOperationLog {
 | `BATCH_APPROVE` | 批量通过帖子 |
 | `BATCH_REJECT` | 批量拒绝帖子 |
 | `DELETE_COMMENT` | 删除评论 |
+| `FEATURE_POST` | 设为精选 |
+| `UNFEATURE_POST` | 取消精选 |
+| `GENERATE_CANDIDATES` | 生成精选候选 |
+| `APPROVE_CANDIDATE` | 确认精选候选 |
+| `REJECT_CANDIDATE` | 拒绝精选候选 |
+| `BATCH_APPROVE_CANDIDATES` | 批量确认精选候选 |

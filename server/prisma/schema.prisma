@@ -8,40 +8,40 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  openid           String    @unique
-  nickname         String?
-  avatar           String?
-  phone            String?   @unique
-  passwordHash     String?
-  firstSeen        DateTime  @default(now())
-  lastLogin        DateTime?
-  totalDreams      Int       @default(0)
-  isMember         Boolean   @default(false)
-  memberSince      DateTime?
-  isAdmin          Boolean   @default(false) // 管理员标识
-  points           Int       @default(0)     // 梦境积分
-  medals           String[]  @default([])   // 已解锁勋章
-  consecutiveShares Int      @default(0)    // 连续分享天数
-  lastShareDate    DateTime?               // 上次分享日期
-  lastViewedNotificationsAt DateTime?        // 上次查看通知时间
-  interpretationAutoShow Boolean @default(true) // 是否自动显示解读弹窗（首次后设为false）
-  notifications    Notification[] @relation("Notifications")
-  sessions         Session[]
-  shareLogs        ShareLog[]
-  storyFeedbacks   StoryFeedback[]
-  interpretationFeedback InterpretationFeedback[]
-  invitesSent      Invite[]  @relation("Inviter")
-  invitesReceived  Invite[]  @relation("Invitee")
-  friends          Friend[]  @relation("UserFriends")
-  friendOf         Friend[]  @relation("FriendOf")
-  dreamWallPosts   DreamWall[] @relation("WallPosts")
-  dreamWallLikes   DreamWallLike[]
-  dreamWallComments DreamWallComment[]
-  dreamWallFavorites DreamWallFavorite[]
-  storyFavorites    StoryFavorite[]
-  notificationsFrom Notification[] @relation("NotificationFrom")
-  checkIns      CheckIn[]
+  id                        String                   @id @default(cuid())
+  openid                    String                   @unique
+  nickname                  String?
+  avatar                    String?
+  phone                     String?                  @unique
+  passwordHash              String?
+  firstSeen                 DateTime                 @default(now())
+  lastLogin                 DateTime?
+  totalDreams               Int                      @default(0)
+  isMember                  Boolean                  @default(false)
+  memberSince               DateTime?
+  isAdmin                   Boolean                  @default(false) // 管理员标识
+  points                    Int                      @default(0) // 梦境积分
+  medals                    String[]                 @default([]) // 已解锁勋章
+  consecutiveShares         Int                      @default(0) // 连续分享天数
+  lastShareDate             DateTime? // 上次分享日期
+  lastViewedNotificationsAt DateTime? // 上次查看通知时间
+  interpretationAutoShow    Boolean                  @default(true) // 是否自动显示解读弹窗（首次后设为false）
+  notifications             Notification[]           @relation("Notifications")
+  sessions                  Session[]
+  shareLogs                 ShareLog[]
+  storyFeedbacks            StoryFeedback[]
+  interpretationFeedback    InterpretationFeedback[]
+  invitesSent               Invite[]                 @relation("Inviter")
+  invitesReceived           Invite[]                 @relation("Invitee")
+  friends                   Friend[]                 @relation("UserFriends")
+  friendOf                  Friend[]                 @relation("FriendOf")
+  dreamWallPosts            DreamWall[]              @relation("WallPosts")
+  dreamWallLikes            DreamWallLike[]
+  dreamWallComments         DreamWallComment[]
+  dreamWallFavorites        DreamWallFavorite[]
+  storyFavorites            StoryFavorite[]
+  notificationsFrom         Notification[]           @relation("NotificationFrom")
+  checkIns                  CheckIn[]
 }
 
 model Friend {
@@ -57,30 +57,32 @@ model Friend {
 }
 
 model Session {
-  id                   String    @id @default(cuid())
-  openid               String
-  status               String    @default("PENDING") // PENDING, Q1-Q5, COLLECTING, COMPLETED
-  dreamFragment        String    @default("")
-  styleTag             String    @default("")
-  questions            String[]  @default([])
-  currentQuestionIndex Int       @default(0)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  completedAt          DateTime?
-  user                 User      @relation(fields: [openid], references: [openid])
-  messages             Message[]
-  answers              Answer[]
-  story                Story?
-  storyFeedback        StoryFeedback[]
+  id                     String                   @id @default(cuid())
+  openid                 String
+  status                 String                   @default("PENDING") // PENDING, Q1-Q5, COLLECTING, COMPLETED
+  dreamFragment          String                   @default("")
+  styleTag               String                   @default("")
+  questions              String[]                 @default([])
+  currentQuestionIndex   Int                      @default(0)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  completedAt            DateTime?
+  user                   User                     @relation(fields: [openid], references: [openid])
+  messages               Message[]
+  answers                Answer[]
+  story                  Story?
+  storyFeedback          StoryFeedback[]
   interpretationFeedback InterpretationFeedback[]
-  wallPost             DreamWall?
-  storyFavorites      StoryFavorite[]
+  wallPost               DreamWall?
+  storyFavorites         StoryFavorite[]
+  storyAsset             StoryAsset?
+  assetCandidate         StoryAssetCandidate?
 }
 
 model Message {
   id        String   @id @default(cuid())
   sessionId String
-  role      String   // user | assistant
+  role      String // user | assistant
   content   String
   msgType   String   @default("text") // text | voice
   createdAt DateTime @default(now())
@@ -92,70 +94,73 @@ model Answer {
   sessionId     String
   questionIndex Int
   questionText  String
-  answerText   String   @default("")
+  answerText    String   @default("")
   answeredAt    DateTime @default(now())
-  session      Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model Story {
-  id              String   @id @default(cuid())
-  sessionId       String   @unique
-  title           String
-  content         String
-  interpretation  String?  // 梦境解读
-  interpretationVisibility String @default("private") // private, friends, public
-  wordCount       Int?
-  promptTokens    Int?
-  completionTokens Int?
-  createdAt       DateTime @default(now())
-  session         Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id                       String   @id @default(cuid())
+  sessionId                String   @unique
+  title                    String
+  content                  String
+  interpretation           String? // 梦境解读
+  interpretationData       String? // 结构化解读数据 (JSON)
+  interpretationVisibility String   @default("private") // private, friends, public
+  wordCount                Int?
+  promptTokens             Int?
+  completionTokens         Int?
+  createdAt                DateTime @default(now())
+  session                  Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model ShareLog {
   id        String   @id @default(cuid())
   openid    String
-  type      String   // 'poster' | 'moment' | 'link' | 'friend'
+  type      String // 'poster' | 'moment' | 'link' | 'friend'
   createdAt DateTime @default(now())
   user      User     @relation(fields: [openid], references: [openid])
 }
 
 model Invite {
-  id           String    @id @default(cuid())
+  id            String    @id @default(cuid())
   inviterOpenid String
   inviteeOpenid String?
-  inviteCode   String   @unique
-  status       String   @default("PENDING") // PENDING, COMPLETED
-  createdAt    DateTime @default(now())
-  completedAt  DateTime?
-  inviter      User     @relation("Inviter", fields: [inviterOpenid], references: [openid])
-  invitee      User?    @relation("Invitee", fields: [inviteeOpenid], references: [openid])
+  inviteCode    String    @unique
+  status        String    @default("PENDING") // PENDING, COMPLETED
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+  inviter       User      @relation("Inviter", fields: [inviterOpenid], references: [openid])
+  invitee       User?     @relation("Invitee", fields: [inviteeOpenid], references: [openid])
 }
 
 // 梦墙相关
 model DreamWall {
-  id           String   @id @default(cuid())
-  sessionId    String   @unique  // 关联原始故事
+  id           String    @id @default(cuid())
+  sessionId    String    @unique // 关联原始故事
   openid       String
-  nickname     String?  // 发布时快照
+  nickname     String? // 发布时快照
   avatar       String?
   storyTitle   String
-  storySnippet String   // 故事摘要（前200字）
-  storyFull    String   // 完整故事内容
-  isAnonymous  Boolean  @default(true)
-  visibility   String   @default("public") // public, private
-  status       String   @default("pending") // pending, approved, rejected
-  likeCount    Int      @default(0)
-  commentCount Int      @default(0)
-  isFeatured   Boolean  @default(false)
+  storySnippet String // 故事摘要（前200字）
+  storyFull    String // 完整故事内容
+  isAnonymous  Boolean   @default(true)
+  visibility   String    @default("public") // public, private
+  status       String    @default("pending") // pending, approved, rejected
+  likeCount    Int       @default(0)
+  commentCount Int       @default(0)
+  isFeatured   Boolean   @default(false)
   featuredAt   DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  user         User      @relation("WallPosts", fields: [openid], references: [openid])
-  session      Session?  @relation(fields: [sessionId], references: [id])
-  likes        DreamWallLike[]
-  comments     DreamWallComment[]
-  favorites    DreamWallFavorite[]
+  user               User                @relation("WallPosts", fields: [openid], references: [openid])
+  session            Session?            @relation(fields: [sessionId], references: [id])
+  likes              DreamWallLike[]
+  comments           DreamWallComment[]
+  favorites          DreamWallFavorite[]
+  dailyHighlight     DailyHighlight?
+  highlightCandidate HighlightCandidate?
 
   @@index([openid])
   @@index([status, visibility])
@@ -169,28 +174,28 @@ model DreamWallLike {
   openid    String
   createdAt DateTime @default(now())
 
-  wall      DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [openid], references: [openid])
+  wall DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [openid], references: [openid])
 
   @@unique([wallId, openid])
   @@index([wallId])
 }
 
 model DreamWallComment {
-  id         String   @id @default(cuid())
-  wallId     String
-  openid     String
-  nickname   String?
-  avatar     String?
-  content    String
-  isAnonymous Boolean @default(true)
-  createdAt  DateTime @default(now())
-  parentId   String?
+  id          String   @id @default(cuid())
+  wallId      String
+  openid      String
+  nickname    String?
+  avatar      String?
+  content     String
+  isAnonymous Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  parentId    String?
 
-  wall       DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [openid], references: [openid])
-  parent     DreamWallComment? @relation("CommentReplies", fields: [parentId], references: [id])
-  replies    DreamWallComment[] @relation("CommentReplies")
+  wall    DreamWall          @relation(fields: [wallId], references: [id], onDelete: Cascade)
+  user    User               @relation(fields: [openid], references: [openid])
+  parent  DreamWallComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies DreamWallComment[] @relation("CommentReplies")
 
   @@index([wallId])
   @@index([parentId])
@@ -202,8 +207,8 @@ model DreamWallFavorite {
   openid    String
   createdAt DateTime @default(now())
 
-  wall      DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [openid], references: [openid])
+  wall DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [openid], references: [openid])
 
   @@unique([wallId, openid])
   @@index([wallId])
@@ -216,43 +221,43 @@ model StoryFavorite {
   openid    String
   createdAt DateTime @default(now())
 
-  user    User     @relation(fields: [openid], references: [openid])
-  session Session  @relation(fields: [sessionId], references: [id])
+  user    User    @relation(fields: [openid], references: [openid])
+  session Session @relation(fields: [sessionId], references: [id])
 
   @@unique([sessionId, openid])
   @@index([sessionId])
 }
 
 model StoryFeedback {
-  id               String   @id @default(cuid())
-  sessionId        String
-  openid           String
-  overallRating    Int
-  characterRating  Int?
-  locationRating   Int?
-  objectRating     Int?
-  emotionRating    Int?
-  plotRating       Int?
-  comment          String?
-  createdAt        DateTime @default(now())
+  id              String   @id @default(cuid())
+  sessionId       String
+  openid          String
+  overallRating   Int
+  characterRating Int?
+  locationRating  Int?
+  objectRating    Int?
+  emotionRating   Int?
+  plotRating      Int?
+  comment         String?
+  createdAt       DateTime @default(now())
 
-  session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user             User     @relation(fields: [openid], references: [openid])
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [openid], references: [openid])
 
   @@index([openid])
 }
 
 // 梦境解读反馈
 model InterpretationFeedback {
-  id          String   @id @default(cuid())
-  sessionId   String   // 关联的 session
-  openid      String   // 提供反馈的用户
-  isAccurate  Boolean  // 解读是否准确：true=准确, false=不准确
-  comment     String?  // 用户可选的详细反馈
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  sessionId  String // 关联的 session
+  openid     String // 提供反馈的用户
+  isAccurate Boolean // 解读是否准确：true=准确, false=不准确
+  comment    String? // 用户可选的详细反馈
+  createdAt  DateTime @default(now())
 
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user        User    @relation(fields: [openid], references: [openid])
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [openid], references: [openid])
 
   @@unique([sessionId, openid]) // 每个用户对每个解读只能提交一次反馈
   @@index([sessionId])
@@ -260,20 +265,20 @@ model InterpretationFeedback {
 }
 
 model Notification {
-  id          String   @id @default(cuid())
-  openid      String   // 接收通知的用户
-  type        String   // LIKE | COMMENT | FRIEND_REQUEST | FRIEND_ACCEPTED | MESSAGE
-  fromOpenid  String   // 触发通知的用户
-  fromNickname String  // 触发通知的用户昵称（快照）
-  targetId    String?  // 关联目标ID（如故事ID）
-  targetTitle String?  // 关联目标标题（如故事标题）
-  message     String   // 通知文案
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime // 30天后过期
+  id           String   @id @default(cuid())
+  openid       String // 接收通知的用户
+  type         String // LIKE | COMMENT | FRIEND_REQUEST | FRIEND_ACCEPTED | MESSAGE
+  fromOpenid   String // 触发通知的用户
+  fromNickname String // 触发通知的用户昵称（快照）
+  targetId     String? // 关联目标ID（如故事ID）
+  targetTitle  String? // 关联目标标题（如故事标题）
+  message      String // 通知文案
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime // 30天后过期
 
-  user        User     @relation("Notifications", fields: [openid], references: [openid])
-  fromUser    User     @relation("NotificationFrom", fields: [fromOpenid], references: [openid])
+  user     User @relation("Notifications", fields: [openid], references: [openid])
+  fromUser User @relation("NotificationFrom", fields: [fromOpenid], references: [openid])
 
   @@index([openid, createdAt])
   @@index([openid, isRead])
@@ -281,12 +286,12 @@ model Notification {
 }
 
 model PrivateMessage {
-  id          String   @id @default(cuid())
-  fromOpenid  String
-  toOpenid    String
-  content     String
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  fromOpenid String
+  toOpenid   String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@index([toOpenid, createdAt])
   @@index([fromOpenid, toOpenid])
@@ -295,7 +300,7 @@ model PrivateMessage {
 model CheckIn {
   id        String   @id @default(cuid())
   userId    String
-  date      String   // 'YYYY-MM-DD' format
+  date      String // 'YYYY-MM-DD' format
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 
@@ -305,14 +310,110 @@ model CheckIn {
 
 model AdminOperationLog {
   id          String   @id @default(cuid())
-  adminOpenid String   // 管理员 openid
-  action      String   // APPROVE_POST, REJECT_POST, BATCH_APPROVE, BATCH_REJECT, DELETE_COMMENT
-  targetType  String   // post, comment
-  targetId    String?  // 单一操作的目标ID
+  adminOpenid String // 管理员 openid
+  action      String // APPROVE_POST, REJECT_POST, BATCH_APPROVE, BATCH_REJECT, DELETE_COMMENT, FEATURE_POST, UNFEATURE_POST
+  targetType  String // post, comment
+  targetId    String? // 单一操作的目标ID
   targetIds   String[] // 批量操作的目标ID列表 (JSON 数组存储)
-  reason      String?  // 拒绝原因（仅拒绝操作）
+  reason      String? // 拒绝原因（仅拒绝操作）
   createdAt   DateTime @default(now())
 
   @@index([adminOpenid, createdAt])
   @@index([action, createdAt])
+}
+
+model DailyHighlight {
+  id             String   @id @default(cuid())
+  wallId         String   @unique
+  rewardPoints   Int      @default(20)
+  operatorOpenid String
+  createdAt      DateTime @default(now())
+
+  wall DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+}
+
+// 算法生成的精选候选（待人工确认）
+model HighlightCandidate {
+  id              String    @id @default(cuid())
+  wallId          String    @unique // 每个帖子只能出现一次候选
+  engagementScore Int // 计算出的热度分数
+  rank            Int // 排名（1=最高）
+  status          String    @default("pending") // pending=待确认, approved=已确认, rejected=已拒绝
+  generatedAt     DateTime  @default(now())
+  reviewedAt      DateTime?
+  reviewerOpenid  String?
+
+  wall DreamWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
+
+  @@index([status, rank])
+}
+
+// 故事资产（质量评级）
+model StoryAsset {
+  id           String   @id @default(cuid())
+  sessionId    String   @unique
+  openid       String
+  qualityLevel String   @default("normal") // normal=普通, premium=优质, curated=精选
+  createdAt    DateTime @default(now())
+
+  session Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  episode Episode?
+
+  @@index([qualityLevel])
+  @@index([openid])
+}
+
+// 故事资产候选（自动生成，待管理员确认）
+model StoryAssetCandidate {
+  id              String    @id @default(cuid())
+  sessionId       String    @unique
+  openid          String
+  targetLevel     String // premium=优质候选, curated=精选候选
+  likeCount       Int
+  commentCount    Int
+  engagementScore Int // 计算出的热度分数
+  status          String    @default("pending") // pending=待确认, approved=已确认, rejected=已拒绝
+  generatedAt     DateTime  @default(now())
+  reviewedAt      DateTime?
+  reviewerOpenid  String?
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([status, engagementScore])
+  @@index([openid])
+}
+
+// 故事合集
+model Collection {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  cover       String?
+  theme       String? // adventure, romance, nightmare, mystery, fantasy, scifi
+  status      String   @default("draft") // draft=草稿, published=已发布
+  order       Int      @default(0) // 排序
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  episodes Episode[]
+
+  @@index([status, order])
+}
+
+// 合集中的章节
+model Episode {
+  id           String   @id @default(cuid())
+  collectionId String
+  sessionId    String   @unique // 每个故事只能出现在一个合集中
+  order        Int      @default(0)
+  title        String
+  excerpt      String? // 故事摘要
+  createdAt    DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  storyAsset StoryAsset @relation(fields: [sessionId], references: [sessionId])
+
+  @@index([collectionId, order])
 }

@@ -208,14 +208,15 @@ export default async function sessionRoutes(fastify) {
       // Get user's auxiliary clues from historical data
       const auxiliaryClue = await auxiliaryClueService.buildClueContext(tokenUser.openid, sessionId)
 
-      // Generate interpretation with appropriate depth and auxiliary clues
-      const { interpretation, tokens, hasAuxiliaryClue } = await storyService.generateInterpretation(
+      // Generate interpretation with appropriate depth and auxiliary clues (use structured format)
+      const { interpretation, interpretationData, tokens, hasAuxiliaryClue } = await storyService.generateInterpretation(
         story.title,
         story.content,
         session.dreamFragment,
         answers.map(a => ({ question: a.questionText, answer: a.answerText })),
         depthLevel,
-        auxiliaryClue
+        auxiliaryClue,
+        { structured: true }
       )
 
       // Deduct points and save interpretation
@@ -236,6 +237,7 @@ export default async function sessionRoutes(fastify) {
         where: { sessionId },
         data: {
           interpretation,
+          interpretationData: interpretationData ? JSON.stringify(interpretationData) : null,
           interpretationVisibility,
           promptTokens: story.promptTokens + (tokens.prompt || 0),
           completionTokens: story.completionTokens + (tokens.completion || 0)
@@ -244,6 +246,7 @@ export default async function sessionRoutes(fastify) {
 
       return res.send(successResponse({
         interpretation,
+        interpretationData,
         interpretationVisibility,
         depthLevel,
         hasAuxiliaryClue,
@@ -316,6 +319,15 @@ export default async function sessionRoutes(fastify) {
     const response = {
       interpretation: story.interpretation || null,
       interpretationVisibility: story.interpretationVisibility || 'private'
+    }
+
+    // Parse and include structured interpretation data if available
+    if (story.interpretationData) {
+      try {
+        response.interpretationData = JSON.parse(story.interpretationData)
+      } catch (e) {
+        console.error('Error parsing interpretationData:', e)
+      }
     }
 
     // 如果有认证信息，返回额外数据（人格标签、历史对比）

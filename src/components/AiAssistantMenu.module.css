@@ -1,111 +1,443 @@
+/* ─── Celestial AI Menu ─────────────────────────────────────────────── */
+
 .aiMenu {
   position: absolute;
-  bottom: calc(100% + var(--space-2));
+  bottom: calc(100% + 14px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(13, 27, 42, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-lg);
-  padding: var(--space-2);
-  min-width: 180px;
+  width: 240px;
   z-index: var(--z-dropdown);
-  animation: fadeInUp var(--duration-fast) var(--ease-dream);
-  box-shadow: var(--shadow-elevated);
+  animation: celestialReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: bottom center;
 }
 
+/* Floating arrow pointer */
 .aiMenu::after {
   content: '';
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  border: 8px solid transparent;
-  border-top-color: rgba(13, 27, 42, 0.95);
+  border: 10px solid transparent;
+  border-top-color: var(--color-night-surface);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
 }
 
-.menuItem {
+/* ─── Main Panel ──────────────────────────────────────────────────── */
+
+.panel {
+  position: relative;
+  background: linear-gradient(
+    165deg,
+    rgba(18, 10, 40, 0.97) 0%,
+    rgba(10, 15, 35, 0.98) 50%,
+    rgba(8, 12, 28, 0.99) 100%
+  );
+  border-radius: 20px;
+  padding: 6px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(244, 211, 94, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 24px 64px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Nebula glow behind panel */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(124, 58, 237, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 80% 100%, rgba(244, 211, 94, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Animated star field */
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 15%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 25%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 80%, rgba(244, 211, 94, 0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 70%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 60%, rgba(255, 255, 255, 0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 40%, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  pointer-events: none;
+  animation: starTwinkle 4s ease-in-out infinite alternate;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────── */
+
+.header {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: none;
-  border: none;
-  border-radius: var(--radius-md);
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(244, 211, 94, 0.08);
+  margin-bottom: 4px;
+}
+
+.headerIcon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.2), rgba(244, 211, 94, 0.05));
+  border: 1px solid rgba(244, 211, 94, 0.25);
+  border-radius: 8px;
+  font-size: 14px;
+  animation: iconGlow 3s ease-in-out infinite;
+}
+
+.headerText {
+  flex: 1;
+}
+
+.headerTitle {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
   color: var(--color-moonlight);
-  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.headerSubtitle {
+  font-size: 10px;
+  color: var(--color-silver-dim);
+  margin: 2px 0 0;
+  letter-spacing: 0.03em;
+}
+
+/* ─── Menu Items ──────────────────────────────────────────────────── */
+
+.menuItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: var(--color-moonlight);
+  font-size: 13px;
+  font-weight: 450;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+}
+
+.menuItem::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.12) 0%, rgba(244, 211, 94, 0.04) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 12px;
+}
+
+.menuItem:hover::before {
+  opacity: 1;
+}
+
+.menuItem:hover {
+  color: var(--color-golden);
+  transform: translateX(2px);
+}
+
+.menuItem:active {
+  transform: translateX(2px) scale(0.98);
+}
+
+.menuItem:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(244, 211, 94, 0.4);
+}
+
+.menuIcon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.menuItem:hover .menuIcon {
+  background: rgba(244, 211, 94, 0.1);
+  border-color: rgba(244, 211, 94, 0.2);
+}
+
+.menuIcon svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.menuItem:hover .menuIcon svg {
+  opacity: 1;
+}
+
+.menuLabel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menuPrimary {
+  line-height: 1.3;
+}
+
+.menuSecondary {
+  font-size: 10px;
+  color: var(--color-silver-dim);
+  font-weight: 400;
+}
+
+.menuItem:hover .menuSecondary {
+  color: rgba(244, 211, 94, 0.6);
+}
+
+/* Speaking state pulse */
+.speakingIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-golden);
+  animation: speakingPulse 1.2s ease-in-out infinite;
+}
+
+/* ─── Voice SubMenu ──────────────────────────────────────────────── */
+
+.voiceSection {
+  margin: 4px 0;
+  padding-top: 8px;
+}
+
+.voiceSectionInner {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 4px;
+}
+
+.sectionDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-golden);
+  opacity: 0.6;
+}
+
+.sectionTitle {
+  font-size: 10px;
+  color: var(--color-silver-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.voiceList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.voiceButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-moonlight);
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
 }
 
-.menuItem:hover {
+.voiceButton:hover {
+  background: rgba(244, 211, 94, 0.08);
+  color: var(--color-golden);
+}
+
+.voiceButton.selectedVoice {
+  background: rgba(244, 211, 94, 0.12);
+  color: var(--color-golden);
+}
+
+.voiceButton.selectedVoice::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--color-golden);
+  border-radius: 0 2px 2px 0;
+}
+
+.voiceIcon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+
+.voiceButton:hover .voiceIcon,
+.voiceButton.selectedVoice .voiceIcon {
   background: rgba(244, 211, 94, 0.1);
-  color: var(--color-golden);
 }
 
-.menuItem:active {
-  background: rgba(244, 211, 94, 0.15);
-  transform: scale(0.98);
+.voiceIcon svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
 }
 
-.menuItem:focus-visible {
-  outline: 2px solid var(--color-golden);
-  outline-offset: -2px;
+.voiceButton:hover .voiceIcon svg,
+.voiceButton.selectedVoice .voiceIcon svg {
+  opacity: 1;
 }
 
-.menuItemDisabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.voiceName {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.menuItemDisabled:hover {
-  background: none;
-  color: var(--color-moonlight);
-}
-
-.selectedVoice {
-  background: rgba(244, 211, 94, 0.15);
-  color: var(--color-golden);
-}
-
-.voiceSubMenu {
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--color-border-light);
-  margin-top: var(--space-2);
-}
-
-.subMenuLabel {
-  display: block;
-  padding: var(--space-2) var(--space-4);
-  font-size: 0.75rem;
-  color: var(--color-silver-dim);
-}
+/* ─── Points Hint ─────────────────────────────────────────────────── */
 
 .pointsHint {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-2) var(--space-4);
-  font-size: 0.75rem;
+  gap: 6px;
+  margin: 6px 6px 4px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.06), rgba(244, 211, 94, 0.02));
+  border: 1px solid rgba(244, 211, 94, 0.1);
+  border-radius: 10px;
+  font-size: 11px;
   color: var(--color-silver);
-  border-top: 1px solid var(--color-border-light);
-  margin-top: var(--space-2);
+  letter-spacing: 0.01em;
 }
 
 .pointsHint strong {
   color: var(--color-golden);
-  margin: 0 2px;
+  font-weight: 600;
 }
 
-@keyframes fadeInUp {
-  from {
+.pointsHint .divider {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-silver-dim);
+  opacity: 0.5;
+}
+
+/* ─── Disabled State ──────────────────────────────────────────────── */
+
+.menuItemDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.menuItemDisabled::before {
+  display: none;
+}
+
+.menuItemDisabled:hover {
+  transform: none;
+  color: var(--color-moonlight);
+}
+
+.menuItemDisabled .menuIcon {
+  opacity: 0.5;
+}
+
+/* ─── Animations ──────────────────────────────────────────────────── */
+
+@keyframes celestialReveal {
+  0% {
     opacity: 0;
-    transform: translateX(-50%) translateY(8px);
+    transform: translateX(-50%) translateY(12px) scale(0.94);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes starTwinkle {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+@keyframes iconGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(244, 211, 94, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(244, 211, 94, 0.35); }
+}
+
+@keyframes speakingPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(244, 211, 94, 0.5);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.85);
+    box-shadow: 0 0 0 4px rgba(244, 211, 94, 0);
+  }
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .aiMenu {
+    animation: none;
+  }
+  .panel::after {
+    animation: none;
+  }
+  .headerIcon {
+    animation: none;
+  }
+  .speakingIndicator {
+    animation: none;
   }
 }

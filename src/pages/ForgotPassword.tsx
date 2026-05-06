@@ -16,7 +16,7 @@ export function ForgotPassword() {
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [codeSent, setCodeSent] = useState(false)
+  const [, setCodeSent] = useState(false)
 
   // Memoized star positions to avoid Math.random() on each render
   const stars = useMemo(() =>
@@ -47,12 +47,16 @@ export function ForgotPassword() {
     setIsLoading(true)
     try {
       const result = await authApi.sendResetCode(phone)
-      if (result.success && result.data?.success) {
-        setCodeSent(true)
-        setSuccessMessage('验证码已发送')
-        setStep('reset')
+      if (result.success) {
+        if (result.data?.success) {
+          setCodeSent(true)
+          setSuccessMessage('验证码已发送')
+          setStep('reset')
+        } else {
+          setError(result.data?.message || '发送验证码失败')
+        }
       } else {
-        setError(result.data?.message || '发送验证码失败')
+        setError(result.error?.message || '发送验证码失败')
       }
     } catch (err) {
       setError('网络错误，请检查网络连接')
@@ -83,11 +87,15 @@ export function ForgotPassword() {
     setIsLoading(true)
     try {
       const result = await authApi.resetPassword(phone, code, password)
-      if (result.success && result.data?.success) {
-        setSuccessMessage('密码重置成功，即将跳转到登录页...')
-        setTimeout(() => navigate('/login'), 1500)
+      if (result.success) {
+        if (result.data?.success) {
+          setSuccessMessage('密码重置成功，即将跳转到登录页...')
+          setTimeout(() => navigate('/login'), 1500)
+        } else {
+          setError(result.data?.message || '重置密码失败')
+        }
       } else {
-        setError(result.data?.message || '重置密码失败')
+        setError(result.error?.message || '重置密码失败')
       }
     } catch (err) {
       setError('网络错误，请检查网络连接')

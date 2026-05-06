@@ -31,6 +31,9 @@ export interface Pagination {
   hasMore: boolean
 }
 
+// 分页信息类型别名
+export type PaginationInfo = Pagination
+
 // 验证响应是否成功
 export function isApiSuccess<T>(res: ApiResponse<T>): res is ApiSuccessResponse<T> {
   return res.success === true
@@ -98,35 +101,6 @@ export async function retryWrapper<T>(
   }
 
   throw lastError
-}
-
-/**
- * 判断错误是否应该重试
- * 只对网络错误和 5xx 服务器错误重试
- */
-function shouldRetry(error: unknown): boolean {
-  // AbortError（超时导致）
-  if (error instanceof DOMException && error.name === 'AbortError') {
-    return true
-  }
-  // 网络错误（如无法连接）
-  if (error instanceof TypeError && error.message.includes('fetch')) {
-    return true
-  }
-  if (error instanceof TypeError && error.message.includes('network')) {
-    return true
-  }
-  if (error instanceof Error) {
-    // 检查是否是网络超时（某些环境下可能包含 timeout 文本）
-    if (error.message.toLowerCase().includes('timeout')) {
-      return true
-    }
-    // 检查是否是中止错误
-    if (error.message.toLowerCase().includes('aborted')) {
-      return true
-    }
-  }
-  return false
 }
 
 // 带重试的关键 API 封装
@@ -215,6 +189,24 @@ export interface FriendRequestItem {
   nickname: string
   avatar: string
   createdAt: string
+}
+
+// Dream Interpretation structured data
+export interface DreamInterpretationData {
+  dreamerPersonality: string
+  dreamerPersonalityDesc: string
+  emotionalTrend: {
+    current: string
+    insight: string
+  }
+  recurringSymbols: Array<{
+    symbol: string
+    meaning: string
+    frequency: number
+  }>
+  sleepQualityScore: number
+  dreamActivityLevel: string
+  tips: string[]
 }
 
 // Session API
@@ -306,6 +298,7 @@ export const api = {
   async getInterpretation(sessionId: string): Promise<ApiResponse<{
     interpretation: string | null
     interpretationVisibility?: string
+    interpretationData?: DreamInterpretationData
     personalityTag?: { name: string; description: string }
     historyComparison?: string
   }>> {
@@ -890,6 +883,25 @@ export const wallApi = {
     })
     if (!res.ok) throw new Error(`添加评论失败: ${res.status}`)
     return res.json()
+  },
+
+  // Get daily highlights (公开接口)
+  async getDailyHighlights(): Promise<ApiResponse<{
+    highlights: Array<{
+      id: string
+      sessionId: string
+      storyTitle: string
+      storySnippet: string
+      nickname: string
+      avatar: string | null
+      likeCount: number
+      commentCount: number
+      createdAt: string
+    }>
+  }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/wall/highlights`)
+    if (!res.ok) throw new Error(`获取精选失败: ${res.status}`)
+    return res.json()
   }
 }
 
@@ -1196,6 +1208,26 @@ export interface AdminComment {
   wallTitle: string
 }
 
+// Highlight Candidate types
+export interface HighlightCandidate {
+  id: string
+  wallId: string
+  engagementScore: number
+  rank: number
+  status: 'pending' | 'approved' | 'rejected'
+  generatedAt: string
+  reviewedAt: string | null
+  reviewerOpenid: string | null
+  // Post details
+  storyTitle: string
+  storySnippet: string
+  nickname: string
+  avatar: string | null
+  likeCount: number
+  commentCount: number
+  createdAt: string
+}
+
 export const adminApi = {
   // Get admin stats
   async getStats(): Promise<ApiResponse<AdminStats>> {
@@ -1284,6 +1316,82 @@ export const adminApi = {
     })
     if (!res.ok) throw new Error(`删除评论失败: ${res.status}`)
     return res.json()
+  },
+
+  // Generate highlight candidates using algorithm
+  async generateHighlightCandidates(): Promise<ApiResponse<{
+    generated: number
+    candidates: HighlightCandidate[]
+  }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/highlights/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({})
+    })
+    if (!res.ok) throw new Error(`生成候选失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get highlight candidates list
+  async getHighlightCandidates(params: {
+    status?: 'pending' | 'approved' | 'rejected'
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{
+    candidates: HighlightCandidate[]
+    pagination: { page: number; limit: number; total: number; hasMore: boolean }
+  }>> {
+    const { status = 'pending', page = 1, limit = 20 } = params
+    const queryParams = new URLSearchParams({
+      status,
+      page: String(page),
+      limit: String(limit)
+    })
+    const res = await fetchWithTimeout(`${API_BASE}/admin/highlights/candidates?${queryParams}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取候选列表失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Approve highlight candidate (mark as featured)
+  async approveHighlightCandidate(candidateId: string): Promise<ApiResponse<{
+    approved: boolean
+    featured: boolean
+    rewardPoints: number
+  }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/highlights/${candidateId}/approve`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`确认候选失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Reject highlight candidate
+  async rejectHighlightCandidate(candidateId: string): Promise<ApiResponse<{ rejected: boolean }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/highlights/${candidateId}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`拒绝候选失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Batch approve highlight candidates
+  async batchApproveHighlightCandidates(candidateIds: string[]): Promise<ApiResponse<{
+    approved: boolean
+    count: number
+    featured: number
+    rewardPoints: number
+  }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/highlights/batch-approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ candidateIds })
+    })
+    if (!res.ok) throw new Error(`批量确认候选失败: ${res.status}`)
+    return res.json()
   }
 }
 
@@ -1351,6 +1459,328 @@ export const achievementApi = {
       body: JSON.stringify({ medals })
     })
     if (!res.ok) throw new Error(`同步成就失败: ${res.status}`)
+    return res.json()
+  }
+}
+
+// ============================================
+// 图书馆 API
+// ============================================
+
+export interface LibraryCollection {
+  id: string
+  title: string
+  description?: string
+  cover?: string
+  theme?: string
+  storyCount: number
+  createdAt: string
+}
+
+export interface LibraryEpisode {
+  id: string
+  order: number
+  title: string
+  excerpt?: string
+  sessionId: string
+  dreamFragment?: string
+  createdAt: string
+}
+
+export interface LibraryCollectionDetail extends LibraryCollection {
+  episodes: LibraryEpisode[]
+}
+
+export interface LibraryStats {
+  totalCollections: number
+  totalStories: number
+  normalCount: number
+  premiumCount: number
+  curatedCount: number
+}
+
+export const libraryApi = {
+  // 获取合集列表
+  async getCollections(params?: {
+    theme?: string
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{ collections: LibraryCollection[]; pagination: PaginationInfo }>> {
+    const searchParams = new URLSearchParams()
+    if (params?.theme) searchParams.set('theme', params.theme)
+    if (params?.page) searchParams.set('page', String(params.page))
+    if (params?.limit) searchParams.set('limit', String(params.limit))
+
+    const res = await fetchWithTimeout(`${API_BASE}/library/collections?${searchParams}`)
+    if (!res.ok) throw new Error(`获取合集列表失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 获取合集详情
+  async getCollectionDetail(id: string): Promise<ApiResponse<{ collection: LibraryCollectionDetail }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/library/collections/${id}`)
+    if (!res.ok) throw new Error(`获取合集详情失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 获取图书馆统计
+  async getStats(): Promise<ApiResponse<{ stats: LibraryStats }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/library/stats`)
+    if (!res.ok) throw new Error(`获取统计数据失败: ${res.status}`)
+    return res.json()
+  }
+}
+
+// ============================================
+// 图书馆管理员 API
+// ============================================
+
+export interface AdminAsset {
+  id: string
+  sessionId: string
+  qualityLevel: 'normal' | 'premium' | 'curated'
+  dreamFragment?: string
+  createdAt: string
+}
+
+export interface AdminCollection {
+  id: string
+  title: string
+  description?: string
+  cover?: string
+  theme?: string
+  status: 'draft' | 'published'
+  order: number
+  storyCount: number
+  createdAt: string
+}
+
+export interface AdminEpisode {
+  id: string
+  collectionId: string
+  sessionId: string
+  order: number
+  title: string
+  excerpt?: string
+  createdAt: string
+}
+
+export const adminLibraryApi = {
+  // 获取所有合集（管理员用）
+  async getCollections(params?: {
+    status?: 'draft' | 'published'
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{ collections: AdminCollection[]; pagination: PaginationInfo }>> {
+    const searchParams = new URLSearchParams()
+    if (params?.status) searchParams.set('status', params.status)
+    if (params?.page) searchParams.set('page', String(params.page))
+    if (params?.limit) searchParams.set('limit', String(params.limit))
+
+    const res = await fetchWithTimeout(`${API_BASE}/admin/collections?${searchParams}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取合集列表失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 创建合集
+  async createCollection(data: {
+    title: string
+    description?: string
+    cover?: string
+    theme?: string
+    order?: number
+  }): Promise<ApiResponse<{ collection: AdminCollection }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/collections`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify(data)
+    })
+    if (!res.ok) throw new Error(`创建合集失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 更新合集
+  async updateCollection(id: string, data: Partial<{
+    title: string
+    description: string
+    cover: string
+    theme: string
+    status: 'draft' | 'published'
+    order: number
+  }>): Promise<ApiResponse<{ collection: AdminCollection }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/collections/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify(data)
+    })
+    if (!res.ok) throw new Error(`更新合集失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 删除合集
+  async deleteCollection(id: string): Promise<ApiResponse<{ deleted: boolean }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/collections/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`删除合集失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 添加章节到合集
+  async addEpisode(collectionId: string, data: {
+    sessionId: string
+    title?: string
+    excerpt?: string
+    order?: number
+  }): Promise<ApiResponse<{ episode: AdminEpisode }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/collections/${collectionId}/episodes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify({ ...data, collectionId })
+    })
+    if (!res.ok) throw new Error(`添加章节失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 从合集移除章节
+  async removeEpisode(collectionId: string, episodeId: string): Promise<ApiResponse<{ deleted: boolean }>> {
+    const res = await fetchWithTimeout(
+      `${API_BASE}/admin/collections/${collectionId}/episodes/${episodeId}`,
+      { method: 'DELETE', headers: authHeaders() }
+    )
+    if (!res.ok) throw new Error(`移除章节失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 章节排序
+  async reorderEpisodes(collectionId: string, episodeIds: string[]): Promise<ApiResponse<{ success: boolean }>> {
+    const res = await fetchWithTimeout(
+      `${API_BASE}/admin/collections/${collectionId}/episodes/reorder`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders()
+        },
+        body: JSON.stringify({ episodeIds })
+      }
+    )
+    if (!res.ok) throw new Error(`排序失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 获取故事资产列表（供管理员选择）
+  async getAssets(params?: {
+    quality?: 'normal' | 'premium' | 'curated'
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{ assets: AdminAsset[]; pagination: PaginationInfo }>> {
+    const searchParams = new URLSearchParams()
+    if (params?.quality) searchParams.set('quality', params.quality)
+    if (params?.page) searchParams.set('page', String(params.page))
+    if (params?.limit) searchParams.set('limit', String(params.limit))
+
+    const res = await fetchWithTimeout(`${API_BASE}/library/assets?${searchParams}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取故事列表失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 手动提升故事质量等级
+  async upgradeAsset(sessionId: string, qualityLevel: 'normal' | 'premium' | 'curated'): Promise<ApiResponse<{ asset: AdminAsset }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/assets/${sessionId}/upgrade`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify({ qualityLevel })
+    })
+    if (!res.ok) throw new Error(`提升质量等级失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 自动升级达标故事
+  async autoUpgrade(): Promise<ApiResponse<{ upgradedCount: number; totalScanned: number }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/assets/auto-upgrade`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`自动升级失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 生成候选列表
+  async generateCandidates(): Promise<ApiResponse<{ generatedCount: number; totalScanned: number }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/assets/generate-candidates`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`生成候选失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 获取候选列表
+  async getCandidates(params?: {
+    status?: 'pending' | 'approved' | 'rejected' | 'all'
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{
+    candidates: Array<{
+      id: string
+      sessionId: string
+      storyTitle: string
+      targetLevel: 'premium' | 'curated'
+      likeCount: number
+      commentCount: number
+      engagementScore: number
+      status: string
+      generatedAt: string
+    }>
+    pagination: PaginationInfo
+  }>> {
+    const searchParams = new URLSearchParams()
+    if (params?.status) searchParams.set('status', params.status)
+    if (params?.page) searchParams.set('page', String(params.page))
+    if (params?.limit) searchParams.set('limit', String(params.limit))
+
+    const res = await fetchWithTimeout(`${API_BASE}/admin/assets/candidates?${searchParams}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取候选列表失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 确认候选
+  async approveCandidate(sessionId: string): Promise<ApiResponse<{ message: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/assets/candidates/${sessionId}/approve`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`确认候选失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 拒绝候选
+  async rejectCandidate(sessionId: string): Promise<ApiResponse<{ message: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/admin/assets/candidates/${sessionId}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`拒绝候选失败: ${res.status}`)
     return res.json()
   }
 }

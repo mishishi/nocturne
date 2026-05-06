@@ -19,7 +19,7 @@ import { StoryFeedbackPanel } from '../components/StoryFeedbackPanel'
 import { CommentThread } from '../components/CommentThread'
 import { FriendRequestButton } from '../components/FriendRequestButton'
 import { StoryContentSkeleton } from '../components/ui/Skeleton'
-import { shareApi, api, wallApi, apiWithRetry } from '../services/api'
+import { shareApi, api, apiWithRetry } from '../services/api'
 import { ExpandableCard } from '../components/ExpandableCard'
 import styles from './Story.module.css'
 
@@ -264,7 +264,7 @@ export function Story() {
       try {
         const result = await api.getStory(targetSessionId)
         if (!cancelled) {
-          if (result.data?.story) {
+          if (result.success && result.data?.story) {
             setDreamWallStory(result.data.story.content)
           }
           // If no story content, it's empty data (not an error)
@@ -395,6 +395,7 @@ export function Story() {
     // Check daily share limit before showing confirm modal
     try {
       const stats = await shareApi.getStats(openid)
+      if (!stats.success) return
       const limit = stats.data?.dailyLimit[type]
       const todayCount = stats.data?.todayShareCount[type]
       if (todayCount >= limit) {
@@ -441,7 +442,7 @@ export function Story() {
           setToastType('success')
           setToastMessage(parts.join(' '))
           setToastVisible(true)
-        } else if (result.data?.reason) {
+        } else if (result.success && result.data?.reason) {
           setToastType('info')
           setToastMessage(result.data.reason)
           setToastVisible(true)
@@ -493,7 +494,7 @@ export function Story() {
                 copyTimeoutRef.current = null
               }, 1000)
             }
-          } else if (result.data?.reason) {
+          } else if (result.success && result.data?.reason) {
             setToastType('error')
             setToastMessage(result.data.reason)
             setToastVisible(true)
@@ -591,14 +592,12 @@ export function Story() {
           setToastMessage(`解读消耗 ${result.data.pointsUsed} 积分，签到可获得更多`)
           setToastVisible(true)
         }
-      } else if (result.data?.reason) {
+      } else if (result.success && result.data?.reason) {
         setToastType('error')
         setToastMessage(result.data.reason)
         setToastVisible(true)
       }
     } catch {
-      setToastType('error')
-      setToastMessage('解读生成失败，请重试')
       setToastVisible(true)
     } finally {
       setIsInterpreting(false)
@@ -644,7 +643,8 @@ export function Story() {
         setToastVisible(true)
       } else {
         // Check if already published error
-        if (result.message?.includes('已在') || result.message?.includes('已经')) {
+        const errorMsg = result.error?.message || ''
+        if (errorMsg.includes('已在') || errorMsg.includes('已经')) {
           // Mark as published even if backend says already published
           setIsPublished(true)
           const publishedSessions = JSON.parse(localStorage.getItem(PUBLISHED_SESSIONS_KEY) || '[]')
@@ -657,7 +657,7 @@ export function Story() {
           setToastVisible(true)
         } else {
           setToastType('error')
-          setToastMessage(result.message || '发布失败')
+          setToastMessage(errorMsg || '发布失败')
           setToastVisible(true)
         }
       }
@@ -695,7 +695,7 @@ export function Story() {
         const targetSessionId = wallContext.sessionId || urlSessionId
         if (targetSessionId) {
           api.getStory(targetSessionId).then((result) => {
-            if (result.data?.story) {
+            if (result.success && result.data?.story) {
               setDreamWallStory(result.data.story.content)
             }
             setStoryFetchError(null)
@@ -1279,13 +1279,12 @@ export function Story() {
                     setToastMessage(parts.join(' '))
                     setToastVisible(true)
                   }
-                } else if (result.data?.reason) {
+                } else if (result.success && result.data?.reason) {
                   setToastType('error')
                   setToastMessage(result.data.reason)
                   setToastVisible(true)
                 }
               } catch {
-                // Silently fail - already showed initial toast
               }
             }
           }}

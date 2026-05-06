@@ -1,0 +1,374 @@
+.page {
+  min-height: 100vh;
+  background: #080b14;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(30, 58, 138, 0.15) 0%, transparent 50%),
+    radial-gradient(1px 1px at 10% 10%, rgba(255, 255, 255, 0.3) 50%, transparent 50%),
+    radial-gradient(1px 1px at 20% 50%, rgba(255, 255, 255, 0.2) 50%, transparent 50%),
+    radial-gradient(1px 1px at 40% 80%, rgba(255, 255, 255, 0.3) 50%, transparent 50%),
+    radial-gradient(1px 1px at 60% 30%, rgba(255, 255, 255, 0.2) 50%, transparent 50%),
+    radial-gradient(1px 1px at 80% 60%, rgba(255, 255, 255, 0.3) 50%, transparent 50%),
+    radial-gradient(1px 1px at 90% 90%, rgba(255, 255, 255, 0.2) 50%, transparent 50%);
+  padding: 20px 16px 100px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Back Button */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 24px;
+}
+
+.back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.back svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.cover {
+  width: 180px;
+  height: 240px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.coverInner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #1a1f35 0%, #0d1120 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.emoji {
+  font-size: 64px;
+  z-index: 1;
+}
+
+.coverGlow {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.headerInfo {
+  text-align: center;
+}
+
+.theme {
+  display: inline-block;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  text-transform: capitalize;
+}
+
+.title {
+  font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 12px;
+  letter-spacing: 0.05em;
+}
+
+.description {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin: 0 0 16px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stat svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Episodes Section */
+.episodes {
+  margin-top: 32px;
+}
+
+.sectionTitle {
+  font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+  font-size: 20px;
+  color: #ffd700;
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionTitle::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%);
+  border-radius: 2px;
+}
+
+.episodeList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.episodeCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.episodeCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 215, 0, 0.3);
+  transform: translateX(4px);
+}
+
+.episodeNumber {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.05) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffd700;
+  flex-shrink: 0;
+}
+
+.episodeInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.episodeTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.episodeExcerpt {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.episodePreview {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+.episodeArrow {
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.episodeCard:hover .episodeArrow {
+  color: #ffd700;
+  transform: translateX(4px);
+}
+
+/* Empty State */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Error State */
+.error {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.error svg {
+  width: 48px;
+  height: 48px;
+  color: rgba(255, 100, 100, 0.6);
+  margin-bottom: 16px;
+}
+
+.error p {
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 24px;
+  font-size: 14px;
+}
+
+.backBtn {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  background: rgba(255, 215, 0, 0.2);
+}
+
+/* Skeleton Loading */
+.skeleton {
+  padding-top: 20px;
+}
+
+.skeletonHeader {
+  width: 180px;
+  height: 240px;
+  margin: 0 auto 24px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+.skeletonCover {
+  width: 60%;
+  height: 32px;
+  margin: 0 auto 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+.skeletonEpisode {
+  height: 80px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Responsive */
+@media (min-width: 640px) {
+  .header {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .cover {
+    margin: 0;
+  }
+
+  .headerInfo {
+    text-align: left;
+    flex: 1;
+  }
+
+  .description {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}

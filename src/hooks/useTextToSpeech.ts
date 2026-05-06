@@ -27,25 +27,19 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
 
       const loadVoices = () => {
         const availableVoices = speechSynthesis.getVoices()
-        // Filter for Chinese voices first, then default
-        const chineseVoices = availableVoices.filter(v => v.lang.includes('zh'))
-        const allVoices = [...chineseVoices, ...availableVoices]
-
-        setVoices(allVoices)
-
-        // Try to select a Chinese female voice
-        const preferredVoice = chineseVoices.find(v =>
-          v.lang.includes('zh-CN') && (v.name.includes('Female') || v.name.includes('女'))
-        ) || chineseVoices.find(v => v.lang.includes('zh-CN')) || chineseVoices[0]
-
-        if (preferredVoice) {
-          setSelectedVoice(preferredVoice)
-        } else if (allVoices.length > 0) {
-          setSelectedVoice(allVoices[0])
+        // Only keep Google zh-CN voices (exclude zh-HK, zh-TW)
+        const googleZhCnVoices = availableVoices.filter(v =>
+          v.name.includes('Google') &&
+          v.lang === 'zh-CN'
+        )
+        setVoices(googleZhCnVoices.slice(0, 3))
+        if (googleZhCnVoices.length > 0) {
+          setSelectedVoice(googleZhCnVoices[0])
         }
       }
 
       loadVoices()
+      setTimeout(loadVoices, 500)
       speechSynthesis.onvoiceschanged = loadVoices
     }
 

@@ -66,6 +66,8 @@ export function Profile() {
         const res = await api.getHistory(openid, 1, 100) // Fetch more items for stats
         if (!isMounted) return
 
+        if (!res.success) return
+
         // Update total stats from backend pagination
         if (res.data?.pagination) {
           setTotalDreams(res.data.pagination.total)
@@ -142,7 +144,9 @@ export function Profile() {
     const fetchFavorites = async () => {
       try {
         const res = await wallApi.getFavorites({ page: 1, limit: 50 })
-        setFavorites(res.data?.posts)
+        if (res.success) {
+          setFavorites(res.data?.posts ?? [])
+        }
       } catch (err) {
         console.error('Failed to fetch favorites:', err)
         setFavorites([])
@@ -173,13 +177,15 @@ export function Profile() {
     const fetchStats = async () => {
       try {
         const stats = await shareApi.getStats(openid)
-        setShareStatsLocal(stats.data || stats)
-        setShareStats({
-          points: stats.data?.points,
-          medals: stats.data?.medals,
-          consecutiveShares: stats.data?.consecutiveShares,
-          lastShareDate: stats.data?.lastShareDate
-        })
+        if (stats.success && stats.data) {
+          setShareStatsLocal(stats.data)
+          setShareStats({
+            points: stats.data.points,
+            medals: stats.data.medals,
+            consecutiveShares: stats.data.consecutiveShares,
+            lastShareDate: stats.data.lastShareDate
+          })
+        }
       } catch (err) {
         console.error('Failed to fetch share stats:', err)
       }
@@ -395,6 +401,18 @@ export function Profile() {
               邀请
             </Button>
           </div>
+
+          {/* Library */}
+          <Link to="/library" className={styles.libraryLink}>
+            <div className={styles.libraryIcon}>📚</div>
+            <div className={styles.libraryInfo}>
+              <span className={styles.libraryLabel}>梦境图书馆</span>
+              <span className={styles.libraryDesc}>浏览精选故事合集</span>
+            </div>
+            <svg className={styles.libraryArrow} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </Link>
           </>
           </div>
         )}

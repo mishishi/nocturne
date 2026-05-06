@@ -382,6 +382,7 @@ export function Dream() {
       localStorage.setItem('yeelin_openid', openid)
 
       const result = await api.createSession(openid)
+      if (!result.success) throw new Error('创建会话失败')
       const sessionId = result.data?.sessionId
       if (!sessionId) throw new Error('创建会话失败')
       setSessionId(sessionId)
@@ -391,6 +392,7 @@ export function Dream() {
       setDreamElements(dreamElements)
 
       const submitResult = await api.submitDream(sessionId, currentSession.dreamText, selectedEmotion || '')
+      if (!submitResult.success) throw new Error('获取问题失败')
       const questions = submitResult.data?.questions
       if (!questions) throw new Error('获取问题失败')
       clearDraft()

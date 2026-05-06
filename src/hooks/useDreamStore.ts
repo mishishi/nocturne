@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { checkInApi, wallApi, achievementApi, apiWithRetry } from '../services/api'
+import { checkInApi, achievementApi, apiWithRetry } from '../services/api'
 import { useAuthStore } from './useAuthStore'
 
 // Toast 通知回调函数（用于后台任务失败时通知用户）
@@ -641,7 +641,8 @@ export const useDreamStore = create<DreamState>()(
     {
       name: 'yeelin-dream-storage',
       partialize: (state) => ({
-        history: state.history,
+        // Limit history to last 50 items to prevent localStorage bloat
+        history: state.history.slice(0, 50),
         achievements: state.achievements,
         currentSession: state.currentSession,
         fontSize: state.fontSize,
@@ -654,7 +655,7 @@ export const useDreamStore = create<DreamState>()(
         lastShareDate: state.lastShareDate,
         user: state.user,
         token: state.token,
-        friends: state.friends,
+        // friends removed - should be loaded from API, not persisted
         checkedInToday: state.checkedInToday,
         consecutiveDays: state.consecutiveDays
       })

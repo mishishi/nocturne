@@ -94,6 +94,58 @@ const result = await wallApi.getPosts({
 
 ---
 
+### GET /api/wall/highlights
+
+**功能：** 获取今日精选帖子列表（公开）
+
+**需要认证：** 否
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "data": {
+    "highlights": [
+      {
+        "id": "post_cuid",
+        "sessionId": "session_cuid",
+        "storyTitle": "坠落的孩子",
+        "storySnippet": "我站在一座没有尽头的楼梯上...",
+        "nickname": "小明",
+        "avatar": "https://example.com/avatar.jpg",
+        "likeCount": 42,
+        "commentCount": 8,
+        "createdAt": "2024-01-15T10:30:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+**业务逻辑：**
+1. 返回今日（北京时间 00:00:00 至 23:59:59）被设为精选的帖子
+2. 最多返回 5 条
+3. 按设为精选的时间降序排列
+4. 只返回已审核通过的帖子
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/pages/Home.tsx` | `useEffect` | 页面加载时 |
+| `src/components/DailyHighlights.tsx` | `useEffect` | 组件挂载时 |
+
+**前端代码位置：** `src/components/DailyHighlights.tsx:18`
+
+```typescript
+const res = await wallApi.getDailyHighlights()
+if (res.success && res.data?.highlights) {
+  setHighlights(res.data.highlights)
+}
+```
+
+---
+
 ### POST /api/wall
 
 **功能：** 发布故事到梦墙

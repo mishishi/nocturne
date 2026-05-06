@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { OnboardingOverlay } from '../components/ui/OnboardingOverlay'
 import { AchievementCenter } from '../components/AchievementCenter'
+import { DailyHighlights } from '../components/DailyHighlights'
 import { useDreamStore, ACHIEVEMENTS, type DreamSession } from '../hooks/useDreamStore'
 import { checkInApi } from '../services/api'
 import styles from './Home.module.css'
@@ -223,6 +224,9 @@ export function Home() {
           <AchievementHint history={history} />
         )}
       </section>
+
+      {/* Daily Highlights - visible to all users */}
+      <DailyHighlights />
 
       {/* Check-in Card - only for logged-in users */}
       {user && (

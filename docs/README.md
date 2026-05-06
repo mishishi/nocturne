@@ -36,6 +36,8 @@
 | 2026-05-05 | 解读增加个性化深度机制（基于历史反馈自动调整详细程度）|
 | 2026-05-05 | 解读增加辅助线索关联（参考用户历史梦境数据生成个性化解读）|
 | 2026-05-05 | 新增解读可见性控制 API（interpretation-visibility）|
+| 2026-05-05 | 新增每日精选功能（GET /api/wall/highlights、POST /api/admin/posts/:postId/feature）|
+| 2026-05-06 | 新增精选候选算法生成功能（POST /api/admin/highlights/generate、GET /api/admin/highlights/candidates）|
 
 ---
 
@@ -96,6 +98,7 @@
 |------|------|------|----------|
 | `/api/wall` | GET | 获取梦墙列表 | 否 |
 | `/api/wall` | POST | 发布到梦墙 | **是** |
+| `/api/wall/highlights` | GET | 获取今日精选 | 否 |
 | `/api/wall/friends` | GET | 获取关注的人动态 | **是** |
 | `/api/wall/my` | GET | 获取我发布的 | **是** |
 | `/api/wall/:postId/like` | POST | 点赞/取消点赞 | **是** |
@@ -147,6 +150,13 @@
 | `/api/admin/posts/pending` | GET | 获取待审核帖子 | **是（管理员）** |
 | `/api/admin/posts/:postId/approve` | POST | 通过审核 | **是（管理员）** |
 | `/api/admin/posts/:postId/reject` | POST | 拒绝审核 | **是（管理员）** |
+| `/api/admin/posts/:postId/feature` | POST | 设为精选 | **是（管理员）** |
+| `/api/admin/posts/:postId/feature` | DELETE | 取消精选 | **是（管理员）** |
+| `/api/admin/highlights/generate` | POST | 生成精选候选 | **是（管理员）** |
+| `/api/admin/highlights/candidates` | GET | 获取候选列表 | **是（管理员）** |
+| `/api/admin/highlights/:candidateId/approve` | POST | 确认候选 | **是（管理员）** |
+| `/api/admin/highlights/:candidateId` | DELETE | 拒绝候选 | **是（管理员）** |
+| `/api/admin/highlights/batch-approve` | POST | 批量确认候选 | **是（管理员）** |
 | `/api/admin/comments` | GET | 获取评论列表 | **是（管理员）** |
 | `/api/admin/comments/:commentId` | DELETE | 删除评论 | **是（管理员）** |
 

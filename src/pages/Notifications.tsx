@@ -72,11 +72,12 @@ export function Notifications() {
 
   const handleNotificationClick = async (notification: ApiNotification) => {
     // Navigate based on type
-    let path = '/'
+    let path = '/wall'
     switch (notification.type) {
       case 'LIKE':
       case 'COMMENT':
-        // Navigate to story page using targetId (sessionId)
+      case 'POST_FEATURED':
+        // Navigate to story page using targetId (sessionId), or wall if no targetId
         if (notification.targetId) {
           path = `/story/${notification.targetId}`
         }
@@ -200,11 +201,17 @@ export function Notifications() {
                           <polyline points="22 4 12 14.01 9 11.01"/>
                         </svg>
                       )}
+                      {notification.type === 'POST_FEATURED' && (
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                      )}
                       <span>
                         {notification.type === 'LIKE' && '赞'}
                         {notification.type === 'COMMENT' && '评论'}
                         {notification.type === 'FRIEND_REQUEST' && '好友请求'}
                         {notification.type === 'FRIEND_ACCEPTED' && '已互关'}
+                        {notification.type === 'POST_FEATURED' && '精选'}
                       </span>
                     </span>
                     <span className={styles.time}>{formatRelativeTime(notification.createdAt)}</span>

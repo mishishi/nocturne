@@ -131,11 +131,11 @@ export function Login() {
           }
         }
 
-        setUser(user, token, guestOpenid)
+        setUser(user, token, guestOpenid ?? undefined)
         localStorage.setItem('yeelin_openid', user.openid)
         navigate(user.isAdmin ? '/admin' : from, { replace: true })
       } else {
-        setError(result.error?.message || '登录失败')
+        setError((!result.success ? result.error?.message : result.message) || '登录失败')
       }
     } catch (err) {
       setError('网络错误，请检查网络连接')

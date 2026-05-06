@@ -5,6 +5,7 @@ import { useDreamStore, DreamSession } from './useDreamStore'
 const createMockSession = (overrides: Partial<DreamSession> = {}): DreamSession => ({
   id: `session_${Date.now()}_test`,
   sessionId: `backend_session_${Math.random().toString(36).substr(2, 9)}`,
+  openid: 'test_openid',
   date: new Date().toLocaleDateString('zh-CN'),
   dreamSnippet: 'I dreamed of flying over mountains...',
   storyTitle: 'The Flying Dream',

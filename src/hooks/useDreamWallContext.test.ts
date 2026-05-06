@@ -31,6 +31,7 @@ describe('useDreamWallContext', () => {
         storyFull: 'Full story content',
         authorOpenid: 'user_123',
         postId: 'post_456',
+        dreamSnippet: 'Test dream snippet',
       }
 
       storeDreamWallContext(ctx)
@@ -49,6 +50,7 @@ describe('useDreamWallContext', () => {
         storyFull: null,
         authorOpenid: null,
         postId: null,
+        dreamSnippet: null,
       }
 
       storeDreamWallContext(ctx)
@@ -71,6 +73,7 @@ describe('useDreamWallContext', () => {
         storyFull: null,
         authorOpenid: null,
         postId: null,
+        dreamSnippet: null,
       })
     })
 
@@ -83,6 +86,7 @@ describe('useDreamWallContext', () => {
         storyFull: 'Stored content',
         authorOpenid: 'user_789',
         postId: 'post_789',
+        dreamSnippet: 'Stored dream snippet',
       }
       storeDreamWallContext(ctx)
 
@@ -101,6 +105,7 @@ describe('useDreamWallContext', () => {
         storyFull: 'Location content',
         authorOpenid: 'user_location',
         postId: 'post_location',
+        dreamSnippet: 'Location dream snippet',
       }
       mockLocation.state = locationCtx
 
@@ -112,6 +117,7 @@ describe('useDreamWallContext', () => {
         storyFull: 'Storage content',
         authorOpenid: 'user_storage',
         postId: 'post_storage',
+        dreamSnippet: 'Storage dream snippet',
       })
 
       const { result } = renderHook(() => useDreamWallContext())
@@ -128,6 +134,7 @@ describe('useDreamWallContext', () => {
         storyFull: 'Once upon a time...',
         authorOpenid: 'author_456',
         postId: 'post_789',
+        dreamSnippet: 'My dream snippet',
       }
 
       const { result } = renderHook(() => useDreamWallContext())
@@ -139,6 +146,7 @@ describe('useDreamWallContext', () => {
         storyFull: 'Once upon a time...',
         authorOpenid: 'author_456',
         postId: 'post_789',
+        dreamSnippet: 'My dream snippet',
       })
     })
 
@@ -146,6 +154,7 @@ describe('useDreamWallContext', () => {
       mockLocation.state = {
         fromDreamWall: true,
         sessionId: 'session_123',
+        dreamSnippet: null,
         // storyTitle and storyFull intentionally missing
       }
 
@@ -158,6 +167,7 @@ describe('useDreamWallContext', () => {
         storyFull: null,
         authorOpenid: null,
         postId: null,
+        dreamSnippet: null,
       })
     })
   })

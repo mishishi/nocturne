@@ -28,12 +28,14 @@ export function Favorites() {
 
     try {
       const result = await wallApi.getFavorites({ page: pageNum, limit: 20 })
-      if (append) {
-        setPosts(prev => [...prev, ...(result.data?.posts || [])])
-      } else {
-        setPosts(result.data?.posts || [])
+      if (result.success) {
+        if (append) {
+          setPosts(prev => [...prev, ...(result.data?.posts || [])])
+        } else {
+          setPosts(result.data?.posts || [])
+        }
+        setHasMore(result.data?.pagination?.hasMore ?? false)
       }
-      setHasMore(result.data?.pagination?.hasMore ?? false)
     } catch (err) {
       console.error('Failed to fetch favorites:', err)
     } finally {

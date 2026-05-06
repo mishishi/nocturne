@@ -58,9 +58,10 @@ export function History() {
 
       setIsSyncing(true)
       try {
-        const { data } = await api.getHistory(openid)
+        const res = await api.getHistory(openid)
         if (!isMounted) return
-        const sessions = data?.sessions
+        if (!res.success) return
+        const sessions = res.data?.sessions
 
         if (sessions && sessions.length > 0) {
           // Build backend map for merging

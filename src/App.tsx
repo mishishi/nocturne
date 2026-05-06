@@ -35,11 +35,16 @@ import { Chat } from './pages/Chat'
 import { AdminRoute } from './components/AdminRoute'
 import { AdminLayout } from './components/AdminLayout'
 import { Dashboard } from './pages/admin/Dashboard'
+import { Stats } from './pages/admin/Stats'
 import { PendingPosts } from './pages/admin/PendingPosts'
 import { CommentManagement } from './pages/admin/CommentManagement'
+import { Highlights } from './pages/admin/Highlights'
+import { LibraryAssets } from './pages/admin/LibraryAssets'
 import { DemoExperience } from './pages/DemoExperience'
 import { StreamingEffectsDemo } from './pages/StreamingEffectsDemo'
 import { StreamingLayoutDemo } from './pages/StreamingLayoutDemo'
+import { Library } from './pages/Library'
+import { Collection } from './pages/Collection'
 
 // Page title mapping
 const PAGE_TITLES: Record<string, string> = {
@@ -60,7 +65,10 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin': '管理后台 - 夜棂',
   '/admin/pending': '待审核 - 管理后台 - 夜棂',
   '/admin/comments': '评论管理 - 管理后台 - 夜棂',
-  '/admin/stats': '数据统计 - 管理后台 - 夜棂'
+  '/admin/stats': '数据统计 - 管理后台 - 夜棂',
+  '/admin/library': '图书馆 - 管理后台 - 夜棂',
+  '/library': '梦境图书馆 - 夜棂',
+  '/collection': '合集详情 - 夜棂'
 }
 
 function App() {
@@ -217,8 +225,16 @@ function App() {
               <PageErrorBoundary><AdminRoute><AdminLayout><CommentManagement /></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
             <Route path="/admin/stats" element={
-              <PageErrorBoundary><AdminRoute><AdminLayout><Dashboard /></AdminLayout></AdminRoute></PageErrorBoundary>
+              <PageErrorBoundary><AdminRoute><AdminLayout><Stats /></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
+            <Route path="/admin/highlights" element={
+              <PageErrorBoundary><AdminRoute><AdminLayout><Highlights /></AdminLayout></AdminRoute></PageErrorBoundary>
+            } />
+            <Route path="/admin/library" element={
+              <PageErrorBoundary><AdminRoute><AdminLayout><LibraryAssets /></AdminLayout></AdminRoute></PageErrorBoundary>
+            } />
+            <Route path="/library" element={<PageErrorBoundary><Library /></PageErrorBoundary>} />
+            <Route path="/collection/:id" element={<PageErrorBoundary><Collection /></PageErrorBoundary>} />
             <Route path="/streaming-demo" element={<PageErrorBoundary><StreamingEffectsDemo /></PageErrorBoundary>} />
             <Route path="/layout-demo" element={<PageErrorBoundary><StreamingLayoutDemo /></PageErrorBoundary>} />
           </Routes>

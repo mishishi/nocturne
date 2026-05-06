@@ -49,6 +49,7 @@ export function StoryCommentList({ sessionId }: StoryCommentListProps) {
         const result = await storyFeedbackApi.getAll(sessionId)
         if (cancelled) return
 
+        if (!result.success) return
         const feedbacks = result.data?.feedbacks ?? []
         const filtered = feedbacks.filter((f: any) => f.comment)
         setComments(filtered)

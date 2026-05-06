@@ -54,7 +54,7 @@ export function DreamWall() {
       })
 
       // Defensive check for response structure
-      if (!result) {
+      if (!result || !result.success) {
         console.warn('Empty response from wall API')
         setPosts([])
         setHasMore(false)
@@ -123,7 +123,7 @@ export function DreamWall() {
     try {
       const result = await wallApi.getFriendFeed({ page: pageNum, limit: 20 })
 
-      if (!result) {
+      if (!result || !result.success) {
         console.warn('Empty response from wall friends API')
         setPosts([])
         setHasMore(false)
@@ -331,6 +331,7 @@ export function DreamWall() {
       storyFull: post.storyFull || null,
       authorOpenid: post.openid,
       postId: post.id,
+      dreamSnippet: post.storySnippet,
     })
 
     navigate(`/story/${post.sessionId}`, {

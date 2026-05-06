@@ -40,7 +40,9 @@ export function StoryFeedbackPanel({ sessionId, refreshKey = 0 }: StoryFeedbackP
       setIsLoading(true)
       try {
         const result = await storyFeedbackApi.getAll(sessionId)
-        setStats(result.data?.stats ?? null)
+        if (result.success) {
+          setStats(result.data?.stats ?? null)
+        }
       } catch (err) {
         console.error('Failed to load feedback stats:', err)
       } finally {

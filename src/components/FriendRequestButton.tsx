@@ -32,10 +32,11 @@ export function FriendRequestButton({ friendOpenid }: FriendRequestButtonProps) 
         setState('sent')
       } else {
         // 处理已存在的好友请求或已是好友
+        const errorMessage = result.error?.message || ''
         if (
-          result.reason === '好友请求已存在' ||
-          result.reason === '你们已经是好友或已有待处理请求' ||
-          result.reason === '已经是好友'
+          errorMessage === '好友请求已存在' ||
+          errorMessage === '你们已经是好友或已有待处理请求' ||
+          errorMessage === '已经是好友'
         ) {
           setState('alreadyFriends')
         } else {

@@ -90,11 +90,11 @@ export function Register() {
           }
         }
 
-        setUser(user, token, guestOpenid)
+        setUser(user, token, guestOpenid ?? undefined)
         localStorage.setItem('yeelin_openid', user.openid)
         navigate('/')
       } else {
-        setError(result.message || '注册失败')
+        setError((!result.success ? result.error?.message : result.message) || '注册失败')
         setStep('credentials')
       }
     } catch (err) {

@@ -97,7 +97,7 @@ export function Questions() {
       clearTimeout(timeoutId)
 
       // 检查 isLastQuestion 来决定是否进入下一题或生成故事
-      if (result.data?.isLastQuestion) {
+      if (result.success && result.data?.isLastQuestion) {
         // 最后一题，触发生成故事流程
         handleFinalSubmit()
       } else {
@@ -192,10 +192,10 @@ export function Questions() {
           console.error('[Questions] submitAnswer error at index', currentIdx, ':', e?.message)
           throw e // Re-throw to stop the loop
         }
-        console.log('[Questions] Result:', JSON.stringify(result.data))
+        console.log('[Questions] Result:', JSON.stringify(result.success ? result.data : undefined))
         clearTimeout(timeoutId)
 
-        currentIdx = result.data?.nextIndex ?? currentIdx + 1
+        currentIdx = (result.success ? result.data?.nextIndex : undefined) ?? currentIdx + 1
         console.log('[Questions] nextIndex set to:', currentIdx, 'loop condition:', currentIdx < questions.length)
         clearTimeout(timeoutId)
         timeoutId = setTimeout(() => {
