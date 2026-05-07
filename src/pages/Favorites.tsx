@@ -3,6 +3,9 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { wallApi, DreamWallPost } from '../services/api'
 import { Button } from '../components/ui/Button'
+import { EmptyState } from '../components/ui/EmptyState'
+import { DreamWallSkeleton } from '../components/ui/Skeleton'
+import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Favorites.module.css'
 
@@ -22,6 +25,7 @@ export function Favorites() {
   const [unfavoritingId, setUnfavoritingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [storySearchQuery, setStorySearchQuery] = useState('')
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
 
   const fetchFavorites = useCallback(async (pageNum: number, append = false) => {
     if (!user?.openid) return
@@ -38,6 +42,7 @@ export function Favorites() {
       }
     } catch (err) {
       console.error('Failed to fetch favorites:', err)
+      setToast({ visible: true, message: '加载失败，请检查网络连接', type: 'error' })
     } finally {
       setLoading(false)
       setLoadingMore(false)
@@ -94,6 +99,7 @@ export function Favorites() {
       // Revert on error
       setPosts(previousPosts)
       console.error('Failed to unfavorite:', err)
+      setToast({ visible: true, message: '取消收藏失败，请重试', type: 'error' })
     } finally {
       setUnfavoritingId(null)
     }
@@ -143,11 +149,15 @@ export function Favorites() {
       <div className={styles.page}>
         <div className={styles.container}>
           <Breadcrumb items={[{ label: '首页', href: '/' }, { label: '收藏' }]} />
-          <div className={styles.emptyState}>
-            <h2 className={styles.emptyTitle}>请先登录</h2>
-            <p className={styles.emptyText}>登录后查看你收藏的梦境故事</p>
-            <Link to="/wall"><Button size="lg">探索梦墙</Button></Link>
-          </div>
+          <EmptyState
+            icon="moon"
+            title="请先登录"
+            description="登录后查看你收藏的梦境故事"
+            action={{
+              label: '探索梦墙',
+              onClick: () => navigate('/wall')
+            }}
+          />
         </div>
       </div>
     )
@@ -237,40 +247,17 @@ export function Favorites() {
 
         {/* Loading */}
         {loading ? (
-          <div className={styles.loading}>
-            <div className={styles.loadingMoon}>
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
-              </svg>
-            </div>
-            <p>加载中...</p>
-          </div>
+          <DreamWallSkeleton />
         ) : activeTab === 'wall' && posts.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="20" cy="25" r="1.5" fill="currentColor" opacity="0.3" />
-                <circle cx="95" cy="20" r="1" fill="currentColor" opacity="0.4" />
-                <circle cx="100" cy="80" r="1.5" fill="currentColor" opacity="0.3" />
-                <circle cx="15" cy="90" r="1" fill="currentColor" opacity="0.4" />
-                <circle cx="50" cy="10" r="1" fill="currentColor" opacity="0.3" />
-                <circle cx="75" cy="105" r="1.5" fill="currentColor" opacity="0.3" />
-                <circle cx="60" cy="55" r="30" fill="url(#starGlow)" opacity="0.15" />
-                <path d="M60 25L66.18 43.82L86 43.82L70.09 55.64L76.27 74.36L60 62.73L43.73 74.36L49.91 55.64L34 43.82L53.82 43.82L60 25Z" fill="currentColor" opacity="0.8" />
-                <path d="M30 35L32 40L37 42L32 44L30 49L28 44L23 42L28 40L30 35Z" fill="currentColor" opacity="0.3" />
-                <path d="M85 70L86.5 73L89.5 74.5L86.5 76L85 79L83.5 76L80.5 74.5L83.5 73L85 70Z" fill="currentColor" opacity="0.3" />
-                <defs>
-                  <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="currentColor" />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-                </defs>
-              </svg>
-            </div>
-            <h2 className={styles.emptyTitle}>还没有收藏</h2>
-            <p className={styles.emptyText}>去梦墙收藏你喜欢的故事吧</p>
-            <Link to="/wall"><Button size="lg">探索梦墙</Button></Link>
-          </div>
+          <EmptyState
+            icon="star"
+            title="还没有收藏"
+            description="去梦墙收藏你喜欢的故事吧"
+            action={{
+              label: '探索梦墙',
+              onClick: () => navigate('/wall')
+            }}
+          />
         ) : activeTab === 'wall' ? (
           <>
             {/* Search */}
@@ -491,41 +478,27 @@ export function Favorites() {
                 })}
               </div>
             ) : (
-              <div className={styles.emptyState}>
-                {storySearchQuery ? (
-                  <>
-                    <h2 className={styles.emptyTitle}>没有找到匹配的内容</h2>
-                    <p className={styles.emptyText}>试试其他关键词</p>
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.emptyIcon}>
-                      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="20" cy="25" r="1.5" fill="currentColor" opacity="0.3" />
-                        <circle cx="95" cy="20" r="1" fill="currentColor" opacity="0.4" />
-                        <circle cx="100" cy="80" r="1.5" fill="currentColor" opacity="0.3" />
-                        <circle cx="15" cy="90" r="1" fill="currentColor" opacity="0.4" />
-                        <circle cx="50" cy="10" r="1" fill="currentColor" opacity="0.3" />
-                        <circle cx="75" cy="105" r="1.5" fill="currentColor" opacity="0.3" />
-                        <circle cx="60" cy="55" r="30" fill="url(#starGlow)" opacity="0.15" />
-                        <path d="M60 25L66.18 43.82L86 43.82L70.09 55.64L76.27 74.36L60 62.73L43.73 74.36L49.91 55.64L34 43.82L53.82 43.82L60 25Z" fill="currentColor" opacity="0.8" />
-                        <defs>
-                          <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stopColor="currentColor" />
-                            <stop offset="100%" stopColor="transparent" />
-                          </radialGradient>
-                        </defs>
-                      </svg>
-                    </div>
-                    <h2 className={styles.emptyTitle}>还没有原创之梦</h2>
-                    <p className={styles.emptyText}>在历史记录中收藏的故事将显示在这里</p>
-                  </>
-                )}
-              </div>
+              <EmptyState
+                icon={storySearchQuery ? 'search' : 'star'}
+                title={storySearchQuery ? '没有找到匹配的内容' : '还没有原创之梦'}
+                description={storySearchQuery ? '试试其他关键词' : '在历史记录中收藏的故事将显示在这里'}
+                action={!storySearchQuery ? {
+                  label: '探索梦墙',
+                  onClick: () => navigate('/wall')
+                } : undefined}
+              />
             )}
           </>
         )}
       </div>
+
+      {/* Toast */}
+      <Toast
+        message={toast.message}
+        visible={toast.visible}
+        type={toast.type}
+        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
+      />
     </div>
   )
 }
