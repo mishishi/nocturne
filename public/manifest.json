@@ -1,0 +1,60 @@
+{
+  "name": "夜棂 · 梦境记录",
+  "short_name": "夜棂",
+  "description": "记录梦境，AI 解梦，与好友分享你的星夜故事",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0D0D1A",
+  "theme_color": "#0D0D1A",
+  "orientation": "portrait-primary",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["lifestyle", "entertainment"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "记录梦境",
+      "short_name": "记录",
+      "description": "打开梦境记录页",
+      "url": "/dream",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "梦墙",
+      "short_name": "梦墙",
+      "description": "浏览梦境社区",
+      "url": "/wall",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "草稿箱",
+      "short_name": "草稿",
+      "description": "查看我的草稿",
+      "url": "/drafts",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

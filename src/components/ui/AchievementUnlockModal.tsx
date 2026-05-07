@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import type { Achievement } from '../../hooks/useDreamStore'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { AchievementShareCard } from '../AchievementShareCard'
 import styles from './AchievementUnlockModal.module.css'
 
@@ -13,6 +14,8 @@ export function AchievementUnlockModal({ achievement, isOpen, onClose }: Achieve
   const [showContent, setShowContent] = useState(false)
   const [showGlow, setShowGlow] = useState(false)
   const [showShareCard, setShowShareCard] = useState(false)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const focusTrapRef = useFocusTrap<HTMLDivElement>({ enabled: true, onEscape: onClose })
 
   useEffect(() => {
     if (isOpen && achievement) {
@@ -55,10 +58,11 @@ export function AchievementUnlockModal({ achievement, isOpen, onClose }: Achieve
     <div className={styles.overlay} onClick={onClose}>
       <div
         className={`${styles.modal} ${showGlow ? styles.glowing : ''}`}
+        ref={focusTrapRef}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={`成就解锁：${achievement.title}`}
+        aria-labelledby="achievement-title"
       >
         {/* Glow effect */}
         <div className={styles.glow} />
@@ -80,7 +84,7 @@ export function AchievementUnlockModal({ achievement, isOpen, onClose }: Achieve
           {/* Text */}
           <div className={styles.textContent}>
             <p className={styles.label}>成就解锁</p>
-            <h3 className={styles.title}>{achievement.title}</h3>
+            <h3 className={styles.title} id="achievement-title">{achievement.title}</h3>
             <p className={styles.description}>{achievement.description}</p>
           </div>
 
@@ -104,7 +108,7 @@ export function AchievementUnlockModal({ achievement, isOpen, onClose }: Achieve
         </div>
 
         {/* Dismiss hint */}
-        <button className={styles.dismissHint} onClick={onClose}>
+        <button ref={closeButtonRef} className={styles.dismissHint} onClick={onClose}>
           点击任意处关闭
         </button>
 

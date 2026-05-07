@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0D1B2A"/>
+      <stop offset="50%" stop-color="#1A3A5C"/>
+      <stop offset="100%" stop-color="#0D0D1A"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F4D35E"/>
+      <stop offset="70%" stop-color="#E8C547"/>
+      <stop offset="100%" stop-color="#D4A83A"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" fill="url(#sky)"/>
+
+  <!-- Window frame (棂) - decorative lines -->
+  <circle cx="256" cy="256" r="230" fill="none" stroke="#8B9DC3" stroke-width="2" opacity="0.4"/>
+  <line x1="256" y1="26" x2="256" y2="486" stroke="#8B9DC3" stroke-width="2" opacity="0.3"/>
+  <line x1="26" y1="256" x2="486" y2="256" stroke="#8B9DC3" stroke-width="2" opacity="0.3"/>
+  <line x1="90" y1="90" x2="422" y2="422" stroke="#8B9DC3" stroke-width="1.5" opacity="0.2"/>
+  <line x1="422" y1="90" x2="90" y2="422" stroke="#8B9DC3" stroke-width="1.5" opacity="0.2"/>
+
+  <!-- Stars -->
+  <circle cx="60" cy="100" r="4" fill="#FFF" opacity="0.8"/>
+  <circle cx="120" cy="50" r="3" fill="#FFF" opacity="0.6"/>
+  <circle cx="400" cy="80" r="3" fill="#FFF" opacity="0.7"/>
+  <circle cx="450" cy="150" r="4" fill="#FFF" opacity="0.5"/>
+  <circle cx="70" cy="380" r="3" fill="#FFF" opacity="0.6"/>
+  <circle cx="430" cy="350" r="5" fill="#FFF" opacity="0.7"/>
+  <circle cx="380" cy="420" r="2" fill="#FFF" opacity="0.5"/>
+  <circle cx="100" cy="450" r="3" fill="#FFF" opacity="0.4"/>
+  <circle cx="200" cy="70" r="2" fill="#FFF" opacity="0.6"/>
+  <circle cx="320" cy="60" r="2.5" fill="#FFF" opacity="0.5"/>
+
+  <!-- Moon -->
+  <circle cx="330" cy="150" r="60" fill="url(#moon)" filter="url(#glow)"/>
+  <!-- Moon craters -->
+  <circle cx="310" cy="135" r="10" fill="#D4A83A" opacity="0.3"/>
+  <circle cx="345" cy="160" r="8" fill="#D4A83A" opacity="0.25"/>
+  <circle cx="320" cy="170" r="6" fill="#D4A83A" opacity="0.2"/>
+  <circle cx="355" cy="130" r="5" fill="#D4A83A" opacity="0.2"/>
+
+  <!-- Boat silhouette -->
+  <path d="M160 350 Q175 335 200 350 Q225 335 240 350 L225 375 Q190 368 175 375 Z" fill="#E8E8E8" opacity="0.9"/>
+  <!-- Water reflection -->
+  <ellipse cx="200" cy="395" rx="60" ry="8" fill="#8B9DC3" opacity="0.3"/>
+</svg>

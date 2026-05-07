@@ -159,7 +159,7 @@
   }
 }
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .container {
     padding: 0 var(--space-5);
   }

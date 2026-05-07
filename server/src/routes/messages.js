@@ -286,4 +286,44 @@ export default async function messageRoutes(fastify) {
       return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
     }
   })
+
+  // DELETE /api/messages/:messageId - delete a message (only sender can delete)
+  fastify.delete('/messages/:messageId', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    try {
+      const { messageId } = req.params
+
+      const tokenUser = await authService.getUser(req.userId)
+      if (!tokenUser) {
+        return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
+      }
+
+      // Find the message
+      const message = await prisma.privateMessage.findUnique({
+        where: { id: messageId }
+      })
+
+      if (!message) {
+        return res.status(404).send(errorResponse('消息不存在', 'NOT_FOUND'))
+      }
+
+      // Only the sender can delete their own message
+      if (message.fromOpenid !== tokenUser.openid) {
+        return res.status(403).send(errorResponse('只能删除自己发送的消息', 'FORBIDDEN'))
+      }
+
+      // Delete the message
+      await prisma.privateMessage.delete({
+        where: { id: messageId }
+      })
+
+      return res.send(successResponse({ message: '删除成功' }))
+    } catch (error) {
+      console.error('Delete message error:', error)
+      return res.status(500).send(errorResponse('服务器错误', 'SERVER_ERROR'))
+    }
+  })
 }

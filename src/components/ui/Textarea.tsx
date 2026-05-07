@@ -15,6 +15,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const generatedId = useId()
     const textareaId = id || `textarea-${generatedId}`
     const errorId = `${textareaId}-error`
+    const countId = `${textareaId}-count`
 
     useEffect(() => {
       setCharCount(typeof value === 'string' ? value.length : 0)
@@ -48,7 +49,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           id={textareaId}
           className={`${styles.textarea} ${error ? styles.error : ''} ${showError ? styles.shake : ''} ${className}`}
           value={value}
-          aria-describedby={error ? errorId : undefined}
+          aria-describedby={[error ? errorId : null, showCount ? countId : null].filter(Boolean).join(' ') || undefined}
           aria-invalid={error ? 'true' : undefined}
           onFocus={() => {
             // Scroll textarea into view when keyboard appears on mobile
@@ -67,7 +68,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {showCount && (
           <div className={styles.countWrapper}>
             {error && <span id={errorId} className={styles.errorText}>{error}</span>}
-            <span className={`${styles.charCount} ${error ? styles.countWithError : ''} ${getCountClass(charCount, maxLength)}`}>
+            <span id={countId} className={`${styles.charCount} ${error ? styles.countWithError : ''} ${getCountClass(charCount, maxLength)}`}>
               {maxLength ? `${charCount}/${maxLength} 字` : `${charCount} 字`}
             </span>
           </div>

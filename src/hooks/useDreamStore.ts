@@ -3,6 +3,10 @@ import { persist } from 'zustand/middleware'
 import { checkInApi, achievementApi, apiWithRetry } from '../services/api'
 import { useAuthStore } from './useAuthStore'
 import { getAuthToken, setAuthToken, clearAuthToken } from '../utils/auth'
+import type { User } from '../types'
+
+// Re-export User from shared types
+export { type User } from '../types'
 
 // Toast 通知回调函数（用于后台任务失败时通知用户）
 type ToastCallback = (message: string, type: 'success' | 'error') => void
@@ -37,22 +41,6 @@ export interface DreamSession {
   isFavorite?: boolean
   privateNote?: string
   tags: string[]
-}
-
-// User type
-export interface User {
-  id: string
-  openid: string
-  nickname?: string
-  avatar?: string
-  phone?: string
-  isMember: boolean
-  isAdmin?: boolean
-  memberSince?: string
-  points: number
-  medals: string[]
-  consecutiveShares: number
-  lastShareDate?: string
 }
 
 // Friend type

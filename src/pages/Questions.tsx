@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { api } from '../services/api'
 import { createStoryStream } from '../services/sseClient'
 import { Textarea } from '../components/ui/Textarea'
@@ -37,6 +38,7 @@ export function Questions() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const voiceErrorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sseCleanupRef = useRef<(() => void) | null>(null)
+  const permissionGuideRef = useFocusTrap<HTMLDivElement>({ enabled: showPermissionGuide, onEscape: () => setShowPermissionGuide(false) })
 
   const { questions, answers, currentQuestionIndex, sessionId } = currentSession
 
@@ -88,7 +90,7 @@ export function Questions() {
       setToastType('info')
       setToastMessage('请求较慢，请稍候...')
       setToastVisible(true)
-    }, 30000)
+    }, 90000)
 
     try {
       setAnswer(currentQuestionIndex, currentAnswer)
@@ -496,6 +498,7 @@ export function Questions() {
       {/* Permission guide modal */}
       {showPermissionGuide && (
         <div
+          ref={permissionGuideRef}
           className={styles.permissionGuideModal}
           role="dialog"
           aria-modal="true"

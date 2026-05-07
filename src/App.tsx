@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
+import { LoadingSpinner } from './components/ui/LoadingSpinner'
 import { registerToastCallback, unregisterToastCallback } from './hooks/useDreamStore'
 import { Toast } from './components/ui/Toast'
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
@@ -14,6 +15,9 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary'
 import { PageErrorBoundary } from './components/PageErrorBoundary'
 import { ConfirmModal } from './components/ui/ConfirmModal'
+import { PWAInstallPrompt } from './components/PWAInstallPrompt'
+import { OfflineBanner } from './components/OfflineBanner'
+import { SWUpdatePrompt } from './components/SWUpdatePrompt'
 import { useDreamStore, ACHIEVEMENTS } from './hooks/useDreamStore'
 import { useAchievementSound } from './hooks/useAchievementSound'
 import { hasValidToken } from './utils/auth'
@@ -35,18 +39,23 @@ import { Notifications } from './pages/Notifications'
 import { Chat } from './pages/Chat'
 import { AdminRoute } from './components/AdminRoute'
 import { AdminLayout } from './components/AdminLayout'
-import { Dashboard } from './pages/admin/Dashboard'
-import { Stats } from './pages/admin/Stats'
-import { PendingPosts } from './pages/admin/PendingPosts'
-import { CommentManagement } from './pages/admin/CommentManagement'
-import { Highlights } from './pages/admin/Highlights'
-import { LibraryAssets } from './pages/admin/LibraryAssets'
 import { DemoExperience } from './pages/DemoExperience'
-import { StreamingEffectsDemo } from './pages/StreamingEffectsDemo'
-import { StreamingLayoutDemo } from './pages/StreamingLayoutDemo'
 import { Library } from './pages/Library'
 import { Collection } from './pages/Collection'
 import { Drafts } from './pages/Drafts'
+import { NotFound } from './pages/NotFound'
+
+// Lazy-loaded admin pages (less frequently accessed)
+const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })))
+const Stats = lazy(() => import('./pages/admin/Stats').then(m => ({ default: m.Stats })))
+const PendingPosts = lazy(() => import('./pages/admin/PendingPosts').then(m => ({ default: m.PendingPosts })))
+const CommentManagement = lazy(() => import('./pages/admin/CommentManagement').then(m => ({ default: m.CommentManagement })))
+const Highlights = lazy(() => import('./pages/admin/Highlights').then(m => ({ default: m.Highlights })))
+const LibraryAssets = lazy(() => import('./pages/admin/LibraryAssets').then(m => ({ default: m.LibraryAssets })))
+
+// Lazy-loaded demo pages (for streaming effects demo)
+const StreamingEffectsDemo = lazy(() => import('./pages/StreamingEffectsDemo').then(m => ({ default: m.StreamingEffectsDemo })))
+const StreamingLayoutDemo = lazy(() => import('./pages/StreamingLayoutDemo').then(m => ({ default: m.StreamingLayoutDemo })))
 
 // Page title mapping
 const PAGE_TITLES: Record<string, string> = {
@@ -85,6 +94,20 @@ function App() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
+
+  // PWA: Register Service Worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('[App] Service Worker registered:', registration.scope)
+        })
+        .catch((error) => {
+          console.error('[App] Service Worker registration failed:', error)
+        })
+    }
+  }, [])
 
   // Re-engagement: check if should show modal based on last active date
   useEffect(() => {
@@ -239,28 +262,29 @@ function App() {
               <PageErrorBoundary><ProtectedRoute><Chat /></ProtectedRoute></PageErrorBoundary>
             } />
             <Route path="/admin" element={
-              <PageErrorBoundary><AdminRoute><AdminLayout><Dashboard /></AdminLayout></AdminRoute></PageErrorBoundary>
+              <PageErrorBoundary><AdminRoute><AdminLayout><Suspense fallback={<LoadingSpinner />}><Dashboard /></Suspense></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
             <Route path="/admin/pending" element={
-              <PageErrorBoundary><AdminRoute><AdminLayout><PendingPosts /></AdminLayout></AdminRoute></PageErrorBoundary>
+              <PageErrorBoundary><AdminRoute><AdminLayout><Suspense fallback={<LoadingSpinner />}><PendingPosts /></Suspense></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
             <Route path="/admin/comments" element={
-              <PageErrorBoundary><AdminRoute><AdminLayout><CommentManagement /></AdminLayout></AdminRoute></PageErrorBoundary>
+              <PageErrorBoundary><AdminRoute><AdminLayout><Suspense fallback={<LoadingSpinner />}><CommentManagement /></Suspense></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
             <Route path="/admin/stats" element={
-              <PageErrorBoundary><AdminRoute><AdminLayout><Stats /></AdminLayout></AdminRoute></PageErrorBoundary>
+              <PageErrorBoundary><AdminRoute><AdminLayout><Suspense fallback={<LoadingSpinner />}><Stats /></Suspense></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
             <Route path="/admin/highlights" element={
-              <PageErrorBoundary><AdminRoute><AdminLayout><Highlights /></AdminLayout></AdminRoute></PageErrorBoundary>
+              <PageErrorBoundary><AdminRoute><AdminLayout><Suspense fallback={<LoadingSpinner />}><Highlights /></Suspense></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
             <Route path="/admin/library" element={
-              <PageErrorBoundary><AdminRoute><AdminLayout><LibraryAssets /></AdminLayout></AdminRoute></PageErrorBoundary>
+              <PageErrorBoundary><AdminRoute><AdminLayout><Suspense fallback={<LoadingSpinner />}><LibraryAssets /></Suspense></AdminLayout></AdminRoute></PageErrorBoundary>
             } />
             <Route path="/library" element={<PageErrorBoundary><Library /></PageErrorBoundary>} />
             <Route path="/collection/:id" element={<PageErrorBoundary><Collection /></PageErrorBoundary>} />
             <Route path="/drafts" element={<PageErrorBoundary><Drafts /></PageErrorBoundary>} />
-            <Route path="/streaming-demo" element={<PageErrorBoundary><StreamingEffectsDemo /></PageErrorBoundary>} />
-            <Route path="/layout-demo" element={<PageErrorBoundary><StreamingLayoutDemo /></PageErrorBoundary>} />
+            <Route path="/streaming-demo" element={<PageErrorBoundary><Suspense fallback={<LoadingSpinner />}><StreamingEffectsDemo /></Suspense></PageErrorBoundary>} />
+            <Route path="/layout-demo" element={<PageErrorBoundary><Suspense fallback={<LoadingSpinner />}><StreamingLayoutDemo /></Suspense></PageErrorBoundary>} />
+            <Route path="*" element={<PageErrorBoundary><NotFound /></PageErrorBoundary>} />
           </Routes>
           </GlobalErrorBoundary>
         </main>
@@ -294,6 +318,10 @@ function App() {
         type={toastType}
         onClose={() => setToastVisible(false)}
       />
+
+      <OfflineBanner />
+      <PWAInstallPrompt />
+      <SWUpdatePrompt />
     </div>
   )
 }

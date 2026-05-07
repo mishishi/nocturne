@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { storyFeedbackApi } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { Toast } from './ui/Toast'
 import { Button } from './ui/Button'
 import styles from './StoryFeedbackForm.module.css'
@@ -129,6 +130,8 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false, onSubmitted }: 
 
   const sentinelRef = useRef<HTMLDivElement>(null)
   const formRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const focusTrapRef = useFocusTrap<HTMLDivElement>({ enabled: isVisible, onEscape: () => setIsVisible(false) })
 
   const handleToastClose = useCallback(() => {
     setToastVisible(false)
@@ -323,15 +326,18 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false, onSubmitted }: 
 
       {/* Feedback form */}
       <div
-        ref={formRef}
+        ref={(node) => {
+          formRef.current = node
+          if (node) focusTrapRef.current = node
+        }}
         className={`${styles.container} ${isVisible ? styles.visible : ''}`}
         role="dialog"
-        aria-label="故事反馈"
-        aria-modal="false"
+        aria-modal="true"
+        aria-labelledby="feedback-title"
       >
         <div className={styles.card}>
           <div className={styles.header}>
-            <h3 className={styles.title}>分享你的反馈</h3>
+            <h3 className={styles.title} id="feedback-title">分享你的反馈</h3>
             <p className={styles.subtitle}>帮助我们优化梦境故事体验</p>
           </div>
 

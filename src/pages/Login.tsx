@@ -5,7 +5,6 @@ import { authApi, api } from '../services/api'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { setAuthToken } from '../utils/auth'
 import styles from './Login.module.css'
 
 export function Login() {
@@ -113,10 +112,8 @@ export function Login() {
       if (result.success && result.data?.user) {
         const user = result.data.user
         const token = result.data.token
-        // Store token as Cookie first so migrateSession can use it
-        if (token) {
-          setAuthToken(token)
-        }
+        // Token is stored via setUser (useDreamStore) which handles Cookie persistence
+        // Server also sets httpOnly Cookie via Set-Cookie header
 
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
@@ -134,7 +131,9 @@ export function Login() {
 
         setUser(user, token, guestOpenid ?? undefined)
         localStorage.setItem('yeelin_openid', user.openid)
-        navigate(user.isAdmin ? '/admin' : from, { replace: true })
+        // Respect 'from' if user came from a specific page, otherwise use role-based default
+        const destination = from !== '/' ? from : (user.isAdmin ? '/admin' : '/')
+        navigate(destination, { replace: true })
       } else {
         setError((!result.success ? result.error?.message : result.message) || '登录失败')
       }

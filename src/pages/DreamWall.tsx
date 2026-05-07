@@ -5,9 +5,11 @@ import { useDreamStore } from '../hooks/useDreamStore'
 import { storeDreamWallContext } from '../hooks/useDreamWallContext'
 import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
+import { EmptyState } from '../components/ui/EmptyState'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { FriendRequestButton } from '../components/FriendRequestButton'
 import { DreamWallSkeleton } from '../components/ui/Skeleton'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 import styles from './DreamWall.module.css'
 
 type TabType = 'all' | 'featured' | 'my' | 'friends'
@@ -38,6 +40,9 @@ export function DreamWall() {
   // Use ref to track page value and avoid stale closure in IntersectionObserver
   const pageRef = useRef(page)
   pageRef.current = page
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null)
 
   const loadPosts = useCallback(async (tab: TabType, pageNum: number, reset = false, keyword?: string) => {
     if (pageNum !== 1) {
@@ -317,6 +322,42 @@ export function DreamWall() {
     }
   }
 
+  const handleDeleteClick = (postId: string) => {
+    setDeletingPostId(postId)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deletingPostId) return
+
+    try {
+      const result = await wallApi.deletePost(deletingPostId)
+      if (result.success) {
+        setPosts(prev => prev.filter(p => p.id !== deletingPostId))
+        setToastType('success')
+        setToastMessage('删除成功')
+        setToastVisible(true)
+      } else {
+        setToastType('error')
+        setToastMessage('删除失败，请重试')
+        setToastVisible(true)
+      }
+    } catch (err) {
+      console.error('Failed to delete post:', err)
+      setToastType('error')
+      setToastMessage('删除失败，请重试')
+      setToastVisible(true)
+    } finally {
+      setShowDeleteConfirm(false)
+      setDeletingPostId(null)
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false)
+    setDeletingPostId(null)
+  }
+
   const handlePostClick = (post: DreamWallPost) => {
     console.log('[DreamWall] Post clicked:', {
       id: post.id,
@@ -510,44 +551,39 @@ export function DreamWall() {
               )}
             </div>
           ) : posts.length === 0 ? (
-            <div className={styles.empty}>
-              <div className={styles.emptyIcon}>
-                <svg viewBox="0 0 120 120" fill="none">
-                  <circle cx="60" cy="60" r="40" fill="url(#emptyMoonGrad)" opacity="0.3" />
-                  <path d="M60 25C42 25 30 40 30 60C30 80 42 95 60 95C48 95 40 80 40 60C40 40 48 25 60 25Z" fill="currentColor" opacity="0.6" />
-                  <defs>
-                    <radialGradient id="emptyMoonGrad" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="currentColor" />
-                      <stop offset="100%" stopColor="transparent" />
-                    </radialGradient>
-                  </defs>
-                </svg>
-              </div>
-              <h2 className={styles.emptyTitle}>
-                {searchQuery ? '没有找到匹配的梦境' : activeTab === 'my' ? '还没有发布' : activeTab === 'friends' && !user?.openid ? '登录后查看' : activeTab === 'friends' ? '关注的人还没有发布故事' : '暂无内容'}
-              </h2>
-              <p className={styles.emptyText}>
-                {searchQuery
-                  ? '换个关键词试试吧'
-                  : activeTab === 'my'
-                  ? '记录梦境后可以发布到这里'
-                  : activeTab === 'friends' && !user?.openid
-                  ? '登录后可查看关注好友的梦境'
-                  : activeTab === 'friends'
-                  ? '快去关注一些好友吧'
-                  : '成为第一个分享梦境的人'}
-              </p>
-              {activeTab === 'my' && (
-                <Button onClick={() => navigate('/dream')}>
-                  记录梦境
-                </Button>
-              )}
-              {activeTab === 'friends' && !user?.openid && (
-                <Button onClick={() => navigate('/login')}>
-                  登录
-                </Button>
-              )}
-            </div>
+            searchQuery ? (
+              <EmptyState
+                icon="search"
+                title="没有找到匹配的梦境"
+                description="换个关键词试试吧"
+              />
+            ) : activeTab === 'my' ? (
+              <EmptyState
+                icon="moon"
+                title="还没有发布"
+                description="记录梦境后可以发布到这里"
+                action={{ label: '记录梦境', onClick: () => navigate('/dream') }}
+              />
+            ) : activeTab === 'friends' && !user?.openid ? (
+              <EmptyState
+                icon="friends"
+                title="登录后查看"
+                description="登录后可查看关注好友的梦境"
+                action={{ label: '登录', onClick: () => navigate('/login') }}
+              />
+            ) : activeTab === 'friends' ? (
+              <EmptyState
+                icon="friends"
+                title="关注的人还没有发布故事"
+                description="快去关注一些好友吧"
+              />
+            ) : (
+              <EmptyState
+                icon="moon"
+                title="暂无内容"
+                description="成为第一个分享梦境的人"
+              />
+            )
           ) : (
             <div className={styles.postList}>
               {posts.map((post, index) => (
@@ -647,6 +683,23 @@ export function DreamWall() {
                     {user?.openid && post.openid !== user.openid && !post.isFriend && (
                       <FriendRequestButton friendOpenid={post.openid} />
                     )}
+                    {user?.openid && post.openid === user.openid && (
+                      <button
+                        className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteClick(post.id)
+                        }}
+                        aria-label="删除"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          <line x1="10" y1="11" x2="10" y2="17" />
+                          <line x1="14" y1="11" x2="14" y2="17" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </article>
               ))}
@@ -682,6 +735,17 @@ export function DreamWall() {
         visible={toastVisible}
         onClose={() => setToastVisible(false)}
         type={toastType}
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="删除帖子？"
+        message="删除后将无法恢复，确定要删除这篇帖子吗？"
+        confirmText="删除"
+        cancelText="取消"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        danger
       />
     </div>
   )

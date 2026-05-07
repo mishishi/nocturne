@@ -506,8 +506,9 @@ export function Story() {
             setToastMessage(result.data.reason)
             setToastVisible(true)
           }
-        } catch {
-          // Silently fail - already showed copy confirmation
+        } catch (err) {
+          console.error('[Story] Failed to log link share:', err)
+          // Silently fail - link copy confirmation was already shown
         }
       }
     })
@@ -604,7 +605,10 @@ export function Story() {
         setToastMessage(result.data.reason)
         setToastVisible(true)
       }
-    } catch {
+    } catch (err) {
+      console.error('[Story] Failed to interpret:', err)
+      setToastType('error')
+      setToastMessage('解读失败，请重试')
       setToastVisible(true)
     } finally {
       setIsInterpreting(false)
@@ -1296,7 +1300,9 @@ export function Story() {
                   setToastMessage(result.data.reason)
                   setToastVisible(true)
                 }
-              } catch {
+              } catch (err) {
+                console.error('[Story] Failed to log share:', err)
+                // Silently fail - poster was already saved successfully
               }
             }
           }}

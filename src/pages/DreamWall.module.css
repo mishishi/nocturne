@@ -479,6 +479,14 @@
   cursor: not-allowed;
 }
 
+.actionBtn.deleteBtn {
+  color: #e74c3c;
+}
+
+.actionBtn.deleteBtn:hover {
+  background: rgba(231, 76, 60, 0.1);
+}
+
 /* Load More */
 .loadMore {
   display: flex;

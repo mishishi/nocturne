@@ -150,40 +150,9 @@ function authHeaders(): HeadersInit {
   return token ? { 'Authorization': `Bearer ${token}` } : {}
 }
 
-// Types
-export interface User {
-  id: string
-  openid: string
-  nickname?: string
-  avatar?: string
-  phone?: string
-  isMember: boolean
-  isAdmin?: boolean
-  memberSince?: string
-  points: number
-  medals: string[]
-  consecutiveShares: number
-  lastShareDate?: string
-}
-
-export interface Friend {
-  id: string
-  friendId: string
-  nickname?: string
-  avatar?: string
-  isMember: boolean
-  memberSince?: string
-  friendsSince: string
-}
-
-export interface PendingRequest {
-  id: string
-  fromId?: string
-  toId?: string
-  nickname?: string
-  avatar?: string
-  createdAt: string
-}
+// Types - import from shared types and re-export for backwards compatibility
+export type { User, Friend } from '../types'
+import type { User, Friend } from '../types'
 
 // Friend system API response types (per spec)
 export interface FriendListItem {
@@ -913,6 +882,16 @@ export const wallApi = {
     const res = await fetchWithTimeout(`${API_BASE}/wall/highlights`)
     if (!res.ok) throw new Error(`获取精选失败: ${res.status}`)
     return res.json()
+  },
+
+  // Delete my post (需登录)
+  async deletePost(postId: string): Promise<ApiResponse<{ message: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/wall/${postId}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`删除失败: ${res.status}`)
+    return res.json()
   }
 }
 
@@ -1171,6 +1150,16 @@ export const messageApi = {
       headers: authHeaders()
     })
     if (!res.ok) throw new Error(`标记已读失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Delete a message (only sender can delete)
+  async deleteMessage(messageId: string): Promise<ApiResponse<{ message: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`删除消息失败: ${res.status}`)
     return res.json()
   }
 }

@@ -29,7 +29,7 @@
   z-index: 1;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .container {
     padding-top: var(--space-6);
   }

@@ -1,0 +1,151 @@
+/* ============================================
+   404 Not Found Page - Lost in Stars
+   ============================================ */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-night-deep);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Animated Stars Background */
+.stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  background: var(--color-moonlight);
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+  opacity: 0.5;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+}
+
+/* Large 404 Code */
+.code {
+  font-family: 'Georgia', serif;
+  font-size: clamp(6rem, 20vw, 12rem);
+  font-weight: bold;
+  color: transparent;
+  background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-moonlight) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  opacity: 0.15;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  animation: floatCode 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes floatCode {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50% { transform: translate(-50%, -50%) translateY(-10px); }
+}
+
+/* Moon Illustration */
+.moon {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 1.5rem;
+  animation: moonFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(255, 248, 231, 0.3));
+}
+
+@keyframes moonFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+/* Content */
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+.title {
+  font-family: 'Noto Serif SC', 'Georgia', serif;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 1rem;
+  letter-spacing: 0.05em;
+}
+
+.description {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+  margin: 0 0 2rem;
+  max-width: 400px;
+}
+
+/* Action Buttons */
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Floating Decorative Elements */
+.floatingElements {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.floatingIcon {
+  position: absolute;
+  font-size: 1.5rem;
+  animation: floatIcon 5s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-5px) rotate(5deg); }
+  75% { transform: translateY(5px) rotate(-5deg); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .moon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+}

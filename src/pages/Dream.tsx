@@ -96,6 +96,7 @@ export function Dream() {
   const [interimTranscript, setInterimTranscript] = useState('')
   const [pendingTranscript, setPendingTranscript] = useState('')
   const [showTranscriptConfirm, setShowTranscriptConfirm] = useState(false)
+  const [showClearDraftConfirm, setShowClearDraftConfirm] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastVisible, setToastVisible] = useState(false)
   const lastSavedRef = useRef<string>(currentSession.dreamText)
@@ -115,21 +116,49 @@ export function Dream() {
     key: i
   }))
 
-  // Check if this is a new dream request - clear old draft if so
+  // Check if this is a new dream request - show confirmation if there's existing content
   useEffect(() => {
     if (searchParams.get('new') === '1') {
-      localStorage.removeItem(DRAFT_KEY)
-      // Reset step to emotion for new dream
-      setStep('emotion')
-      setSelectedEmotion(null)
-      setTransitionEmotion(null)
-      setDreamElementsLocal([])
-      setError('')
-      setIsNetworkError(false)
-      // Also reset store's dreamText to avoid showing old content
-      setDreamText('')
+      // Check if there's content that would be lost
+      const hasContent = currentSession.dreamText.length > 0 ||
+        selectedEmotion !== null ||
+        dreamElements.length > 0
+
+      if (hasContent) {
+        // Show confirmation instead of immediately clearing
+        setShowClearDraftConfirm(true)
+      } else {
+        // No content, safe to clear immediately
+        localStorage.removeItem(DRAFT_KEY)
+        setStep('emotion')
+        setSelectedEmotion(null)
+        setTransitionEmotion(null)
+        setDreamElementsLocal([])
+        setError('')
+        setIsNetworkError(false)
+        setDreamText('')
+      }
     }
   }, []) // Run once on mount
+
+  const handleConfirmClearDraft = () => {
+    localStorage.removeItem(DRAFT_KEY)
+    setStep('emotion')
+    setSelectedEmotion(null)
+    setTransitionEmotion(null)
+    setDreamElementsLocal([])
+    setError('')
+    setIsNetworkError(false)
+    setDreamText('')
+    setShowClearDraftConfirm(false)
+  }
+
+  const handleCancelClearDraft = () => {
+    setShowClearDraftConfirm(false)
+    // Remove the 'new' param from URL without navigating
+    const newUrl = window.location.pathname
+    window.history.replaceState({}, '', newUrl)
+  }
 
   // Restore draft on mount
   useEffect(() => {
@@ -473,6 +502,7 @@ export function Dream() {
                   tabIndex={focusedEmotionIndex === index || (focusedEmotionIndex === -1 && index === 0) ? 0 : -1}
                   role="radio"
                   aria-checked={selectedEmotion === tag.id}
+                  aria-label={tag.label}
                   style={{
                     '--tag-color': tag.color,
                     animationDelay: `${index * 0.05}s`
@@ -706,6 +736,18 @@ export function Dream() {
           cancelText="取消"
           onConfirm={handleConfirmTranscript}
           onCancel={handleCancelTranscript}
+        />
+
+        {/* Confirm modal for clearing draft */}
+        <ConfirmModal
+          isOpen={showClearDraftConfirm}
+          title="确定要开始新梦境吗？"
+          message="当前有未保存的内容，开始新梦境将清除这些内容。"
+          confirmText="确定"
+          cancelText="取消"
+          onConfirm={handleConfirmClearDraft}
+          onCancel={handleCancelClearDraft}
+          danger
         />
 
         {/* Toast for browser unsupported */}

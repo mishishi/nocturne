@@ -4,6 +4,8 @@ import { messageApi, Conversation, Message, friendApi, FriendListItem } from '..
 import { ChatBubble } from '../components/ChatBubble'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { Toast } from '../components/ui/Toast'
+import { EmptyState } from '../components/ui/EmptyState'
+import { ConfirmModal } from '../components/ui/ConfirmModal'
 import styles from './Chat.module.css'
 
 export function Chat() {
@@ -27,6 +29,8 @@ export function Chat() {
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [mobileChatOpen, setMobileChatOpen] = useState(false)
   const [pendingMessageId, setPendingMessageId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Message | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -41,6 +45,9 @@ export function Chat() {
       }
     } catch (err) {
       console.error('Failed to load conversations:', err)
+      setToastType('error')
+      setToastMessage('加载会话失败')
+      setToastVisible(true)
     }
   }, [])
 
@@ -53,6 +60,9 @@ export function Chat() {
       }
     } catch (err) {
       console.error('Failed to load friends:', err)
+      setToastType('error')
+      setToastMessage('加载好友列表失败')
+      setToastVisible(true)
     }
   }, [])
 
@@ -218,6 +228,36 @@ export function Chat() {
     }
   }
 
+  const handleDeleteClick = (message: Message) => {
+    setDeleteTarget(message)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+
+    try {
+      await messageApi.deleteMessage(deleteTarget.id)
+      setMessages(prev => prev.filter(m => m.id !== deleteTarget.id))
+      setToastType('success')
+      setToastMessage('消息已删除')
+      setToastVisible(true)
+    } catch (err) {
+      console.error('Failed to delete message:', err)
+      setToastType('error')
+      setToastMessage('删除失败，请重试')
+      setToastVisible(true)
+    } finally {
+      setShowDeleteConfirm(false)
+      setDeleteTarget(null)
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false)
+    setDeleteTarget(null)
+  }
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
@@ -280,10 +320,11 @@ export function Chat() {
                 <p>加载中...</p>
               </div>
             ) : allContacts.length === 0 ? (
-              <div className={styles.empty}>
-                <p>暂无消息</p>
-                <p style={{ fontSize: '12px', marginTop: '8px' }}>去添加好友开始聊天吧</p>
-              </div>
+              <EmptyState
+                icon="inbox"
+                title="暂无消息"
+                description="去添加好友开始聊天吧"
+              />
             ) : (
               allContacts.map(contact => (
                 <button
@@ -391,6 +432,7 @@ export function Chat() {
                     isMine={message.isMine}
                     timestamp={formatTime(message.createdAt)}
                     sending={message.id === pendingMessageId}
+                    onDelete={() => handleDeleteClick(message)}
                   />
                 ))}
                 <div ref={messagesEndRef} />
@@ -442,6 +484,17 @@ export function Chat() {
         visible={toastVisible}
         onClose={() => setToastVisible(false)}
         type={toastType}
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="删除消息"
+        message="确定要删除这条消息吗？删除后将无法恢复。"
+        confirmText="删除"
+        cancelText="取消"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        danger
       />
     </div>
   )

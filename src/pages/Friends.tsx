@@ -6,6 +6,7 @@ import { Toast } from '../components/ui/Toast'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { FriendsSkeleton } from '../components/ui/Skeleton'
+import { EmptyState } from '../components/ui/EmptyState'
 import styles from './Friends.module.css'
 
 export function Friends() {
@@ -323,15 +324,15 @@ export function Friends() {
               {activeTab === 'list' && (
                 <div className={styles.friendList}>
                   {friends.length === 0 ? (
-                    <div className={styles.empty}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className={styles.emptyIcon}>
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                      </svg>
-                      <p className={styles.emptyText}>还没有好友</p>
-                    </div>
+                    <EmptyState
+                      icon="friends"
+                      title="还没有好友"
+                      description="搜索用户来添加好友吧"
+                      action={{
+                        label: '搜索用户',
+                        onClick: () => setActiveTab('search')
+                      }}
+                    />
                   ) : (
                     friends.map((friend) => (
                       <div
@@ -380,7 +381,11 @@ export function Friends() {
               {activeTab === 'requests' && (
                 <div className={styles.requestSection}>
                   {requests.length === 0 ? (
-                    <p className={styles.noRequests}>暂无好友请求</p>
+                    <EmptyState
+                      icon="friends"
+                      title="暂无好友请求"
+                      description="收到的好友请求将显示在这里"
+                    />
                   ) : (
                     requests.map((request) => (
                       <div key={request.id} className={styles.requestCard}>
@@ -426,15 +431,11 @@ export function Friends() {
               {activeTab === 'sent' && (
                 <div className={styles.requestSection}>
                   {sentRequests.length === 0 ? (
-                    <div className={styles.empty}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className={styles.emptyIcon}>
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="8.5" cy="7" r="4"/>
-                        <line x1="20" y1="8" x2="20" y2="14"/>
-                        <line x1="23" y1="11" x2="17" y2="11"/>
-                      </svg>
-                      <p className={styles.emptyText}>暂无发出的请求</p>
-                    </div>
+                    <EmptyState
+                      icon="friends"
+                      title="暂无发出的请求"
+                      description="发出的好友请求将显示在这里"
+                    />
                   ) : (
                     sentRequests.map((request) => (
                       <div key={request.id} className={styles.requestCard}>
@@ -521,7 +522,11 @@ export function Friends() {
                       ))}
                     </div>
                   ) : searchQuery && !isSearching ? (
-                    <p className={styles.noRequests}>没有找到匹配的用户</p>
+                    <EmptyState
+                      icon="search"
+                      title="没有找到匹配的用户"
+                      description="试试其他关键词"
+                    />
                   ) : null}
                 </div>
               )}

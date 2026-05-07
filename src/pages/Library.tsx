@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { libraryApi, LibraryCollection } from '../services/api'
+import { Toast } from '../components/ui/Toast'
+import { EmptyState } from '../components/ui/EmptyState'
 import styles from './Library.module.css'
 
 // 主题配置
@@ -49,6 +51,9 @@ export function Library() {
   const [loading, setLoading] = useState(true)
   const [collections, setCollections] = useState<Collection[]>([])
   const [readingProgress] = useState<ReadingProgress | null>(null)
+  const [toastVisible, setToastVisible] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
   useEffect(() => {
     async function fetchCollections() {
@@ -73,6 +78,9 @@ export function Library() {
       } catch (error) {
         console.error('获取合集列表失败:', error)
         setCollections([])
+        setToastType('error')
+        setToastMessage('加载失败，请检查网络连接')
+        setToastVisible(true)
       } finally {
         setLoading(false)
       }
@@ -158,18 +166,17 @@ export function Library() {
 
         {/* Collection Grid */}
         {loading ? (
-          <div className={styles.skeleton}>
+          <div className={styles.skeleton} role="status" aria-live="polite" aria-label="正在加载">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className={styles.skeletonCard} />
             ))}
           </div>
         ) : filteredCollections.length === 0 ? (
-          <div className={styles.empty}>
-            <svg className={styles.emptyIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <p className={styles.emptyText}>暂无相关合集</p>
-          </div>
+          <EmptyState
+            icon="document"
+            title="暂无相关合集"
+            description="稍后再来看看有什么新内容吧"
+          />
         ) : (
           <div className={styles.grid}>
             {filteredCollections.map(collection => (
@@ -206,6 +213,13 @@ export function Library() {
           </div>
         )}
       </div>
+
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onClose={() => setToastVisible(false)}
+      />
     </div>
   )
 }

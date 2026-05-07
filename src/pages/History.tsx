@@ -36,6 +36,8 @@ export function History() {
   const [swipedItemId, setSwipedItemId] = useState<string | null>(null)
   const [swipeOffset, setSwipeOffset] = useState(0)
   const [showSwipeHint, setShowSwipeHint] = useState(false)
+  const [swipeDeleteItem, setSwipeDeleteItem] = useState<typeof history[0] | null>(null)
+  const [showSwipeDeleteConfirm, setShowSwipeDeleteConfirm] = useState(false)
   const touchStartX = useRef<number>(0)
   const touchStartY = useRef<number>(0)
 
@@ -192,6 +194,18 @@ export function History() {
   }
 
   const handleSwipeDelete = (item: typeof history[0]) => {
+    // Store item for confirmation and show dialog
+    setSwipeDeleteItem(item)
+    setShowSwipeDeleteConfirm(true)
+    setSwipedItemId(null)
+    setSwipeOffset(0)
+  }
+
+  const confirmSwipeDelete = () => {
+    if (!swipeDeleteItem) return
+
+    const item = swipeDeleteItem
+
     // Clear any existing undo timeout
     if (undoTimeoutRef.current) {
       clearTimeout(undoTimeoutRef.current)
@@ -202,8 +216,6 @@ export function History() {
 
     // Start delete animation
     setDeletingId(item.id!)
-    setSwipedItemId(null)
-    setSwipeOffset(0)
 
     // Actually remove after animation
     setTimeout(() => {
@@ -221,6 +233,14 @@ export function History() {
         setToastVisible(false)
       }, UNDO_TIMEOUT)
     }, 300)
+
+    setShowSwipeDeleteConfirm(false)
+    setSwipeDeleteItem(null)
+  }
+
+  const cancelSwipeDelete = () => {
+    setShowSwipeDeleteConfirm(false)
+    setSwipeDeleteItem(null)
   }
 
   const handleUndoDelete = () => {
@@ -564,8 +584,8 @@ export function History() {
             </button>
             {multiSelectMode && selectedIds.size > 0 && (
               <>
-                <button className={styles.selectAllBtn} onClick={selectAll}>全选</button>
-                <button className={styles.deselectAllBtn} onClick={deselectAll}>取消全选</button>
+                <button className={styles.selectAllBtn} onClick={selectAll} aria-label="全选">全选</button>
+                <button className={styles.deselectAllBtn} onClick={deselectAll} aria-label="取消全选">取消全选</button>
               </>
             )}
           </div>
@@ -574,7 +594,7 @@ export function History() {
         {/* Batch Delete Bar */}
         {multiSelectMode && selectedIds.size > 0 && (
           <div className={styles.batchDeleteBar}>
-            <button className={styles.doneMultiSelectBtn} onClick={toggleMultiSelect}>完成</button>
+            <button className={styles.doneMultiSelectBtn} onClick={toggleMultiSelect} aria-label="完成批量选择">完成</button>
             <span className={styles.selectedCount}>已选择 {selectedIds.size} 项</span>
             <Button variant="ghost" size="sm" onClick={confirmBatchDelete} className={styles.batchDeleteBtn}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
@@ -886,6 +906,17 @@ export function History() {
           </>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showSwipeDeleteConfirm}
+        title="滑动删除"
+        message="确定要删除这个梦境故事吗？删除后将无法恢复。"
+        confirmText="删除"
+        cancelText="取消"
+        onConfirm={confirmSwipeDelete}
+        onCancel={cancelSwipeDelete}
+        danger
+      />
 
       <ConfirmModal
         isOpen={deleteConfirmId !== null}

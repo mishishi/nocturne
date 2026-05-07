@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '../services/api'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import styles from './DreamInterpretationModal.module.css'
 
 interface DreamInterpretationModalProps {
@@ -19,6 +20,8 @@ export function DreamInterpretationModal({ interpretation, sessionId, personalit
   const [selectedRating, setSelectedRating] = useState<boolean | null>(null)
   const [feedbackComment, setFeedbackComment] = useState('')
   const [existingFeedback, setExistingFeedback] = useState<{ isAccurate: boolean; comment?: string } | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const focusTrapRef = useFocusTrap<HTMLDivElement>({ enabled: true, onEscape: onClose })
 
   // Check if user already submitted feedback
   useEffect(() => {
@@ -66,13 +69,20 @@ export function DreamInterpretationModal({ interpretation, sessionId, personalit
 
   return createPortal(
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.modal}
+        ref={focusTrapRef}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="interpretation-title"
+      >
         <div className={styles.header}>
-          <h3 className={styles.title}>
+          <h3 className={styles.title} id="interpretation-title">
             <span className={styles.titleIcon}>🌙</span>
             梦境解读
           </h3>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="关闭">
+          <button ref={closeButtonRef} className={styles.closeBtn} onClick={onClose} aria-label="关闭">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>

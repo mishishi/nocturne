@@ -1,20 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { setAuthToken, clearAuthToken } from '../utils/auth'
+import type { User } from '../types'
 
-export interface User {
-  id: string
-  openid: string
-  nickname?: string
-  avatar?: string
-  phone?: string
-  isMember: boolean
-  memberSince?: string
-  points: number
-  medals: string[]
-  consecutiveShares: number
-  lastShareDate?: string
-}
+export { type User }
 
 interface AuthState {
   user: User | null

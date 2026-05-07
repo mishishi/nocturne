@@ -389,12 +389,15 @@ export default async function dreamWallRoutes(fastify) {
         },
         orderBy: { createdAt: 'desc' },
         take: 5,
-        include: {
-          // Include wall post data
+        select: {
+          id: true,
+          wallId: true,
+          createdAt: true
         }
       })
 
-      const wallIds = highlights.map(h => h.wallId)
+      // Filter out any invalid wallIds
+      const wallIds = highlights.map(h => h.wallId).filter(Boolean)
 
       if (wallIds.length === 0) {
         return res.send(successResponse({ highlights: [], count: 0 }))
@@ -404,7 +407,17 @@ export default async function dreamWallRoutes(fastify) {
         where: {
           id: { in: wallIds }
         },
-        include: {
+        select: {
+          id: true,
+          sessionId: true,
+          openid: true,
+          nickname: true,
+          avatar: true,
+          storyTitle: true,
+          storySnippet: true,
+          likeCount: true,
+          commentCount: true,
+          createdAt: true,
           likes: { select: { openid: true } },
           favorites: { select: { openid: true } },
           session: { select: { dreamFragment: true } }
@@ -971,6 +984,42 @@ export default async function dreamWallRoutes(fastify) {
       })
       return successResponse({ favorited: true })
     }
+  })
+
+  // DELETE /api/wall/:postId - 删除我发布的帖子（需登录）
+  fastify.delete('/wall/:postId', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { postId } = req.params
+
+    // Get authenticated user
+    const tokenUser = await authService.getUser(req.userId)
+    if (!tokenUser) {
+      return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
+    }
+
+    // Find the post
+    const post = await prisma.dreamWall.findUnique({
+      where: { id: postId }
+    })
+
+    if (!post) {
+      return res.status(404).send(errorResponse('帖子不存在', 'NOT_FOUND'))
+    }
+
+    // Check ownership
+    if (post.openid !== tokenUser.openid) {
+      return res.status(403).send(errorResponse('无权删除他人的帖子', 'FORBIDDEN'))
+    }
+
+    // Delete the post (cascade will handle related likes, favorites, comments)
+    await prisma.dreamWall.delete({
+      where: { id: postId }
+    })
+
+    return successResponse({ message: '删除成功' })
   })
 
   // GET /api/wall/favorites/story - 获取我收藏的故事列表（需登录）

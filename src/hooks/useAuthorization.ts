@@ -18,16 +18,6 @@ export function useIsAuthor(resource: AuthorableResource | null): boolean {
     const authorOpenid = resource?.author?.openid ?? resource?.authorOpenid ?? undefined
     const isAuthor = authorId === user.id || authorOpenid === user.openid
 
-    console.log('[useIsAuthor] debug:', {
-      'resource?.authorOpenid': resource?.authorOpenid,
-      'resource?.author?.openid': resource?.author?.openid,
-      'user.openid': user.openid,
-      'user.id': user.id,
-      authorId,
-      authorOpenid,
-      isAuthor
-    })
-
     return isAuthor
   }, [user, resource])
 

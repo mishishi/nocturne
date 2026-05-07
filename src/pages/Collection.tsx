@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { libraryApi, LibraryCollectionDetail, LibraryEpisode } from '../services/api'
+import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Collection.module.css'
 
 // 主题 emoji 映射
@@ -87,6 +88,15 @@ export function Collection() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: '首页', href: '/' },
+            { label: '图书馆', href: '/library' },
+            { label: collection.title }
+          ]}
+        />
+
         {/* Back Button */}
         <button className={styles.back} onClick={() => navigate('/library')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

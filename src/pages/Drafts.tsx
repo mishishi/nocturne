@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
+import { EmptyState } from '../components/ui/EmptyState'
 import styles from './Drafts.module.css'
 
 // Status labels
@@ -149,20 +150,15 @@ export function Drafts() {
             </div>
           </div>
         ) : (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <svg viewBox="0 0 48 48" fill="none">
-                <rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" strokeWidth="2"/>
-                <path d="M16 8V12M32 8V12M8 20H40" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M16 28H32M16 34H24" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <p className={styles.emptyTitle}>暂无草稿</p>
-            <p className={styles.emptyDesc}>开始记录一个新的梦境吧</p>
-            <Button onClick={() => navigate('/dream')} className={styles.startBtn}>
-              开始记录
-            </Button>
-          </div>
+          <EmptyState
+            icon="document"
+            title="暂无草稿"
+            description="开始记录一个新的梦境吧"
+            action={{
+              label: '开始记录',
+              onClick: () => navigate('/dream')
+            }}
+          />
         )}
 
         {/* Action buttons */}
