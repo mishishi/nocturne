@@ -102,3 +102,51 @@ export function StoryContentSkeleton() {
     </div>
   )
 }
+
+export function HistorySkeleton() {
+  return (
+    <div className={styles.historySkeleton} role="status" aria-live="polite" aria-label="正在加载历史记录" aria-busy="true">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className={styles.historyCardSkeleton}>
+          <div className={styles.historyCardHeader}>
+            <div className={styles.historyCardMeta}>
+              <Skeleton variant="text" className={styles.historyCardDate} />
+              <Skeleton variant="title" className={styles.historyCardTitle} />
+            </div>
+          </div>
+          <Skeleton variant="line" className={styles.historyCardPreview} />
+          <Skeleton variant="line" className={styles.historyCardPreview} />
+          <Skeleton variant="line" className={styles.historyCardPreviewShort} />
+          <div className={styles.historyCardActions}>
+            <Skeleton variant="line" className={styles.historyActionBtn} />
+            <Skeleton variant="line" className={styles.historyActionBtn} />
+            <Skeleton variant="line" className={styles.historyActionBtn} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function DraftsSkeleton() {
+  return (
+    <div className={styles.draftsSkeleton} role="status" aria-live="polite" aria-label="正在加载草稿" aria-busy="true">
+      <div className={styles.draftCardSkeleton}>
+        <div className={styles.draftCardHeader}>
+          <Skeleton variant="text" className={styles.draftStatus} />
+          <Skeleton variant="text" className={styles.draftDate} />
+        </div>
+        <div className={styles.draftCardBody}>
+          <Skeleton variant="title" className={styles.draftTitle} />
+          <Skeleton variant="line" className={styles.draftPreview} />
+          <Skeleton variant="line" className={styles.draftPreview} />
+          <Skeleton variant="line" className={styles.draftPreviewShort} />
+        </div>
+        <div className={styles.draftCardActions}>
+          <Skeleton variant="line" className={styles.draftActionBtn} />
+          <Skeleton variant="line" className={styles.draftActionBtn} />
+        </div>
+      </div>
+    </div>
+  )
+}

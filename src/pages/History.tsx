@@ -4,6 +4,8 @@ import { useDreamStore, DreamSession, DREAM_TAGS } from '../hooks/useDreamStore'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
+import { EmptyState } from '../components/ui/EmptyState'
+import { HistorySkeleton } from '../components/ui/Skeleton'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamWeather } from '../components/DreamWeather'
 import { api } from '../services/api'
@@ -585,44 +587,18 @@ export function History() {
         )}
 
         {/* History List or Empty State */}
-        {history.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Background stars */}
-                <circle cx="20" cy="25" r="1.5" fill="currentColor" opacity="0.3" />
-                <circle cx="95" cy="20" r="1" fill="currentColor" opacity="0.4" />
-                <circle cx="100" cy="80" r="1.5" fill="currentColor" opacity="0.3" />
-                <circle cx="15" cy="90" r="1" fill="currentColor" opacity="0.4" />
-                <circle cx="50" cy="10" r="1" fill="currentColor" opacity="0.3" />
-                <circle cx="75" cy="105" r="1.5" fill="currentColor" opacity="0.3" />
-                {/* Moon glow */}
-                <circle cx="60" cy="55" r="30" fill="url(#moonGlow)" opacity="0.15" />
-                {/* Moon crescent */}
-                <path d="M60 25C45 25 35 37 35 55C35 73 45 85 60 85C48 85 40 73 40 55C40 37 48 25 60 25Z" fill="currentColor" opacity="0.8" />
-                {/* Cloud wisps */}
-                <path d="M25 70C25 70 30 65 38 68C46 71 50 78 55 75" stroke="currentColor" strokeWidth="1.5" opacity="0.2" strokeLinecap="round" />
-                <path d="M70 90C70 90 78 85 85 90C92 95 95 102 100 100" stroke="currentColor" strokeWidth="1.5" opacity="0.2" strokeLinecap="round" />
-                {/* Z's for dreaming */}
-                <text x="78" y="35" fontSize="12" fill="currentColor" opacity="0.4" fontFamily="var(--font-display)">z</text>
-                <text x="88" y="25" fontSize="10" fill="currentColor" opacity="0.3" fontFamily="var(--font-display)">z</text>
-                <text x="95" y="18" fontSize="8" fill="currentColor" opacity="0.2" fontFamily="var(--font-display)">z</text>
-                <defs>
-                  <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="currentColor" />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-                </defs>
-              </svg>
-            </div>
-            <h2 className={styles.emptyTitle}>暂无记录</h2>
-            <p className={styles.emptyText}>
-              {['月光落在枕边，梦正在酝酿', '星河入梦前，万籁皆寂', '今夜的月色，值得一个梦', '在醒与睡之间，故事正在萌发', '每一个梦境，都是夜的礼物'][new Date().getDay() % 5]}
-            </p>
-            <Link to="/dream">
-              <Button size="lg">记录你的第一个梦</Button>
-            </Link>
-          </div>
+        {isSyncing && history.length === 0 ? (
+          <HistorySkeleton />
+        ) : history.length === 0 ? (
+          <EmptyState
+            icon="moon"
+            title="暂无记录"
+            description="月光落在枕边，梦正在酝酿"
+            action={{
+              label: '记录你的第一个梦',
+              onClick: () => navigate('/dream')
+            }}
+          />
         ) : (
           <>
             {/* Swipe hint for first-time users */}

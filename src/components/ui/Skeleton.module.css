@@ -263,3 +263,140 @@
   width: 60%;
   border-radius: var(--radius-sm);
 }
+
+/* History Skeleton */
+.historySkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.historyCardSkeleton {
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.historyCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.historyCardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.historyCardDate {
+  height: 0.75rem;
+  width: 80px;
+  border-radius: var(--radius-sm);
+}
+
+.historyCardTitle {
+  height: 1.125rem;
+  width: 50%;
+  border-radius: var(--radius-sm);
+}
+
+.historyCardPreview {
+  height: 0.875rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+}
+
+.historyCardPreview:nth-child(1) { width: 100%; }
+.historyCardPreview:nth-child(2) { width: 90%; }
+.historyCardPreviewShort {
+  height: 0.875rem;
+  width: 60%;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-4);
+}
+
+.historyCardActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.historyActionBtn {
+  height: 1.75rem;
+  width: 4rem;
+  border-radius: var(--radius-md);
+}
+
+/* Drafts Skeleton */
+.draftsSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.draftCardSkeleton {
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.draftCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.draftStatus {
+  height: 1rem;
+  width: 60px;
+  border-radius: var(--radius-sm);
+}
+
+.draftDate {
+  height: 0.75rem;
+  width: 100px;
+  border-radius: var(--radius-sm);
+}
+
+.draftCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.draftTitle {
+  height: 1.25rem;
+  width: 65%;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+}
+
+.draftPreview {
+  height: 0.875rem;
+  border-radius: var(--radius-sm);
+}
+
+.draftPreview:nth-child(1) { width: 100%; }
+.draftPreview:nth-child(2) { width: 85%; }
+.draftPreviewShort {
+  height: 0.875rem;
+  width: 50%;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-4);
+}
+
+.draftCardActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.draftActionBtn {
+  height: 1.75rem;
+  width: 4rem;
+  border-radius: var(--radius-md);
+}
