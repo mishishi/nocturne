@@ -9,6 +9,7 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
 import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
+import { usePushNotification } from '../hooks/usePushNotification'
 import { shareApi, UserStats, checkInApi, api, wallApi, type DreamWallPost } from '../services/api'
 import styles from './Profile.module.css'
 
@@ -40,6 +41,7 @@ const formatStatValue = (value: number | null): string => {
 export function Profile() {
   const navigate = useNavigate()
   const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus, setHistory } = useDreamStore()
+  const { permission, isSubscribed, reminderEnabled, reminderTime, isSupported, subscribe, unsubscribe, toggleReminder, updateReminderTime } = usePushNotification()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
@@ -633,6 +635,66 @@ export function Profile() {
             </div>
           </div>
         </div>
+
+        {/* Push Notifications */}
+        {isSupported && (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>消息通知</h2>
+            <div className={styles.settingsList}>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>推送通知</span>
+                  <span className={styles.settingDesc}>
+                    {permission === 'denied' ? '已被拒绝，请在浏览器设置中开启' :
+                     permission === 'granted' ? (isSubscribed ? '已订阅' : '未订阅') : '接收评论、好友请求等通知'}
+                  </span>
+                </div>
+                {permission === 'denied' ? (
+                  <Button variant="ghost" size="sm" disabled>已拒绝</Button>
+                ) : isSubscribed ? (
+                  <Button variant="ghost" size="sm" onClick={unsubscribe}>取消订阅</Button>
+                ) : (
+                  <Button variant="ghost" size="sm" onClick={subscribe}>订阅</Button>
+                )}
+              </div>
+
+              {isSubscribed && (
+                <>
+                  <div className={styles.settingItem}>
+                    <div className={styles.settingInfo}>
+                      <span className={styles.settingLabel}>每日提醒</span>
+                      <span className={styles.settingDesc}>设定时间提醒你记录梦境</span>
+                    </div>
+                    <button
+                      className={`${styles.toggle} ${reminderEnabled ? styles.toggleActive : ''}`}
+                      onClick={() => toggleReminder(!reminderEnabled)}
+                      role="switch"
+                      aria-checked={reminderEnabled}
+                    >
+                      <span className={styles.toggleThumb} />
+                    </button>
+                  </div>
+
+                  {reminderEnabled && (
+                    <div className={styles.settingItem}>
+                      <div className={styles.settingInfo}>
+                        <span className={styles.settingLabel}>提醒时间</span>
+                        <span className={styles.settingDesc}>每天 {reminderTime} 提醒</span>
+                      </div>
+                      <input
+                        type="time"
+                        value={reminderTime}
+                        onChange={(e) => updateReminderTime(e.target.value)}
+                        className={styles.timeInput}
+                        aria-label="设置提醒时间"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Settings */}
         <div className={styles.section}>

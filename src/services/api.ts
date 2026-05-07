@@ -1784,3 +1784,53 @@ export const adminLibraryApi = {
     return res.json()
   }
 }
+
+// Push notification API
+export const pushApi = {
+  // 获取订阅状态
+  async getStatus(): Promise<ApiResponse<{ subscribed: boolean; endpoint?: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/push/status`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`获取订阅状态失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 订阅推送通知 (发送 subscription 对象)
+  async subscribe(subscription: PushSubscriptionJSON): Promise<ApiResponse<{ message: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/push/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify(subscription)
+    })
+    if (!res.ok) throw new Error(`订阅失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 取消订阅
+  async unsubscribe(endpoint: string): Promise<ApiResponse<{ message: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/push/unsubscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify({ endpoint })
+    })
+    if (!res.ok) throw new Error(`取消订阅失败: ${res.status}`)
+    return res.json()
+  },
+
+  // 发送测试通知
+  async sendTest(): Promise<ApiResponse<{ message: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/push/test`, {
+      method: 'POST',
+      headers: authHeaders()
+    })
+    if (!res.ok) throw new Error(`发送测试通知失败: ${res.status}`)
+    return res.json()
+  }
+}

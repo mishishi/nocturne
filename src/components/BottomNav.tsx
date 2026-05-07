@@ -73,7 +73,7 @@ const NAV_ITEMS = [
 ]
 
 interface BottomNavProps {
-  onDraftConfirm?: () => void
+  onDraftConfirm?: () => void // Deprecated - kept for backwards compatibility
 }
 
 export function BottomNav({ onDraftConfirm }: BottomNavProps) {
@@ -116,17 +116,17 @@ export function BottomNav({ onDraftConfirm }: BottomNavProps) {
 
       {/* Floating Action Button for recording */}
       {hasDraft ? (
-        <button
+        <Link
+          to="/drafts"
           className={`${styles.fab} ${styles.fabHasDraft}`}
-          aria-label="继续编辑梦境草稿"
-          onClick={onDraftConfirm}
+          aria-label="查看草稿"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
           </svg>
           <span className={styles.draftIndicator} />
-        </button>
+        </Link>
       ) : (
         <Link
           to="/dream?new=1"

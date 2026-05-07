@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { registerToastCallback, unregisterToastCallback } from './hooks/useDreamStore'
 import { Toast } from './components/ui/Toast'
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigate, ScrollRestoration } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { MobileHeader } from './components/MobileHeader'
 import { BottomNav } from './components/BottomNav'
@@ -45,6 +45,7 @@ import { StreamingEffectsDemo } from './pages/StreamingEffectsDemo'
 import { StreamingLayoutDemo } from './pages/StreamingLayoutDemo'
 import { Library } from './pages/Library'
 import { Collection } from './pages/Collection'
+import { Drafts } from './pages/Drafts'
 
 // Page title mapping
 const PAGE_TITLES: Record<string, string> = {
@@ -68,7 +69,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/stats': '数据统计 - 管理后台 - 夜棂',
   '/admin/library': '图书馆 - 管理后台 - 夜棂',
   '/library': '梦境图书馆 - 夜棂',
-  '/collection': '合集详情 - 夜棂'
+  '/collection': '合集详情 - 夜棂',
+  '/drafts': '草稿箱 - 夜棂'
 }
 
 function App() {
@@ -169,6 +171,20 @@ function App() {
     return () => unregisterToastCallback()
   }, [])
 
+  // Register Service Worker for push notifications
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(
+        (registration) => {
+          console.log('[App] Service Worker registered:', registration.scope)
+        },
+        (error) => {
+          console.error('[App] Service Worker registration failed:', error)
+        }
+      )
+    }
+  }, [])
+
   // Get the first recently unlocked achievement to show
   const currentAchievement = recentlyUnlocked.length > 0
     ? ACHIEVEMENTS.find(a => a.id === recentlyUnlocked[0]) || null
@@ -236,9 +252,11 @@ function App() {
             } />
             <Route path="/library" element={<PageErrorBoundary><Library /></PageErrorBoundary>} />
             <Route path="/collection/:id" element={<PageErrorBoundary><Collection /></PageErrorBoundary>} />
+            <Route path="/drafts" element={<PageErrorBoundary><Drafts /></PageErrorBoundary>} />
             <Route path="/streaming-demo" element={<PageErrorBoundary><StreamingEffectsDemo /></PageErrorBoundary>} />
             <Route path="/layout-demo" element={<PageErrorBoundary><StreamingLayoutDemo /></PageErrorBoundary>} />
           </Routes>
+          <ScrollRestoration />
           </GlobalErrorBoundary>
         </main>
       </PageTransition>
