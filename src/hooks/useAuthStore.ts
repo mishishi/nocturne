@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { setAuthToken, clearAuthToken } from '../utils/auth'
 
 export interface User {
   id: string
@@ -30,14 +31,14 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user, token = null) => {
         if (token) {
-          localStorage.setItem('yeelin_token', token)
+          setAuthToken(token)
         }
         set({ user, token: token ?? null })
       },
 
       logout: () => {
         localStorage.removeItem('yeelin_openid')
-        localStorage.removeItem('yeelin_token')
+        clearAuthToken()
         set({
           user: null,
           token: null
@@ -45,7 +46,8 @@ export const useAuthStore = create<AuthState>()(
       }
     }),
     {
-      name: 'yeelin-auth-storage'
+      name: 'yeelin-auth-storage',
+      partialize: (state) => ({ user: state.user }) // Only persist user, not token
     }
   )
 )

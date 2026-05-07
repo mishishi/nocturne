@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
+import fastifyCookie from '@fastify/cookie'
 import { connectDB } from './config/database.js'
 import { successResponse } from './config/response.js'
 import sessionRoutes from './routes/sessions.js'
@@ -21,6 +22,9 @@ const fastify = Fastify({ logger: true })
 
 // Register plugins
 await fastify.register(cors, { origin: true })
+await fastify.register(fastifyCookie, {
+  parseOptions: {}
+})
 await fastify.register(rateLimit, {
   max: 999999,
   timeWindow: '1 minute',

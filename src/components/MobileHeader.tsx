@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
+import { useDreamStore } from '../hooks/useDreamStore'
 import { useNotificationCount } from '../hooks/useNotificationCount'
+import { hasValidToken } from '../utils/auth'
 import styles from './MobileHeader.module.css'
 
 export function MobileHeader() {
+  const { user } = useDreamStore()
+  const isLoggedIn = !!user?.openid && hasValidToken()
   const notificationCount = useNotificationCount()
 
   return (
@@ -23,7 +27,7 @@ export function MobileHeader() {
           <path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        {notificationCount > 0 && (
+        {isLoggedIn && notificationCount > 0 && (
           <span className={styles.badge}>{notificationCount > 99 ? '99+' : notificationCount}</span>
         )}
       </Link>

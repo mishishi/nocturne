@@ -1,5 +1,7 @@
 // SSE client for story streaming using fetch + ReadableStream
 
+import { getAuthToken } from '../utils/auth'
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 
 export interface StoryStreamCallbacks {
@@ -13,7 +15,7 @@ export function createStoryStream(
   sessionId: string,
   callbacks: StoryStreamCallbacks
 ): () => void {
-  const token = localStorage.getItem('yeelin_token')
+  const token = getAuthToken()
   console.log('[SSE Client] Token present:', !!token, 'Token prefix:', token?.substring(0, 20))
 
   const url = `${API_BASE}/sessions/${sessionId}/story/stream`

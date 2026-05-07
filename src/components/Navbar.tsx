@@ -2,11 +2,14 @@ import { Link, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { useNotificationCount } from '../hooks/useNotificationCount'
 import { useFriendRequestCount } from '../hooks/useFriendRequestCount'
+import { hasValidToken } from '../utils/auth'
 import styles from './Navbar.module.css'
 
 export function Navbar() {
   const location = useLocation()
-  useDreamStore()
+  const { user } = useDreamStore()
+  const isLoggedIn = !!user?.openid && hasValidToken()
+
   const notificationCount = useNotificationCount()
   const friendRequests = useFriendRequestCount()
 
@@ -43,7 +46,7 @@ export function Navbar() {
           <li>
             <Link to="/friends" aria-current={isActive('/friends') ? 'page' : undefined} className={`${styles.link} ${isActive('/friends') ? styles.active : ''}`}>
               好友
-              {friendRequests.length > 0 && <span className={styles.badge}>{friendRequests.length}</span>}
+              {isLoggedIn && friendRequests.length > 0 && <span className={styles.badge}>{friendRequests.length}</span>}
             </Link>
           </li>
           <li>
@@ -68,7 +71,7 @@ export function Navbar() {
             <path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          {notificationCount > 0 && <span className={styles.notificationBadge}>{notificationCount}</span>}
+          {isLoggedIn && notificationCount > 0 && <span className={styles.notificationBadge}>{notificationCount}</span>}
         </Link>
         </div>
       </nav>

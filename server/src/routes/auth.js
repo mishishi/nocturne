@@ -72,6 +72,14 @@ export default async function authRoutes(fastify) {
 
     try {
       const result = await authService.wechatLogin(openid)
+      // 设置 httpOnly Cookie
+      res.setCookie('yeelin_token', result.token, {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 天
+      })
       return successResponse(result)
     } catch (error) {
       console.error('WeChat login error:', error)
@@ -99,6 +107,14 @@ export default async function authRoutes(fastify) {
       if (!result.success) {
         return res.status(401).send(errorResponse(result.reason || '登录失败', 'AUTH_FAILED'))
       }
+      // 设置 httpOnly Cookie
+      res.setCookie('yeelin_token', result.token, {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 天
+      })
       return successResponse(result)
     } catch (error) {
       console.error('Phone login error:', error)
@@ -130,6 +146,14 @@ export default async function authRoutes(fastify) {
       if (!result.success) {
         return res.status(400).send(errorResponse(result.reason || '注册失败', 'REGISTER_FAILED'))
       }
+      // 设置 httpOnly Cookie
+      res.setCookie('yeelin_token', result.token, {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 天
+      })
       return successResponse(result)
     } catch (error) {
       console.error('Register error:', error)

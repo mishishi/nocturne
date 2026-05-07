@@ -1,6 +1,8 @@
 // Real API service - connects to Express backend
 // In development, use mock API for UI testing
 
+import { getAuthToken } from '../utils/auth'
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 
 // ============ 统一响应类型 ============
@@ -41,10 +43,8 @@ export function isApiSuccess<T>(res: ApiResponse<T>): res is ApiSuccessResponse<
 const FETCH_TIMEOUT = 15000
 const LONG_FETCH_TIMEOUT = 60000 // For AI generation endpoints (questions, story, interpretation)
 
-// Get auth token from localStorage
-function getAuthToken(): string | null {
-  return localStorage.getItem('yeelin_token')
-}
+// Re-export getAuthToken for backwards compatibility
+export { getAuthToken } from '../utils/auth'
 
 // Fetch with timeout using AbortSignal
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
@@ -77,11 +77,13 @@ async function fetchWithLongTimeout(url: string, options: RequestInit = {}): Pro
  * @param fn 要重试的异步函数
  * @param maxRetries 最大重试次数（默认3次）
  * @param baseDelay 基础延迟毫秒数（默认1000ms）
+ * @param operationName 操作名称（用于错误信息）
  */
 export async function retryWrapper<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
+  operationName: string = 'API call'
 ): Promise<T> {
   let lastError: Error | null = null
 
@@ -94,13 +96,19 @@ export async function retryWrapper<T>(
       if (attempt < maxRetries) {
         // 指数退避：1s, 2s, 4s
         const delay = baseDelay * Math.pow(2, attempt)
-        console.log(`[API Retry] call failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`, lastError.message)
+        console.log(`[API Retry] ${operationName} failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`, lastError.message)
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
   }
 
-  throw lastError
+  // 所有重试都失败后，抛出包含详细信息的错误
+  const finalError = new Error(
+    `${operationName} failed after ${maxRetries + 1} attempts: ${lastError?.message || 'Unknown error'}`
+  )
+  finalError.cause = lastError
+  console.error(`[API Retry] ${finalError.message}`)
+  throw finalError
 }
 
 // 带重试的关键 API 封装
@@ -110,7 +118,8 @@ export const apiWithRetry = {
     return retryWrapper(
       () => wallApi.publish({ openid, sessionId, isAnonymous }),
       3,
-      1000
+      1000,
+      '发布故事'
     )
   },
 
@@ -119,7 +128,8 @@ export const apiWithRetry = {
     return retryWrapper(
       () => wallApi.toggleStoryFavorite(sessionId),
       3,
-      1000
+      1000,
+      '切换收藏'
     )
   },
 
@@ -128,7 +138,8 @@ export const apiWithRetry = {
     return retryWrapper(
       () => achievementApi.syncAchievements(medals),
       3,
-      1000
+      1000,
+      '同步成就'
     )
   }
 }

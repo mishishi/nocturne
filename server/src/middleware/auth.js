@@ -1,16 +1,27 @@
 import { verifyToken } from '../services/authService.js'
 
 /**
- * Auth middleware - verifies Bearer token and attaches userId to request
+ * Auth middleware - verifies token from Cookie or Bearer header
+ * Priority: Cookie (httpOnly) > Authorization Header
  */
 export async function authMiddleware(req, res) {
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  // 优先从 httpOnly Cookie 获取 token
+  const tokenFromCookie = req.cookies?.yeelin_token
+
+  // Fallback 到 Authorization Header（兼容旧版）
+  let token = tokenFromCookie
+  if (!token) {
+    const authHeader = req.headers.authorization
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.slice(7)
+    }
+  }
+
+  if (!token) {
     res.status(401).send({ error: '未授权，请先登录' })
     throw new Error('Unauthorized')
   }
 
-  const token = authHeader.slice(7)
   const userId = verifyToken(token)
 
   if (!userId) {

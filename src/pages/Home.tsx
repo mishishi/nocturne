@@ -7,6 +7,7 @@ import { AchievementCenter } from '../components/AchievementCenter'
 import { DailyHighlights } from '../components/DailyHighlights'
 import { useDreamStore, ACHIEVEMENTS, type DreamSession } from '../hooks/useDreamStore'
 import { checkInApi } from '../services/api'
+import { hasValidToken } from '../utils/auth'
 import styles from './Home.module.css'
 
 const LAST_VISIT_KEY = 'yeelin_last_visit'
@@ -30,7 +31,7 @@ export function Home() {
 
   // Fetch check-in status for logged-in users
   useEffect(() => {
-    if (!user?.openid) return
+    if (!user?.openid || !hasValidToken()) return
 
     const fetchCheckInStatus = async () => {
       try {
@@ -47,12 +48,14 @@ export function Home() {
 
   // Handle check-in
   const handleCheckIn = async () => {
-    if (!user?.openid || isCheckingIn) return
+    if (!user?.openid || !hasValidToken() || isCheckingIn) return
     setIsCheckingIn(true)
     try {
       const result = await checkInApi.checkIn()
       if (result.success && result.data) {
-        setCheckInStatus(result.data.alreadyCheckedIn ?? false, result.data.consecutiveDays)
+        // alreadyCheckedIn: true = 重复签到, false = 新签到成功
+        // 无论哪种情况，result.success 为 true 就表示今日可以签到
+        setCheckInStatus(true, result.data.consecutiveDays)
       }
     } catch (err) {
       console.error('Failed to check in:', err)

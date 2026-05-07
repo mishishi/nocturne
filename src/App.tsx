@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { registerToastCallback, unregisterToastCallback } from './hooks/useDreamStore'
 import { Toast } from './components/ui/Toast'
-import { Routes, Route, useLocation, useNavigate, ScrollRestoration } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { MobileHeader } from './components/MobileHeader'
 import { BottomNav } from './components/BottomNav'
@@ -16,6 +16,7 @@ import { PageErrorBoundary } from './components/PageErrorBoundary'
 import { ConfirmModal } from './components/ui/ConfirmModal'
 import { useDreamStore, ACHIEVEMENTS } from './hooks/useDreamStore'
 import { useAchievementSound } from './hooks/useAchievementSound'
+import { hasValidToken } from './utils/auth'
 import { Home } from './pages/Home'
 import { Dream } from './pages/Dream'
 import { Questions } from './pages/Questions'
@@ -156,7 +157,7 @@ function App() {
 
   // Sync achievements from server on app start (for users who logged in on other devices)
   useEffect(() => {
-    if (user) {
+    if (user && hasValidToken()) {
       syncAchievementsFromServer()
     }
   }, [])
@@ -189,6 +190,11 @@ function App() {
   const currentAchievement = recentlyUnlocked.length > 0
     ? ACHIEVEMENTS.find(a => a.id === recentlyUnlocked[0]) || null
     : null
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
 
   // Auto-clear when modal closes
   const handleClose = () => {
@@ -256,7 +262,6 @@ function App() {
             <Route path="/streaming-demo" element={<PageErrorBoundary><StreamingEffectsDemo /></PageErrorBoundary>} />
             <Route path="/layout-demo" element={<PageErrorBoundary><StreamingLayoutDemo /></PageErrorBoundary>} />
           </Routes>
-          <ScrollRestoration />
           </GlobalErrorBoundary>
         </main>
       </PageTransition>

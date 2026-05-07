@@ -5,6 +5,7 @@ import { authApi, api } from '../services/api'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import { setAuthToken } from '../utils/auth'
 import styles from './Login.module.css'
 
 export function Login() {
@@ -112,9 +113,9 @@ export function Login() {
       if (result.success && result.data?.user) {
         const user = result.data.user
         const token = result.data.token
-        // Store token first so migrateSession can use it
+        // Store token as Cookie first so migrateSession can use it
         if (token) {
-          localStorage.setItem('yeelin_token', token)
+          setAuthToken(token)
         }
 
         // Migrate guest sessions if exists

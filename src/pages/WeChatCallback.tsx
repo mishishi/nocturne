@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { api } from '../services/api'
 import { Toast } from '../components/ui/Toast'
+import { setAuthToken } from '../utils/auth'
 import styles from './Login.module.css'
 
 export function WeChatCallback() {
@@ -51,8 +52,8 @@ export function WeChatCallback() {
         // Save guest openid before setting new token
         const guestOpenid = localStorage.getItem('yeelin_openid')
 
-        // Store token
-        localStorage.setItem('yeelin_token', token)
+        // Set token as Cookie (for server reads) and localStorage for openid
+        setAuthToken(token)
         localStorage.setItem('yeelin_openid', user.openid)
 
         // Migrate guest sessions if exists (失败不影响登录流程)

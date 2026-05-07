@@ -20,6 +20,7 @@ import { CommentThread } from '../components/CommentThread'
 import { FriendRequestButton } from '../components/FriendRequestButton'
 import { StoryContentSkeleton } from '../components/ui/Skeleton'
 import { shareApi, api, apiWithRetry } from '../services/api'
+import { getAuthToken } from '../utils/auth'
 import { ExpandableCard } from '../components/ExpandableCard'
 import styles from './Story.module.css'
 
@@ -611,7 +612,8 @@ export function Story() {
   }
 
   const handlePublishToWall = async () => {
-    const token = localStorage.getItem('yeelin_token')
+    // Get token from Cookie
+    const token = getAuthToken()
     const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
     const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || urlSessionId
 

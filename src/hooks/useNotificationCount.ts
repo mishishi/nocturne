@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { notificationApi } from '../services/api'
 import { useDreamStore } from './useDreamStore'
+import { hasValidToken } from '../utils/auth'
 
 // Shared cache to prevent duplicate API calls
 let cachedCount: number | null = null
@@ -44,7 +45,7 @@ export function useNotificationCount() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    if (!user?.openid) {
+    if (!user?.openid || !hasValidToken()) {
       setCount(0)
       cachedCount = null
       cacheUserOpenid = null

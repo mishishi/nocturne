@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { useFriendRequestCount } from '../hooks/useFriendRequestCount'
+import { hasValidToken } from '../utils/auth'
 import styles from './BottomNav.module.css'
 
 const DRAFT_KEY = 'yeelin_draft'
@@ -78,7 +79,8 @@ interface BottomNavProps {
 
 export function BottomNav({ onDraftConfirm }: BottomNavProps) {
   const location = useLocation()
-  const { recentlyUnlocked } = useDreamStore()
+  const { user, recentlyUnlocked } = useDreamStore()
+  const isLoggedIn = !!user?.openid && hasValidToken()
   const friendRequests = useFriendRequestCount()
   const hasDraft = useHasDraft()
 
@@ -105,7 +107,7 @@ export function BottomNav({ onDraftConfirm }: BottomNavProps) {
                 {recentlyUnlocked.length > 99 ? '99+' : recentlyUnlocked.length}
               </span>
             )}
-            {item.path === '/friends' && friendRequests.length > 0 && (
+            {item.path === '/friends' && isLoggedIn && friendRequests.length > 0 && (
               <span className={styles.badge} aria-label={`${friendRequests.length}个待处理好友请求`}>
                 {friendRequests.length > 99 ? '99+' : friendRequests.length}
               </span>

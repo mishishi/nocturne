@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { checkInApi, achievementApi, apiWithRetry } from '../services/api'
 import { useAuthStore } from './useAuthStore'
+import { getAuthToken, setAuthToken, clearAuthToken } from '../utils/auth'
 
 // Toast 通知回调函数（用于后台任务失败时通知用户）
 type ToastCallback = (message: string, type: 'success' | 'error') => void
@@ -420,7 +421,7 @@ export const useDreamStore = create<DreamState>()(
 
         // Record check-in after successful dream submission
         // Only check in if user is logged in (has token)
-        const token = localStorage.getItem('yeelin_token')
+        const token = getAuthToken()
         if (token) {
           try {
             const checkInResult = await checkInApi.checkIn()
@@ -579,7 +580,7 @@ export const useDreamStore = create<DreamState>()(
       // Auth actions
       setUser: (user, token = null, previousOpenid) => {
         if (token) {
-          localStorage.setItem('yeelin_token', token)
+          setAuthToken(token)
         }
         // Also update the auth store
         useAuthStore.getState().setUser(user, token)
@@ -602,7 +603,8 @@ export const useDreamStore = create<DreamState>()(
 
       logout: () => {
         localStorage.removeItem('yeelin_openid')
-        localStorage.removeItem('yeelin_token')
+        // Clear token Cookie
+        clearAuthToken()
         // Clear the persist storage entirely
         localStorage.removeItem('yeelin-dream-storage')
         // Also clear the auth store
@@ -654,7 +656,7 @@ export const useDreamStore = create<DreamState>()(
         consecutiveShares: state.consecutiveShares,
         lastShareDate: state.lastShareDate,
         user: state.user,
-        token: state.token,
+        // token removed - stored in Cookie for security
         // friends removed - should be loaded from API, not persisted
         checkedInToday: state.checkedInToday,
         consecutiveDays: state.consecutiveDays

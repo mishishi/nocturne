@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { friendApi, FriendRequestItem } from '../services/api'
 import { useDreamStore } from './useDreamStore'
+import { hasValidToken } from '../utils/auth'
 
 // Shared cache to prevent duplicate API calls
 let cachedRequests: FriendRequestItem[] = []
@@ -43,7 +44,7 @@ export function useFriendRequestCount() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    if (!user?.openid) {
+    if (!user?.openid || !hasValidToken()) {
       setRequests([])
       cachedRequests = []
       cacheUserOpenid = null
