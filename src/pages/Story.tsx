@@ -73,6 +73,8 @@ export function Story() {
   const aiMenuRef = useRef<HTMLDivElement>(null)
   const fabMenuRef = useRef<HTMLDivElement>(null)
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Track trigger element for focus restoration when menus close
+  const menuTriggerRef = useRef<HTMLElement | null>(null)
 
   // Memoized particle positions to avoid Math.random() on each render
   const particlePositions = useMemo(() =>
@@ -168,7 +170,9 @@ export function Story() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault()
         setShowShareMenu(false)
+        menuTriggerRef.current?.focus()
         return
       }
       if (e.key === 'Tab') {
@@ -196,7 +200,9 @@ export function Story() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault()
         setShowAiMenu(false)
+        menuTriggerRef.current?.focus()
         return
       }
       if (e.key === 'Tab') {
@@ -932,6 +938,7 @@ export function Story() {
                     <button
                       className={styles.fabMenuItem}
                       onClick={() => {
+                        menuTriggerRef.current = document.activeElement as HTMLElement
                         setShowFabMenu(false)
                         setShowShareMenu(true)
                       }}
@@ -1039,7 +1046,10 @@ export function Story() {
             <div className={styles.aiWrapper} ref={aiWrapperRef}>
               <Button
                 variant="secondary"
-                onClick={() => setShowAiMenu(!showAiMenu)}
+                onClick={(e) => {
+                  menuTriggerRef.current = e.currentTarget as HTMLElement
+                  setShowAiMenu(!showAiMenu)
+                }}
                 aria-expanded={showAiMenu}
                 disabled={isInterpreting}
                 className={isSpeaking ? styles.ttsButtonActive : ''}

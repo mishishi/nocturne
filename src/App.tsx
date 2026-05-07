@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { registerToastCallback, unregisterToastCallback } from './hooks/useDreamStore'
 import { Toast } from './components/ui/Toast'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { MobileHeader } from './components/MobileHeader'
 import { BottomNav } from './components/BottomNav'
@@ -73,6 +73,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function App() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, user, syncAchievementsFromServer } = useDreamStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
@@ -126,7 +127,7 @@ function App() {
   const handleDraftConfirm = () => {
     localStorage.removeItem('yeelin_draft')
     setShowDraftConfirm(false)
-    window.location.href = '/dream?new=1'
+    navigate('/dream?new=1', { replace: true })
   }
 
   // Sync fontSize and theme to documentElement for CSS selectors

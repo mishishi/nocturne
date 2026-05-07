@@ -201,7 +201,7 @@ export function Home() {
 
         {/* Achievement progress hint - only for returning users */}
         {!isNewUser && (
-          <AchievementHint history={history} />
+          <AchievementHint history={history} achievements={achievements} />
         )}
       </section>
 
@@ -326,10 +326,10 @@ export function Home() {
 // Achievement progress hint component
 interface AchievementHintProps {
   history: DreamSession[]
+  achievements: string[]
 }
 
-function AchievementHint({ history }: AchievementHintProps) {
-  const { achievements } = useDreamStore()
+function AchievementHint({ history, achievements }: AchievementHintProps) {
 
   // Find the closest locked achievement to unlock
   const getProgress = () => {
