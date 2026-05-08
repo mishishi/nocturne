@@ -161,6 +161,218 @@ export default async function authRoutes(fastify) {
     }
   })
 
+  // POST /api/auth/email-login - 邮箱密码登录
+  fastify.post('/auth/email-login', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (req, res) => {
+    const { email, password } = req.body
+
+    if (!email || !password) {
+      return res.status(400).send(errorResponse('邮箱和密码不能为空', 'MISSING_PARAMS'))
+    }
+
+    // Basic email format validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).send(errorResponse('邮箱格式不正确', 'VALIDATION_ERROR'))
+    }
+
+    try {
+      const result = await authService.emailLogin(email, password)
+      if (!result.success) {
+        return res.status(401).send(errorResponse(result.reason || '登录失败', 'AUTH_FAILED'))
+      }
+      // 设置 httpOnly Cookie
+      res.setCookie('yeelin_token', result.token, {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 天
+      })
+      return successResponse(result)
+    } catch (error) {
+      console.error('Email login error:', error)
+      return res.status(500).send(errorResponse('登录失败', 'SERVER_ERROR'))
+    }
+  })
+
+  // POST /api/auth/email-register - 邮箱注册
+  fastify.post('/auth/email-register', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (req, res) => {
+    const { email, password, nickname, inviteCode } = req.body
+
+    if (!email || !password) {
+      return res.status(400).send(errorResponse('邮箱和密码不能为空', 'MISSING_PARAMS'))
+    }
+
+    // Basic email format validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).send(errorResponse('邮箱格式不正确', 'VALIDATION_ERROR'))
+    }
+
+    if (password.length < 6) {
+      return res.status(400).send(errorResponse('密码至少6位', 'VALIDATION_ERROR'))
+    }
+
+    try {
+      const result = await authService.emailRegister(email, password, nickname)
+      if (!result.success) {
+        return res.status(400).send(errorResponse(result.reason || '注册失败', 'REGISTER_FAILED'))
+      }
+      // 设置 httpOnly Cookie
+      res.setCookie('yeelin_token', result.token, {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 天
+      })
+      return successResponse(result)
+    } catch (error) {
+      console.error('Email register error:', error)
+      return res.status(500).send(errorResponse('注册失败', 'SERVER_ERROR'))
+    }
+  })
+
+  // POST /api/auth/send-email-code - 发送邮箱验证码
+  fastify.post('/auth/send-email-code', {
+    config: {
+      rateLimit: {
+        max: 3,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (req, res) => {
+    const { email, purpose } = req.body
+
+    if (!email) {
+      return res.status(400).send(errorResponse('邮箱不能为空', 'MISSING_PARAMS'))
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).send(errorResponse('邮箱格式不正确', 'VALIDATION_ERROR'))
+    }
+
+    if (!['login', 'bind', 'reset'].includes(purpose)) {
+      return res.status(400).send(errorResponse('无效的用途', 'VALIDATION_ERROR'))
+    }
+
+    try {
+      await authService.sendEmailCode(email, purpose)
+      // Demo version: return the code directly for testing
+      return successResponse({ success: true, message: '验证码已发送', code: '123456' })
+    } catch (error) {
+      console.error('Send email code error:', error)
+      return res.status(500).send(errorResponse('发送验证码失败', 'SERVER_ERROR'))
+    }
+  })
+
+  // POST /api/auth/verify-email-code - 验证邮箱验证码
+  fastify.post('/auth/verify-email-code', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '5 minute'
+      }
+    }
+  }, async (req, res) => {
+    const { email, code, purpose } = req.body
+
+    if (!email || !code || !purpose) {
+      return res.status(400).send(errorResponse('参数不完整', 'MISSING_PARAMS'))
+    }
+
+    try {
+      const result = await authService.verifyEmailCode(email, code, purpose)
+      if (!result.success) {
+        return res.status(400).send(errorResponse(result.reason || '验证码错误', 'VERIFY_FAILED'))
+      }
+      return successResponse({ success: true })
+    } catch (error) {
+      console.error('Verify email code error:', error)
+      return res.status(500).send(errorResponse('验证失败', 'SERVER_ERROR'))
+    }
+  })
+
+  // POST /api/auth/bind-email - 绑定邮箱（已登录用户）
+  fastify.post('/auth/bind-email', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '5 minute'
+      }
+    },
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { email, code } = req.body
+
+    if (!email || !code) {
+      return res.status(400).send(errorResponse('邮箱和验证码不能为空', 'MISSING_PARAMS'))
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).send(errorResponse('邮箱格式不正确', 'VALIDATION_ERROR'))
+    }
+
+    try {
+      const result = await authService.bindEmail(req.userId, email, code)
+      if (!result.success) {
+        return res.status(400).send(errorResponse(result.reason || '绑定失败', 'BIND_FAILED'))
+      }
+      return successResponse({ success: true, user: result.user })
+    } catch (error) {
+      console.error('Bind email error:', error)
+      return res.status(500).send(errorResponse('绑定失败', 'SERVER_ERROR'))
+    }
+  })
+
+  // POST /api/auth/change-password - 修改密码（已登录用户）
+  fastify.post('/auth/change-password', {
+    config: {
+      rateLimit: {
+        max: 3,
+        timeWindow: '5 minute'
+      }
+    },
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    const { oldPassword, newPassword } = req.body
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).send(errorResponse('原密码和新密码不能为空', 'MISSING_PARAMS'))
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).send(errorResponse('新密码至少6位', 'VALIDATION_ERROR'))
+    }
+
+    try {
+      const result = await authService.changePassword(req.userId, oldPassword, newPassword)
+      if (!result.success) {
+        return res.status(400).send(errorResponse(result.reason || '修改失败', 'CHANGE_PASSWORD_FAILED'))
+      }
+      return successResponse({ success: true, message: '密码修改成功' })
+    } catch (error) {
+      console.error('Change password error:', error)
+      return res.status(500).send(errorResponse('修改失败', 'SERVER_ERROR'))
+    }
+  })
+
   // POST /api/auth/update-profile - 更新用户资料
   fastify.post('/auth/update-profile', {
     preHandler: async (req, res) => {
@@ -229,7 +441,14 @@ export default async function authRoutes(fastify) {
   })
 
   // POST /api/auth/send-reset-code - 发送密码重置验证码
-  fastify.post('/auth/send-reset-code', async (req, res) => {
+  fastify.post('/auth/send-reset-code', {
+    config: {
+      rateLimit: {
+        max: 3,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (req, res) => {
     const { phone } = req.body
 
     if (!phone) {
@@ -254,7 +473,14 @@ export default async function authRoutes(fastify) {
   })
 
   // POST /api/auth/reset-password - 重置密码
-  fastify.post('/auth/reset-password', async (req, res) => {
+  fastify.post('/auth/reset-password', {
+    config: {
+      rateLimit: {
+        max: 3,
+        timeWindow: '5 minute'
+      }
+    }
+  }, async (req, res) => {
     const { phone, code, password } = req.body
 
     if (!phone || !code || !password) {
@@ -387,6 +613,69 @@ export default async function authRoutes(fastify) {
     } catch (error) {
       console.error('Export data error:', error)
       return res.status(500).send(errorResponse('导出失败', 'SERVER_ERROR'))
+    }
+  })
+
+  // DELETE /api/auth/account - 删除用户账号 (GDPR数据删除权)
+  fastify.delete('/auth/account', {
+    preHandler: async (req, res) => {
+      await authMiddleware(req, res)
+    }
+  }, async (req, res) => {
+    try {
+      const user = await authService.getUser(req.userId)
+      if (!user) {
+        return res.status(401).send(errorResponse('用户不存在', 'USER_NOT_FOUND'))
+      }
+      const { openid } = user
+
+      // Use a transaction to delete all user data
+      await prisma.$transaction([
+        // Delete push subscriptions
+        prisma.pushSubscription.deleteMany({ where: { openid } }),
+        // Delete check-ins
+        prisma.checkIn.deleteMany({ where: { userId: user.id } }),
+        // Delete story favorites
+        prisma.storyFavorite.deleteMany({ where: { openid } }),
+        // Delete dream wall favorites
+        prisma.dreamWallFavorite.deleteMany({ where: { openid } }),
+        // Delete dream wall likes
+        prisma.dreamWallLike.deleteMany({ where: { openid } }),
+        // Delete dream wall comments (these will cascade from wall posts)
+        prisma.dreamWallComment.deleteMany({ where: { openid } }),
+        // Delete dream wall posts (this cascades to likes, comments via onDelete: Cascade)
+        prisma.dreamWall.deleteMany({ where: { openid } }),
+        // Delete notifications (both sent and received)
+        prisma.notification.deleteMany({ where: { openid } }),
+        prisma.notification.deleteMany({ where: { fromOpenid: openid } }),
+        // Delete private messages
+        prisma.privateMessage.deleteMany({ where: { fromOpenid: openid } }),
+        prisma.privateMessage.deleteMany({ where: { toOpenid: openid } }),
+        // Delete interpretation feedback
+        prisma.interpretationFeedback.deleteMany({ where: { openid } }),
+        // Delete story feedback
+        prisma.storyFeedback.deleteMany({ where: { openid } }),
+        // Delete sessions with messages, answers, and stories (cascades via onDelete: Cascade)
+        prisma.session.deleteMany({ where: { openid } }),
+        // Delete share logs
+        prisma.shareLog.deleteMany({ where: { openid } }),
+        // Delete invites (both sent and received)
+        prisma.invite.deleteMany({ where: { inviterOpenid: openid } }),
+        prisma.invite.deleteMany({ where: { inviteeOpenid: openid } }),
+        // Delete friends (both directions)
+        prisma.friend.deleteMany({ where: { userId: user.id } }),
+        prisma.friend.deleteMany({ where: { friendId: user.id } }),
+        // Finally delete the user
+        prisma.user.delete({ where: { id: user.id } })
+      ])
+
+      // Clear the auth cookie
+      res.clearCookie('yeelin_token', { path: '/' })
+
+      return successResponse({ success: true, message: '账号已删除' })
+    } catch (error) {
+      console.error('Delete account error:', error)
+      return res.status(500).send(errorResponse('删除账号失败', 'SERVER_ERROR'))
     }
   })
 }
