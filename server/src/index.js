@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
 import fastifyCookie from '@fastify/cookie'
+import * as Sentry from '@sentry/node'
 import { connectDB } from './config/database.js'
 import { successResponse } from './config/response.js'
 import sessionRoutes from './routes/sessions.js'
@@ -17,8 +18,23 @@ import achievementRoutes from './routes/achievements.js'
 import adminRoutes from './routes/admin.js'
 import libraryRoutes from './routes/library.js'
 import pushRoutes from './routes/push.js'
+import featureFlagRoutes from './routes/featureFlags.js'
 
-const fastify = Fastify({ logger: true })
+// Initialize Sentry for error monitoring
+// Only enable if SENTRY_DSN is configured
+let sentryEnabled = false
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 0.1,
+  })
+  sentryEnabled = true
+}
+
+import logger from './utils/logger.js'
+
+const fastify = Fastify({ logger })
 
 // Register plugins
 await fastify.register(cors, { origin: true })
@@ -26,16 +42,34 @@ await fastify.register(fastifyCookie, {
   parseOptions: {}
 })
 await fastify.register(rateLimit, {
-  max: 999999,
+  max: 200,
   timeWindow: '1 minute',
-  keyGenerator: (req) => req.ip || 'unknown',
+  keyGenerator: (req) => {
+    // Use user ID if authenticated, otherwise fall back to IP
+    const userId = req.userId
+    if (userId) {
+      return `user:${userId}`
+    }
+    return `ip:${req.ip || 'unknown'}`
+  },
   errorResponseBuilder: (req, context) => ({
     success: false,
     error: {
       code: 'RATE_LIMIT_EXCEEDED',
       message: `请求过于频繁，请 ${Math.ceil(context.ttl / 1000)} 秒后再试`
     }
-  })
+  }),
+  addHeadersOnExceeding: {
+    'x-ratelimit-limit': true,
+    'x-ratelimit-remaining': true,
+    'x-ratelimit-reset': true
+  },
+  addHeaders: {
+    'x-ratelimit-limit': true,
+    'x-ratelimit-remaining': true,
+    'x-ratelimit-reset': true,
+    'retry-after': true
+  }
 })
 
 // Auto-wrap responses without timestamp (兜底措施)
@@ -60,10 +94,22 @@ fastify.register(achievementRoutes, { prefix: '/api' })
 fastify.register(adminRoutes, { prefix: '/api' })
 fastify.register(libraryRoutes, { prefix: '/api' })
 fastify.register(pushRoutes, { prefix: '/api' })
+fastify.register(featureFlagRoutes, { prefix: '/api' })
 
 // Error handler
 fastify.setErrorHandler((err, req, res) => {
   fastify.log.error(err)
+
+  // Capture error with Sentry if configured
+  if (sentryEnabled) {
+    Sentry.captureException(err, {
+      extra: {
+        url: req.url,
+        method: req.method,
+      },
+    })
+  }
+
   res.status(500).send({ error: err.message || 'Internal server error' })
 })
 
@@ -71,7 +117,7 @@ const start = async () => {
   try {
     await connectDB()
     await fastify.listen({ port: process.env.PORT || 4000 })
-    console.log(`Server running on port ${process.env.PORT || 4000}`)
+    logger.info({ action: 'server-start', port: process.env.PORT || 4000 }, `Server running on port ${process.env.PORT || 4000}`)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)

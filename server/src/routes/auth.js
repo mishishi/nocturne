@@ -2,6 +2,7 @@ import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { successResponse, errorResponse } from '../config/response.js'
+import { authLogger, wechatLogger, maskPhone, maskEmail, maskIp } from '../utils/logger.js'
 
 export default async function authRoutes(fastify) {
   // GET /api/auth/wechat/authorize - 生成微信授权链接并跳转
@@ -54,7 +55,7 @@ export default async function authRoutes(fastify) {
 
       return res.redirect(finalUrl.toString())
     } catch (error) {
-      console.error('WeChat callback error:', error)
+      wechatLogger.error({ action: 'wechat-callback', error: error.message }, '微信回调异常')
       // 出错也重定向到前端，让前端展示错误
       const errorUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:4001')
       errorUrl.searchParams.set('wechat_error', '1')
@@ -82,7 +83,7 @@ export default async function authRoutes(fastify) {
       })
       return successResponse(result)
     } catch (error) {
-      console.error('WeChat login error:', error)
+      authLogger.error({ action: 'wechat-login', error: error.message }, '微信登录异常')
       return res.status(500).send(errorResponse('微信登录失败', 'SERVER_ERROR'))
     }
   })
@@ -117,7 +118,7 @@ export default async function authRoutes(fastify) {
       })
       return successResponse(result)
     } catch (error) {
-      console.error('Phone login error:', error)
+      authLogger.error({ action: 'phone-login', error: error.message }, '手机号登录异常')
       return res.status(500).send(errorResponse('登录失败', 'SERVER_ERROR'))
     }
   })
@@ -156,7 +157,7 @@ export default async function authRoutes(fastify) {
       })
       return successResponse(result)
     } catch (error) {
-      console.error('Register error:', error)
+      authLogger.error({ action: 'register', error: error.message }, '注册异常')
       return res.status(500).send(errorResponse('注册失败', 'SERVER_ERROR'))
     }
   })
@@ -196,7 +197,7 @@ export default async function authRoutes(fastify) {
       })
       return successResponse(result)
     } catch (error) {
-      console.error('Email login error:', error)
+      authLogger.error({ action: 'email-login', error: error.message }, '邮箱登录异常')
       return res.status(500).send(errorResponse('登录失败', 'SERVER_ERROR'))
     }
   })
@@ -240,7 +241,7 @@ export default async function authRoutes(fastify) {
       })
       return successResponse(result)
     } catch (error) {
-      console.error('Email register error:', error)
+      authLogger.error({ action: 'email-register', error: error.message }, '邮箱注册异常')
       return res.status(500).send(errorResponse('注册失败', 'SERVER_ERROR'))
     }
   })
@@ -273,7 +274,7 @@ export default async function authRoutes(fastify) {
       // Demo version: return the code directly for testing
       return successResponse({ success: true, message: '验证码已发送', code: '123456' })
     } catch (error) {
-      console.error('Send email code error:', error)
+      authLogger.error({ action: 'send-email-code', error: error.message }, '发送邮箱验证码异常')
       return res.status(500).send(errorResponse('发送验证码失败', 'SERVER_ERROR'))
     }
   })
@@ -300,7 +301,7 @@ export default async function authRoutes(fastify) {
       }
       return successResponse({ success: true })
     } catch (error) {
-      console.error('Verify email code error:', error)
+      authLogger.error({ action: 'verify-email-code', error: error.message }, '验证邮箱验证码异常')
       return res.status(500).send(errorResponse('验证失败', 'SERVER_ERROR'))
     }
   })
@@ -334,7 +335,7 @@ export default async function authRoutes(fastify) {
       }
       return successResponse({ success: true, user: result.user })
     } catch (error) {
-      console.error('Bind email error:', error)
+      authLogger.error({ action: 'bind-email', error: error.message }, '绑定邮箱异常')
       return res.status(500).send(errorResponse('绑定失败', 'SERVER_ERROR'))
     }
   })
@@ -368,7 +369,7 @@ export default async function authRoutes(fastify) {
       }
       return successResponse({ success: true, message: '密码修改成功' })
     } catch (error) {
-      console.error('Change password error:', error)
+      authLogger.error({ action: 'change-password', error: error.message }, '修改密码异常')
       return res.status(500).send(errorResponse('修改失败', 'SERVER_ERROR'))
     }
   })
@@ -395,7 +396,7 @@ export default async function authRoutes(fastify) {
       const user = await authService.updateProfile(openid, { nickname, avatar })
       return successResponse({ user })
     } catch (error) {
-      console.error('Update profile error:', error)
+      authLogger.error({ action: 'update-profile', error: error.message }, '更新资料异常')
       return res.status(500).send(errorResponse('更新资料失败', 'SERVER_ERROR'))
     }
   })
@@ -415,7 +416,7 @@ export default async function authRoutes(fastify) {
       }
       return successResponse({ user })
     } catch (error) {
-      console.error('Get user error:', error)
+      authLogger.error({ action: 'get-user', error: error.message }, '获取用户信息异常')
       return res.status(500).send(errorResponse('获取用户信息失败', 'SERVER_ERROR'))
     }
   })
@@ -435,7 +436,7 @@ export default async function authRoutes(fastify) {
       }
       return successResponse({ user })
     } catch (error) {
-      console.error('Verify token error:', error)
+      authLogger.error({ action: 'verify-token', error: error.message }, '验证Token异常')
       return res.status(500).send(errorResponse('验证失败', 'SERVER_ERROR'))
     }
   })
@@ -467,7 +468,7 @@ export default async function authRoutes(fastify) {
       await authService.sendResetCode(phone)
       return successResponse({ success: true, message: '验证码已发送' })
     } catch (error) {
-      console.error('Send reset code error:', error)
+      authLogger.error({ action: 'send-reset-code', error: error.message }, '发送重置验证码异常')
       return res.status(500).send(errorResponse('发送验证码失败', 'SERVER_ERROR'))
     }
   })
@@ -503,7 +504,7 @@ export default async function authRoutes(fastify) {
       await authService.resetPassword(phone, code, password)
       return successResponse({ success: true, message: '密码重置成功' })
     } catch (error) {
-      console.error('Reset password error:', error)
+      authLogger.error({ action: 'reset-password', error: error.message }, '重置密码异常')
       return res.status(500).send(errorResponse('重置密码失败', 'SERVER_ERROR'))
     }
   })
@@ -611,7 +612,7 @@ export default async function authRoutes(fastify) {
       res.header('Content-Disposition', `attachment; filename="yeelin_data_${today}.json"`)
       return res.send(json)
     } catch (error) {
-      console.error('Export data error:', error)
+      authLogger.error({ action: 'export-data', error: error.message }, '导出数据异常')
       return res.status(500).send(errorResponse('导出失败', 'SERVER_ERROR'))
     }
   })
@@ -674,7 +675,7 @@ export default async function authRoutes(fastify) {
 
       return successResponse({ success: true, message: '账号已删除' })
     } catch (error) {
-      console.error('Delete account error:', error)
+      authLogger.error({ action: 'delete-account', error: error.message }, '删除账号异常')
       return res.status(500).send(errorResponse('删除账号失败', 'SERVER_ERROR'))
     }
   })

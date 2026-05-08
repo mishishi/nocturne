@@ -15,8 +15,11 @@
     "@fastify/cors": "^9.0.0",
     "@fastify/rate-limit": "^9.1.0",
     "@prisma/client": "^5.10.0",
+    "@sentry/node": "^10.52.0",
     "bcrypt": "^6.0.0",
-    "fastify": "^4.26.0"
+    "fastify": "^4.26.0",
+    "pino": "^10.3.1",
+    "pino-rotate": "^0.3.0"
   },
   "devDependencies": {
     "prisma": "^5.10.0"
