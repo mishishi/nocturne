@@ -80,6 +80,33 @@ fastify.addHook('onSend', async (req, res, payload) => {
   return payload
 })
 
+// Request duration tracking
+fastify.addHook('onRequest', async (req) => {
+  req.startTime = Date.now()
+})
+
+fastify.addHook('onResponse', async (req, res) => {
+  const duration = Date.now() - (req.startTime || Date.now())
+  const slowThreshold = parseInt(process.env.SLOW_REQUEST_THRESHOLD || '1000', 10)
+
+  const logData = {
+    action: 'request',
+    method: req.method,
+    url: req.url.split('?')[0], // 去掉 query string
+    status: res.statusCode,
+    duration,
+    ip: req.ip
+  }
+
+  if (duration > slowThreshold) {
+    // 慢请求记录 warn 级别
+    logger.warn(logData, `Slow request: ${req.method} ${req.url} - ${duration}ms`)
+  } else {
+    // 正常请求记录 info 级别
+    logger.info(logData)
+  }
+})
+
 // Register routes
 fastify.register(sessionRoutes, { prefix: '/api' })
 fastify.register(shareRoutes, { prefix: '/api' })
