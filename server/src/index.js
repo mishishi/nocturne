@@ -19,6 +19,8 @@ import adminRoutes from './routes/admin.js'
 import libraryRoutes from './routes/library.js'
 import pushRoutes from './routes/push.js'
 import featureFlagRoutes from './routes/featureFlags.js'
+import metricsRoutes from './routes/metrics.js'
+import { recordMetric } from './services/metricsService.js'
 
 // Initialize Sentry for error monitoring
 // Only enable if SENTRY_DSN is configured
@@ -88,15 +90,24 @@ fastify.addHook('onRequest', async (req) => {
 fastify.addHook('onResponse', async (req, res) => {
   const duration = Date.now() - (req.startTime || Date.now())
   const slowThreshold = parseInt(process.env.SLOW_REQUEST_THRESHOLD || '1000', 10)
+  const endpoint = req.url.split('?')[0] // 去掉 query string
 
   const logData = {
     action: 'request',
     method: req.method,
-    url: req.url.split('?')[0], // 去掉 query string
+    url: endpoint,
     status: res.statusCode,
     duration,
     ip: req.ip
   }
+
+  // 记录到数据库（异步，不阻塞响应）
+  recordMetric({
+    endpoint,
+    method: req.method,
+    duration,
+    status: res.statusCode
+  }).catch(() => {}) // 忽略写入错误
 
   if (duration > slowThreshold) {
     // 慢请求记录 warn 级别
@@ -107,21 +118,22 @@ fastify.addHook('onResponse', async (req, res) => {
   }
 })
 
-// Register routes
-fastify.register(sessionRoutes, { prefix: '/api' })
-fastify.register(shareRoutes, { prefix: '/api' })
-fastify.register(authRoutes, { prefix: '/api' })
-fastify.register(friendRoutes, { prefix: '/api' })
-fastify.register(dreamWallRoutes, { prefix: '/api' })
-fastify.register(storyFeedbackRoutes, { prefix: '/api' })
-fastify.register(notificationRoutes, { prefix: '/api' })
-fastify.register(messageRoutes, { prefix: '/api' })
-fastify.register(checkInRoutes, { prefix: '/api' })
-fastify.register(achievementRoutes, { prefix: '/api' })
-fastify.register(adminRoutes, { prefix: '/api' })
-fastify.register(libraryRoutes, { prefix: '/api' })
-fastify.register(pushRoutes, { prefix: '/api' })
-fastify.register(featureFlagRoutes, { prefix: '/api' })
+// Register routes (API v1)
+fastify.register(sessionRoutes, { prefix: '/api/v1' })
+fastify.register(shareRoutes, { prefix: '/api/v1' })
+fastify.register(authRoutes, { prefix: '/api/v1' })
+fastify.register(friendRoutes, { prefix: '/api/v1' })
+fastify.register(dreamWallRoutes, { prefix: '/api/v1' })
+fastify.register(storyFeedbackRoutes, { prefix: '/api/v1' })
+fastify.register(notificationRoutes, { prefix: '/api/v1' })
+fastify.register(messageRoutes, { prefix: '/api/v1' })
+fastify.register(checkInRoutes, { prefix: '/api/v1' })
+fastify.register(achievementRoutes, { prefix: '/api/v1' })
+fastify.register(adminRoutes, { prefix: '/api/v1' })
+fastify.register(libraryRoutes, { prefix: '/api/v1' })
+fastify.register(pushRoutes, { prefix: '/api/v1' })
+fastify.register(featureFlagRoutes, { prefix: '/api/v1' })
+fastify.register(metricsRoutes, { prefix: '/api/v1' })
 
 // Error handler
 fastify.setErrorHandler((err, req, res) => {

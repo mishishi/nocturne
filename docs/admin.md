@@ -14,7 +14,7 @@
 
 ## 审核统计数据
 
-### GET /api/admin/stats
+### GET /api/v1/admin/stats
 
 获取审核统计数据（包含趋势数据）。
 
@@ -50,7 +50,7 @@
 
 ## 帖子审核
 
-### GET /api/admin/posts/pending
+### GET /api/v1/admin/posts/pending
 
 获取待审核帖子列表。
 
@@ -92,7 +92,7 @@
 
 ---
 
-### POST /api/admin/posts/:postId/approve
+### POST /api/v1/admin/posts/:postId/approve
 
 通过审核帖子。
 
@@ -121,7 +121,7 @@
 
 ---
 
-### POST /api/admin/posts/:postId/reject
+### POST /api/v1/admin/posts/:postId/reject
 
 拒绝审核帖子，并通知用户。
 
@@ -168,7 +168,7 @@
 
 ---
 
-### POST /api/admin/posts/batch-approve
+### POST /api/v1/admin/posts/batch-approve
 
 批量通过审核帖子。
 
@@ -203,7 +203,7 @@
 
 ---
 
-### POST /api/admin/posts/batch-reject
+### POST /api/v1/admin/posts/batch-reject
 
 批量拒绝审核帖子。
 
@@ -243,7 +243,7 @@
 
 ## 每日精选
 
-### POST /api/admin/posts/:postId/feature
+### POST /api/v1/admin/posts/:postId/feature
 
 将帖子设为精选，同时奖励作者 20 积分。
 
@@ -276,7 +276,7 @@
 
 ---
 
-### DELETE /api/admin/posts/:postId/feature
+### DELETE /api/v1/admin/posts/:postId/feature
 
 取消帖子精选状态。
 
@@ -327,7 +327,7 @@ engagementScore = (likeCount * 1) + (commentCount * 2)
 
 ---
 
-### POST /api/admin/highlights/generate
+### POST /api/v1/admin/highlights/generate
 
 运行算法生成精选候选。
 
@@ -372,7 +372,7 @@ engagementScore = (likeCount * 1) + (commentCount * 2)
 
 ---
 
-### GET /api/admin/highlights/candidates
+### GET /api/v1/admin/highlights/candidates
 
 获取精选候选列表。
 
@@ -403,7 +403,7 @@ engagementScore = (likeCount * 1) + (commentCount * 2)
 
 ---
 
-### POST /api/admin/highlights/:candidateId/approve
+### POST /api/v1/admin/highlights/:candidateId/approve
 
 确认精选候选，将帖子设为精选并奖励作者 20 积分。
 
@@ -437,7 +437,7 @@ engagementScore = (likeCount * 1) + (commentCount * 2)
 
 ---
 
-### DELETE /api/admin/highlights/:candidateId
+### DELETE /api/v1/admin/highlights/:candidateId
 
 拒绝精选候选。
 
@@ -465,7 +465,7 @@ engagementScore = (likeCount * 1) + (commentCount * 2)
 
 ---
 
-### POST /api/admin/highlights/batch-approve
+### POST /api/v1/admin/highlights/batch-approve
 
 批量确认精选候选。
 
@@ -528,7 +528,7 @@ engagementScore = likeCount * 1 + commentCount * 2
 
 ---
 
-### POST /api/admin/assets/generate-candidates
+### POST /api/v1/admin/assets/generate-candidates
 
 运行算法生成故事资产候选列表。
 
@@ -554,7 +554,7 @@ engagementScore = likeCount * 1 + commentCount * 2
 
 ---
 
-### GET /api/admin/assets/candidates
+### GET /api/v1/admin/assets/candidates
 
 获取故事资产候选列表。
 
@@ -597,7 +597,7 @@ engagementScore = likeCount * 1 + commentCount * 2
 
 ---
 
-### POST /api/admin/assets/candidates/:sessionId/approve
+### POST /api/v1/admin/assets/candidates/:sessionId/approve
 
 确认候选，创建或升级故事资产。
 
@@ -626,7 +626,7 @@ engagementScore = likeCount * 1 + commentCount * 2
 
 ---
 
-### DELETE /api/admin/assets/candidates/:sessionId
+### DELETE /api/v1/admin/assets/candidates/:sessionId
 
 拒绝候选。
 
@@ -654,7 +654,7 @@ engagementScore = likeCount * 1 + commentCount * 2
 
 ---
 
-### POST /api/admin/assets/auto-upgrade
+### POST /api/v1/admin/assets/auto-upgrade
 
 自动升级达标故事的质量等级（点赞≥20 且评论≥5）。
 
@@ -673,7 +673,7 @@ engagementScore = likeCount * 1 + commentCount * 2
 
 ---
 
-### PUT /api/admin/assets/:sessionId/upgrade
+### PUT /api/v1/admin/assets/:sessionId/upgrade
 
 手动提升故事质量等级。
 
@@ -714,7 +714,7 @@ engagementScore = likeCount * 1 + commentCount * 2
 
 ## 评论管理
 
-### GET /api/admin/comments
+### GET /api/v1/admin/comments
 
 获取所有评论列表。
 
@@ -755,7 +755,7 @@ engagementScore = likeCount * 1 + commentCount * 2
 
 ---
 
-### DELETE /api/admin/comments/:commentId
+### DELETE /api/v1/admin/comments/:commentId
 
 删除评论。
 

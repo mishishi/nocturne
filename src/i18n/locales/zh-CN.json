@@ -1,0 +1,133 @@
+{
+  "app": {
+    "name": "夜棂",
+    "tagline": "穿越梦境的星门"
+  },
+  "nav": {
+    "home": "首页",
+    "dream": "记录梦境",
+    "history": "历史",
+    "wall": "梦墙",
+    "profile": "我的",
+    "friends": "好友",
+    "notifications": "通知",
+    "chat": "聊天",
+    "library": "图书馆",
+    "drafts": "草稿箱"
+  },
+  "home": {
+    "welcome": "欢迎回来",
+    "startRecording": "开始记录梦境",
+    "recentDreams": "最近的梦",
+    "highlights": "今日精选",
+    "noDreams": "还没有记录任何梦境",
+    "startJourney": "开始你的梦境之旅"
+  },
+  "dream": {
+    "title": "记录梦境",
+    "placeholder": "描述你的梦境...",
+    "recording": "正在记录...",
+    "save": "保存",
+    "analyzing": "AI 正在分析你的梦境...",
+    "interpretation": "梦境解析",
+    "share": "分享到梦墙",
+    "saveDraft": "保存草稿",
+    "clearDraft": "清空"
+  },
+  "questions": {
+    "title": "回答问题",
+    "subtitle": "帮助我们更好地理解你的梦境",
+    "submit": "提交",
+    "next": "下一个",
+    "skip": "跳过"
+  },
+  "history": {
+    "title": "历史记录",
+    "filter": "筛选",
+    "all": "全部",
+    "noResults": "没有找到匹配的记录"
+  },
+  "favorites": {
+    "title": "我的收藏",
+    "empty": "还没有收藏任何内容"
+  },
+  "wall": {
+    "title": "梦墙",
+    "publish": "发布",
+    "like": "点赞",
+    "comment": "评论",
+    "share": "分享",
+    "report": "举报"
+  },
+  "profile": {
+    "title": "个人中心",
+    "settings": "设置",
+    "logout": "退出登录",
+    "login": "登录",
+    "register": "注册",
+    "points": "积分",
+    "memberSince": "加入时间",
+    "achievements": "成就",
+    "guest": "游客"
+  },
+  "settings": {
+    "title": "设置",
+    "appearance": "外观",
+    "theme": "主题",
+    "fontSize": "字体大小",
+    "reduceMotion": "减少动画",
+    "language": "语言",
+    "sound": "声音",
+    "ambientSound": "环境音",
+    "volume": "音量",
+    "about": "关于",
+    "version": "版本",
+    "feedback": "意见反馈",
+    "privacy": "隐私政策",
+    "terms": "服务条款"
+  },
+  "themes": {
+    "starry": "星空",
+    "aurora": "极光",
+    "dark": "深夜",
+    "light": "日光"
+  },
+  "fontSizes": {
+    "small": "小",
+    "medium": "中",
+    "large": "大"
+  },
+  "languages": {
+    "zh-CN": "简体中文",
+    "en": "English"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "出错了",
+    "retry": "重试",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "search": "搜索",
+    "noMore": "没有更多了",
+    "success": "操作成功",
+    "failed": "操作失败"
+  },
+  "errors": {
+    "networkError": "网络连接失败",
+    "serverError": "服务器错误",
+    "notFound": "内容不存在",
+    "unauthorized": "请先登录"
+  },
+  "pwa": {
+    "install": "安装应用",
+    "update": "有新版本可用",
+    "offline": "当前处于离线状态"
+  }
+}

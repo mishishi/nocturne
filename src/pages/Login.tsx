@@ -12,15 +12,15 @@ export function Login() {
   const location = useLocation()
   const { setUser } = useDreamStore()
   const [isLoading, setIsLoading] = useState(false)
-  const [showPhoneLogin, setShowPhoneLogin] = useState(false)
-  const [_loginMode, _setLoginMode] = useState<'wechat' | 'phone'>('wechat')
+  const [loginMode, setLoginMode] = useState<'wechat' | 'email' | 'phone'>('wechat')
 
   // Form states
+  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
-  const [touched, setTouched] = useState({ phone: false, password: false })
+  const [touched, setTouched] = useState({ email: false, phone: false, password: false })
 
   // Confirm modal state
   const [confirmModal, setConfirmModal] = useState<{
@@ -33,7 +33,12 @@ export function Login() {
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
 
   // Real-time validation
-  const validateField = (field: 'phone' | 'password', value: string): string => {
+  const validateField = (field: 'email' | 'phone' | 'password', value: string): string => {
+    if (field === 'email') {
+      if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        return '请输入有效的邮箱地址'
+      }
+    }
     if (field === 'phone') {
       if (value && !/^1[3-9]\d{9}$/.test(value)) {
         return '请输入有效的手机号'
@@ -47,8 +52,8 @@ export function Login() {
     return ''
   }
 
-  const getFieldError = (field: 'phone' | 'password'): string => {
-    const value = field === 'phone' ? phone : password
+  const getFieldError = (field: 'email' | 'phone' | 'password'): string => {
+    const value = field === 'email' ? email : field === 'phone' ? phone : password
     return touched[field] ? validateField(field, value) : ''
   }
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -96,19 +101,19 @@ export function Login() {
     }
   }
 
-  const handlePhoneLogin = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
 
-    if (!phone || !password) {
-      setError('请输入手机号和密码')
+    if (!email || !password) {
+      setError('请输入邮箱和密码')
       setIsLoading(false)
       return
     }
 
     try {
-      const result = await authApi.phoneLogin(phone, password)
+      const result = await authApi.emailLogin(email, password)
       if (result.success && result.data?.user) {
         const user = result.data.user
         const token = result.data.token
@@ -132,6 +137,51 @@ export function Login() {
         setUser(user, token, guestOpenid ?? undefined)
         localStorage.setItem('yeelin_openid', user.openid)
         // Respect 'from' if user came from a specific page, otherwise use role-based default
+        const destination = from !== '/' ? from : (user.isAdmin ? '/admin' : '/')
+        navigate(destination, { replace: true })
+      } else {
+        setError((!result.success ? result.error?.message : result.message) || '登录失败')
+      }
+    } catch (err) {
+      setError('网络错误，请检查网络连接')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handlePhoneLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+
+    if (!phone || !password) {
+      setError('请输入手机号和密码')
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const result = await authApi.phoneLogin(phone, password)
+      if (result.success && result.data?.user) {
+        const user = result.data.user
+        const token = result.data.token
+
+        // Migrate guest sessions if exists
+        const guestOpenid = localStorage.getItem('yeelin_openid')
+        if (guestOpenid && guestOpenid !== user.openid) {
+          try {
+            const result = await api.migrateSession(guestOpenid)
+            if (result.success && (result.data?.migrated ?? 0) > 0) {
+              showToast(`已保留 ${result.data?.migrated} 个未完成的梦境`)
+            }
+          } catch (err) {
+            console.error('Session migration failed:', err)
+            showToast('无法保留草稿，但您仍可正常登录', 'error')
+          }
+        }
+
+        setUser(user, token, guestOpenid ?? undefined)
+        localStorage.setItem('yeelin_openid', user.openid)
         const destination = from !== '/' ? from : (user.isAdmin ? '/admin' : '/')
         navigate(destination, { replace: true })
       } else {
@@ -204,7 +254,7 @@ export function Login() {
 
         {/* Login Card */}
         <div className={styles.card}>
-          {!showPhoneLogin ? (
+          {loginMode === 'wechat' && (
             // WeChat Login Mode
             <div className={styles.wechatMode}>
               <button
@@ -231,6 +281,28 @@ export function Login() {
               <button
                 className={styles.phoneToggle}
                 onClick={() => {
+                  if (email || password) {
+                    setConfirmModal({
+                      open: true,
+                      message: '切换登录方式将清空已填写的信息，确定继续吗？',
+                      onConfirm: () => {
+                        setEmail('')
+                        setPassword('')
+                        setLoginMode('email')
+                        setConfirmModal(prev => ({ ...prev, open: false }))
+                      }
+                    })
+                    return
+                  }
+                  setLoginMode('email')
+                }}
+              >
+                使用邮箱登录
+              </button>
+
+              <button
+                className={styles.phoneToggle}
+                onClick={() => {
                   if (phone || password) {
                     setConfirmModal({
                       open: true,
@@ -238,17 +310,21 @@ export function Login() {
                       onConfirm: () => {
                         setPhone('')
                         setPassword('')
-                        setShowPhoneLogin(true)
+                        setLoginMode('phone')
                         setConfirmModal(prev => ({ ...prev, open: false }))
                       }
                     })
                     return
                   }
-                  setShowPhoneLogin(true)
+                  setLoginMode('phone')
                 }}
               >
                 使用手机号登录
               </button>
+
+              <a href="/account-recovery" className={styles.phoneToggle}>
+                登录遇到问题？
+              </a>
 
               <p className={styles.loginHint}>
                 登录即表示同意
@@ -257,7 +333,124 @@ export function Login() {
                 <span className={styles.link}>《隐私政策》</span>
               </p>
             </div>
-          ) : (
+          )}
+
+          {loginMode === 'email' && (
+            // Email Login Mode
+            <div className={styles.phoneMode}>
+              <button
+                className={styles.backButton}
+                onClick={() => {
+                  if (email || password) {
+                    setConfirmModal({
+                      open: true,
+                      message: '切换登录方式将清空已填写的信息，确定继续吗？',
+                      onConfirm: () => {
+                        setEmail('')
+                        setPassword('')
+                        setLoginMode('wechat')
+                        setError('')
+                        setConfirmModal(prev => ({ ...prev, open: false }))
+                      }
+                    })
+                    return
+                  }
+                  setLoginMode('wechat')
+                  setError('')
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                返回微信登录
+              </button>
+
+              <form onSubmit={handleEmailLogin} className={styles.phoneForm}>
+                <div className={styles.inputGroup}>
+                  <div className={styles.inputWrapper}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.inputIcon}>
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                      <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <input
+                      type="email"
+                      placeholder="邮箱"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
+                      className={`${styles.input} ${getFieldError('email') ? styles.inputError : ''}`}
+                      autoComplete="email"
+                      aria-describedby={getFieldError('email') ? 'email-error' : undefined}
+                      aria-invalid={getFieldError('email') ? 'true' : undefined}
+                    />
+                    {getFieldError('email') && (
+                      <span id="email-error" className={styles.fieldError} role="alert">{getFieldError('email')}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.inputWrapper}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.inputIcon}>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="密码"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
+                      className={`${styles.input} ${getFieldError('password') ? styles.inputError : ''}`}
+                      autoComplete="current-password"
+                      aria-describedby={getFieldError('password') ? 'password-error' : undefined}
+                      aria-invalid={getFieldError('password') ? 'true' : undefined}
+                    />
+                    <button
+                      type="button"
+                      className={styles.passwordToggle}
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? '隐藏密码' : '显示密码'}
+                    >
+                      {showPassword ? (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                    {getFieldError('password') && (
+                      <span id="password-error" className={styles.fieldError} role="alert">{getFieldError('password')}</span>
+                    )}
+                  </div>
+                </div>
+
+                {error && <p className={styles.error}>{error}</p>}
+
+                <button
+                  type="submit"
+                  className={styles.submitButton}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <LoadingSpinner />
+                  ) : (
+                    '进入夜棂'
+                  )}
+                </button>
+
+                <div className={styles.formFooter}>
+                  <Link to="/forgot-password" className={styles.link}>忘记密码？</Link>
+                  <span className={styles.separator}>|</span>
+                  <a href="/register" className={styles.link}>注册账号</a>
+                </div>
+              </form>
+            </div>
+          )}
+          {loginMode === 'phone' && (
             // Phone Login Mode
             <div className={styles.phoneMode}>
               <button
@@ -270,14 +463,14 @@ export function Login() {
                       onConfirm: () => {
                         setPhone('')
                         setPassword('')
-                        setShowPhoneLogin(false)
+                        setLoginMode('wechat')
                         setError('')
                         setConfirmModal(prev => ({ ...prev, open: false }))
                       }
                     })
                     return
                   }
-                  setShowPhoneLogin(false)
+                  setLoginMode('wechat')
                   setError('')
                 }}
               >
@@ -300,7 +493,6 @@ export function Login() {
                       onChange={(e) => setPhone(e.target.value)}
                       onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
                       className={`${styles.input} ${getFieldError('phone') ? styles.inputError : ''}`}
-                      maxLength={11}
                       autoComplete="tel"
                       aria-describedby={getFieldError('phone') ? 'phone-error' : undefined}
                       aria-invalid={getFieldError('phone') ? 'true' : undefined}

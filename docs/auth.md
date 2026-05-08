@@ -8,7 +8,7 @@
 
 ## 端点详情
 
-### POST /api/auth/wechat
+### POST /api/v1/auth/wechat
 
 **功能：** 微信授权登录（模拟）
 
@@ -55,7 +55,7 @@
 
 ---
 
-### POST /api/auth/phone-login
+### POST /api/v1/auth/phone-login
 
 **功能：** 手机号密码登录
 
@@ -98,7 +98,7 @@
 
 ---
 
-### POST /api/auth/register
+### POST /api/v1/auth/register
 
 **功能：** 手机号注册
 
@@ -144,7 +144,244 @@
 
 ---
 
-### POST /api/auth/update-profile
+### POST /api/v1/auth/email-login
+
+**功能：** 邮箱密码登录
+
+**需要认证：** 否
+
+**请求 Body：**
+```json
+{
+  "email": "string",     // 必填，邮箱地址
+  "password": "string"   // 必填，密码
+}
+```
+
+**响应 (200 成功 / 401 失败)：**
+```json
+// 成功
+{
+  "success": true,
+  "user": { ... },
+  "token": "yeelin_..."
+}
+
+// 失败
+{
+  "success": false,
+  "reason": "邮箱或密码错误"
+}
+```
+
+**业务逻辑：**
+- 验证邮箱和密码（bcrypt 比较）
+- 更新 lastLogin 字段
+- 用户不存在或密码错误返回固定提示（防止用户探测）
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/pages/Login.tsx` | `handleEmailLogin()` | 提交邮箱登录表单 |
+
+---
+
+### POST /api/v1/auth/email-register
+
+**功能：** 邮箱密码注册
+
+**需要认证：** 否
+
+**请求 Body：**
+```json
+{
+  "email": "string",       // 必填，邮箱地址
+  "password": "string",    // 必填，至少6位
+  "nickname": "string"     // 选填，昵称
+}
+```
+
+**响应 (200 成功 / 400 失败)：**
+```json
+// 成功
+{
+  "success": true,
+  "user": { ... },
+  "token": "yeelin_..."
+}
+
+// 失败
+{
+  "success": false,
+  "reason": "该邮箱已注册"
+}
+```
+
+**业务逻辑：**
+- 检查邮箱是否已注册
+- bcrypt 加密密码
+- 生成唯一 openid：`email_<email>_<timestamp>`
+- nickname 默认随机生成
+- emailVerified 默认为 false
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/pages/Register.tsx` | `handleNicknameSubmit()` | 点击"进入夜棂"提交注册表单 |
+
+---
+
+### POST /api/v1/auth/send-email-code
+
+**功能：** 发送邮箱验证码（演示版本返回固定验证码）
+
+**需要认证：** 否
+
+**请求 Body：**
+```json
+{
+  "email": "string",           // 必填，邮箱地址
+  "purpose": "login" | "bind"  // 必填，验证码用途
+}
+```
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "code": "123456"  // 演示版本返回固定验证码
+}
+```
+
+**业务逻辑：**
+- 演示版本：总是返回固定验证码 `123456`
+- 生产版本：应生成随机6位验证码，存储到 Redis，5分钟有效期
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/pages/Profile.tsx` | `handleSendCode()` | 绑定邮箱或修改密码时发送验证码 |
+
+---
+
+### POST /api/v1/auth/verify-email-code
+
+**功能：** 验证邮箱验证码
+
+**需要认证：** 否
+
+**请求 Body：**
+```json
+{
+  "email": "string",  // 必填，邮箱地址
+  "code": "string"    // 必填，验证码
+}
+```
+
+**响应 (200)：**
+```json
+{
+  "success": true
+}
+
+// 失败
+{
+  "success": false,
+  "reason": "验证码错误"
+}
+```
+
+**业务逻辑：**
+- 演示版本：只验证 `code === '123456'`
+- 生产版本：应从 Redis 验证，检查过期时间和用途
+
+---
+
+### POST /api/v1/auth/bind-email
+
+**功能：** 绑定邮箱到已登录账号
+
+**需要认证：** **是**（需 Bearer Token）
+
+**请求 Body：**
+```json
+{
+  "email": "string",  // 必填，邮箱地址
+  "code": "string"    // 必填，验证码
+}
+```
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "user": { ... }
+}
+
+// 失败
+{
+  "success": false,
+  "reason": "验证码错误" | "该邮箱已被其他账号使用"
+}
+```
+
+**业务逻辑：**
+- 验证验证码
+- 检查邮箱是否已被其他账号使用
+- 更新用户邮箱和 emailVerified 字段
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/pages/Profile.tsx` | `handleBindEmail()` | 用户绑定邮箱时 |
+
+---
+
+### POST /api/v1/auth/change-password
+
+**功能：** 修改密码
+
+**需要认证：** **是**（需 Bearer Token）
+
+**请求 Body：**
+```json
+{
+  "oldPassword": "string",  // 必填，原密码
+  "newPassword": "string"    // 必填，新密码（至少6位）
+}
+```
+
+**响应 (200)：**
+```json
+{
+  "success": true
+}
+
+// 失败
+{
+  "success": false,
+  "reason": "原密码错误" | "该账号未设置密码"
+}
+```
+
+**业务逻辑：**
+- 验证原密码
+- bcrypt 加密新密码
+- 更新 passwordHash 字段
+
+**前端调用：**
+
+| 文件 | 函数 | 触发时机 |
+|------|------|----------|
+| `src/pages/Profile.tsx` | `handleChangePassword()` | 用户修改密码时 |
+
+---
+
+### POST /api/v1/auth/update-profile
 
 **功能：** 更新用户资料
 
@@ -171,7 +408,7 @@
 
 ---
 
-### GET /api/auth/user/:openid
+### GET /api/v1/auth/user/:openid
 
 **功能：** 通过 openid 获取用户公开信息
 
@@ -198,7 +435,7 @@
 
 ---
 
-### POST /api/auth/verify-token
+### POST /api/v1/auth/verify-token
 
 **功能：** 验证 token 有效性
 
@@ -238,7 +475,7 @@
 
 ---
 
-### GET /api/auth/wechat/authorize
+### GET /api/v1/auth/wechat/authorize
 
 **功能：** 生成微信授权 URL 并跳转
 
@@ -251,7 +488,7 @@
 
 **业务逻辑：**
 - 拼接微信授权 URL，state 参数包含 base64 编码的 redirect_uri
-- 授权成功回调到 `/api/auth/wechat/callback`
+- 授权成功回调到 `/api/v1/auth/wechat/callback`
 
 **前端调用：**
 
@@ -261,7 +498,7 @@
 
 ---
 
-### GET /api/auth/wechat/callback
+### GET /api/v1/auth/wechat/callback
 
 **功能：** 微信 OAuth 回调，处理 code 换 openid
 
@@ -284,7 +521,7 @@
 
 ---
 
-### POST /api/auth/export-data
+### POST /api/v1/auth/export-data
 
 **功能：** 导出用户所有数据（GDPR 数据可携带权）
 

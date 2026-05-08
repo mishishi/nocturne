@@ -46,7 +46,7 @@ export function Navbar() {
           <li>
             <Link to="/friends" aria-current={isActive('/friends') ? 'page' : undefined} className={`${styles.link} ${isActive('/friends') ? styles.active : ''}`}>
               好友
-              {isLoggedIn && friendRequests.length > 0 && <span className={styles.badge}>{friendRequests.length}</span>}
+              {isLoggedIn && friendRequests.requests.length > 0 && <span className={styles.badge}>{friendRequests.requests.length}</span>}
             </Link>
           </li>
           <li>
@@ -71,7 +71,7 @@ export function Navbar() {
             <path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          {isLoggedIn && notificationCount > 0 && <span className={styles.notificationBadge}>{notificationCount}</span>}
+          {isLoggedIn && notificationCount.count > 0 && <span className={styles.notificationBadge}>{notificationCount.count}</span>}
         </Link>
         </div>
       </nav>

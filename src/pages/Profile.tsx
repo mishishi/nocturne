@@ -9,8 +9,10 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
 import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
+import { useSettingsStore } from '../hooks/useSettingsStore'
 import { usePushNotification } from '../hooks/usePushNotification'
-import { shareApi, UserStats, checkInApi, api, wallApi, type DreamWallPost } from '../services/api'
+import { useSupportChat } from '../hooks/useSupportChat'
+import { shareApi, UserStats, checkInApi, api, wallApi, authApi, type DreamWallPost } from '../services/api'
 import styles from './Profile.module.css'
 
 // Medal definitions (mirrors server-side MEDALS)
@@ -29,7 +31,13 @@ const FONT_SIZE_OPTIONS = [
 const THEME_OPTIONS = [
   { value: 'starry' as const, label: '星夜', icon: '🌙', desc: '深邃星空' },
   { value: 'aurora' as const, label: '极光', icon: '🌌', desc: '神秘极光' },
-  { value: 'dark' as const, label: '暗黑', icon: '🌑', desc: '深邃静谧' }
+  { value: 'dark' as const, label: '暗黑', icon: '🌑', desc: '深邃静谧' },
+  { value: 'light' as const, label: '日光', icon: '☀️', desc: '明亮清爽' }
+]
+
+const LANGUAGE_OPTIONS = [
+  { value: 'zh-CN' as const, label: '简体中文' },
+  { value: 'en' as const, label: 'English' }
 ]
 
 // Helper to format stat values with skeleton loading
@@ -41,10 +49,15 @@ const formatStatValue = (value: number | null): string => {
 export function Profile() {
   const navigate = useNavigate()
   const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus, setHistory } = useDreamStore()
+  const { language, setLanguage } = useSettingsStore()
   const { permission, isSubscribed, reminderEnabled, reminderTime, isSupported, subscribe, unsubscribe, toggleReminder, updateReminderTime } = usePushNotification()
+  const { open: openSupportChat } = useSupportChat({ websiteId: import.meta.env.VITE_CRISP_WEBSITE_ID || '' })
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
+  const [showPushConfirm, setShowPushConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [shareStats, setShareStatsLocal] = useState<UserStats | null>(null)
@@ -230,6 +243,28 @@ export function Profile() {
     setShowClearConfirm(false)
     setToastMessage('历史记录已清除')
     setToastVisible(true)
+  }
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    try {
+      const res = await authApi.deleteAccount()
+      if (res.success) {
+        setShowDeleteAccountConfirm(false)
+        logout()
+        navigate('/')
+        setToastMessage('账号已删除')
+        setToastVisible(true)
+      } else {
+        setToastMessage(res.error?.message || '删除失败')
+        setToastVisible(true)
+      }
+    } catch (err) {
+      setToastMessage('删除账号失败')
+      setToastVisible(true)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -633,6 +668,25 @@ export function Profile() {
                 <span className={styles.toggleThumb} />
               </button>
             </div>
+
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <span className={styles.settingLabel}>语言</span>
+                <span className={styles.settingDesc}>选择界面显示语言</span>
+              </div>
+              <select
+                className={styles.langSelector}
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as 'zh-CN' | 'en')}
+                aria-label="选择语言"
+              >
+                {LANGUAGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -654,7 +708,7 @@ export function Profile() {
                 ) : isSubscribed ? (
                   <Button variant="ghost" size="sm" onClick={unsubscribe}>取消订阅</Button>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={subscribe}>订阅</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setShowPushConfirm(true)}>订阅</Button>
                 )}
               </div>
 
@@ -730,6 +784,21 @@ export function Profile() {
               </button>
             </div>
             {user && (
+              <>
+              <div className={`${styles.settingItem} ${styles.dangerItem}`}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>删除账号</span>
+                  <span className={styles.settingDesc}>永久删除所有数据，账号无法恢复</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDeleteAccountConfirm(true)}
+                  danger
+                >
+                  删除
+                </Button>
+              </div>
               <div className={styles.settingItem}>
                 <div className={styles.settingInfo}>
                   <span className={styles.settingLabel}>退出登录</span>
@@ -743,6 +812,7 @@ export function Profile() {
                   退出
                 </Button>
               </div>
+              </>
             )}
           </div>
         </div>
@@ -754,6 +824,28 @@ export function Profile() {
             <p>夜棂 v1.0.0</p>
             <p>记录你的每一个梦境</p>
           </div>
+          <div className={styles.legalLinks}>
+            <Link to="/privacy" className={styles.legalLink}>隐私政策</Link>
+            <span className={styles.legalDivider}>·</span>
+            <Link to="/terms" className={styles.legalLink}>用户协议</Link>
+          </div>
+
+          {/* 意见反馈 - 仅当配置了 Crisp 时显示 */}
+          {import.meta.env.VITE_CRISP_WEBSITE_ID && (
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <span className={styles.settingLabel}>意见反馈</span>
+                <span className={styles.settingDesc}>遇到问题或有任何建议</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={openSupportChat}
+              >
+                反馈
+              </Button>
+            </div>
+          )}
         </div>
           </div>
         )}
@@ -784,6 +876,31 @@ export function Profile() {
           navigate('/login')
         }}
         onCancel={() => setShowLogoutConfirm(false)}
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteAccountConfirm}
+        title="删除账号"
+        message="确定要永久删除您的账号吗？此操作不可逆，所有数据将被永久删除，包括：梦境记录、故事、收藏、好友关系等。删除后账号无法恢复。"
+        confirmText="确认删除"
+        cancelText="取消"
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setShowDeleteAccountConfirm(false)}
+        danger
+        loading={isDeleting}
+      />
+
+      <ConfirmModal
+        isOpen={showPushConfirm}
+        title="开启推送通知"
+        message="开启后，您将收到评论回复、好友请求等通知。是否确定开启？"
+        confirmText="开启"
+        cancelText="取消"
+        onConfirm={async () => {
+          setShowPushConfirm(false)
+          await subscribe()
+        }}
+        onCancel={() => setShowPushConfirm(false)}
       />
 
       <Toast

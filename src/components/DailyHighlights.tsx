@@ -90,7 +90,7 @@ export function DailyHighlights() {
                 <div className={styles.author}>
                   <div className={styles.avatar}>
                     {highlight.avatar ? (
-                      <img src={highlight.avatar} alt="" />
+                      <img src={highlight.avatar} alt="" loading="lazy" />
                     ) : (
                       <span>{highlight.nickname?.charAt(0) || '梦'}</span>
                     )}

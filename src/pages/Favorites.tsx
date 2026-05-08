@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { wallApi, DreamWallPost } from '../services/api'
 import { Button } from '../components/ui/Button'

@@ -166,6 +166,38 @@ html[data-font-size="large"] {
   --color-border: rgba(255, 255, 255, 0.08);
 }
 
+/* ==========================================
+   THEME: Light
+   ========================================== */
+[data-theme="light"] {
+  /* Backgrounds - Warm cream tones */
+  --color-night-deep: #FEFCF8;
+  --color-night-surface: #F5F0E8;
+  --color-night-mid: #EDE7DC;
+  /* Text - Dark warm tones */
+  --color-moonlight: #2D2A26;
+  --color-silver: #6B6560;
+  --color-silver-dim: #8A8478;
+  /* Accent - Golden/amber */
+  --color-golden: #C4956A;
+  --color-golden-bright: #D4A574;
+  --shadow-glow: rgba(196, 149, 106, 0.2);
+  --shadow-glow-strong: rgba(196, 149, 106, 0.35);
+  /* Borders */
+  --color-border: rgba(45, 42, 38, 0.12);
+  --color-border-subtle: rgba(45, 42, 38, 0.06);
+  --color-border-light: rgba(45, 42, 38, 0.1);
+  --color-border-hover: rgba(45, 42, 38, 0.25);
+  --color-border-strong: rgba(45, 42, 38, 0.35);
+  /* Surface */
+  --color-surface: rgba(237, 231, 220, 0.6);
+  --color-surface-hover: rgba(237, 231, 220, 0.9);
+  --color-surface-light: rgba(45, 42, 38, 0.05);
+  --color-surface-medium: rgba(45, 42, 38, 0.08);
+  /* Overlay */
+  --color-overlay: rgba(254, 252, 248, 0.95);
+}
+
 /* Reset */
 *, *::before, *::after {
   box-sizing: border-box;

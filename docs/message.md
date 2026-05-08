@@ -8,10 +8,10 @@
 
 | 端点 | 方法 | 功能 | 需要认证 |
 |------|------|------|----------|
-| `/api/messages/conversations` | GET | 获取会话列表 | **是** |
-| `/api/messages/:friendOpenid` | GET | 获取与好友的消息历史 | **是** |
-| `/api/messages` | POST | 发送消息 | **是** |
-| `/api/messages/:messageId/read` | POST | 标记消息为已读 | **是** |
+| `/api/v1/messages/conversations` | GET | 获取会话列表 | **是** |
+| `/api/v1/messages/:friendOpenid` | GET | 获取与好友的消息历史 | **是** |
+| `/api/v1/messages` | POST | 发送消息 | **是** |
+| `/api/v1/messages/:messageId/read` | POST | 标记消息为已读 | **是** |
 
 ---
 
@@ -23,7 +23,7 @@
 
 ---
 
-## GET /api/messages/conversations
+## GET /api/v1/messages/conversations
 
 **功能：** 获取当前用户的所有会话列表，每个会话显示最新一条消息和未读数
 
@@ -62,7 +62,7 @@
 
 ---
 
-## GET /api/messages/:friendOpenid
+## GET /api/v1/messages/:friendOpenid
 
 **功能：** 获取与指定好友的消息历史记录
 
@@ -111,7 +111,7 @@
 
 ---
 
-## POST /api/messages
+## POST /api/v1/messages
 
 **功能：** 向指定好友发送消息
 
@@ -155,7 +155,7 @@
 
 ---
 
-## POST /api/messages/:messageId/read
+## POST /api/v1/messages/:messageId/read
 
 **功能：** 标记指定消息为已读
 

@@ -3,7 +3,7 @@
 
 import { getAuthToken } from '../utils/auth'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1'
 
 // ============ 统一响应类型 ============
 export interface ApiSuccessResponse<T> {
@@ -1267,6 +1267,37 @@ export interface DailyStat {
   rejected: number
 }
 
+// Metrics API types
+export interface MetricsSummary {
+  totalRequests: number
+  avgDuration: number
+  totalSlow: number
+  totalErrors: number
+  maxDuration: number
+  minDuration: number
+}
+
+export interface MetricsTrendPoint {
+  date: string
+  hour?: number
+  requestCount: number
+  avgDuration: number
+  slowCount: number
+  errorCount: number
+  maxDuration: number
+  minDuration: number
+}
+
+export interface SlowEndpoint {
+  date: string
+  endpoint: string
+  method: string
+  requestCount: number
+  avgDuration: number
+  slowCount: number
+  errorCount: number
+}
+
 export interface PendingPost {
   id: string
   sessionId: string
@@ -1472,6 +1503,46 @@ export const adminApi = {
       body: JSON.stringify({ candidateIds })
     })
     if (!res.ok) throw new Error(`批量确认候选失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get metrics summary
+  async getMetricsSummary(startDate: string, endDate: string): Promise<ApiResponse<MetricsSummary>> {
+    const res = await fetchWithTimeout(
+      `${API_BASE}/metrics/summary?startDate=${startDate}&endDate=${endDate}`,
+      { headers: authHeaders() }
+    )
+    if (!res.ok) throw new Error(`获取监控汇总失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get metrics trend
+  async getMetricsTrend(
+    startDate: string,
+    endDate: string,
+    interval: 'hour' | 'day' = 'hour'
+  ): Promise<ApiResponse<MetricsTrendPoint[]>> {
+    const res = await fetchWithTimeout(
+      `${API_BASE}/metrics/trend?startDate=${startDate}&endDate=${endDate}&interval=${interval}`,
+      { headers: authHeaders() }
+    )
+    if (!res.ok) throw new Error(`获取监控趋势失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get slowest endpoints
+  async getSlowEndpoints(
+    startDate: string,
+    endDate: string,
+    limit = 10,
+    endpoint?: string
+  ): Promise<ApiResponse<SlowEndpoint[]>> {
+    let url = `${API_BASE}/metrics/slow?startDate=${startDate}&endDate=${endDate}&limit=${limit}`
+    if (endpoint) {
+      url += `&endpoint=${encodeURIComponent(endpoint)}`
+    }
+    const res = await fetchWithTimeout(url, { headers: authHeaders() })
+    if (!res.ok) throw new Error(`获取慢接口失败: ${res.status}`)
     return res.json()
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import styles from './Toast.module.css'
 
 interface ToastAction {
@@ -18,6 +18,7 @@ interface ToastProps {
 export function Toast({ message, visible, onClose, duration, type = 'success', action }: ToastProps) {
   const defaultDuration = type === 'error' ? 0 : type === 'info' ? 5000 : 2000
   const effectiveDuration = duration ?? defaultDuration
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     // Error toasts persist until explicitly dismissed
@@ -26,6 +27,27 @@ export function Toast({ message, visible, onClose, duration, type = 'success', a
       return () => clearTimeout(timer)
     }
   }, [visible, effectiveDuration, onClose, action])
+
+  // Escape key to dismiss
+  useEffect(() => {
+    if (!visible) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [visible, onClose])
+
+  // Focus close button on mount for error toasts
+  useEffect(() => {
+    if (visible && type === 'error' && closeButtonRef.current) {
+      closeButtonRef.current.focus()
+    }
+  }, [visible, type])
 
   if (!visible) return null
 
@@ -56,7 +78,7 @@ export function Toast({ message, visible, onClose, duration, type = 'success', a
         </button>
       )}
       {type === 'error' && (
-        <button className={styles.closeBtn} onClick={onClose} aria-label="关闭">
+        <button ref={closeButtonRef} className={styles.closeBtn} onClick={onClose} aria-label="关闭">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />

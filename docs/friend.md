@@ -15,7 +15,7 @@
 
 ## 端点详情
 
-### POST /api/friends/request
+### POST /api/v1/friends/request
 
 **功能：** 发送好友请求
 
@@ -69,7 +69,7 @@
 
 ---
 
-### POST /api/friends/accept
+### POST /api/v1/friends/accept
 
 **功能：** 接受好友请求
 
@@ -116,7 +116,7 @@
 
 ---
 
-### POST /api/friends/reject
+### POST /api/v1/friends/reject
 
 **功能：** 拒绝好友请求
 
@@ -156,7 +156,7 @@
 
 ---
 
-### DELETE /api/friends/:friendOpenid
+### DELETE /api/v1/friends/:friendOpenid
 
 **功能：** 删除好友
 
@@ -191,7 +191,7 @@
 
 ---
 
-### GET /api/friends
+### GET /api/v1/friends
 
 **功能：** 获取好友列表
 
@@ -224,7 +224,7 @@
 
 ---
 
-### GET /api/friends/requests
+### GET /api/v1/friends/requests
 
 **功能：** 获取收到的待处理好友请求
 
@@ -258,7 +258,7 @@
 
 ---
 
-### GET /api/friends/sent
+### GET /api/v1/friends/sent
 
 **功能：** 获取发出的好友请求
 
@@ -292,7 +292,7 @@
 
 ---
 
-### GET /api/friends/:openid/posts
+### GET /api/v1/friends/:openid/posts
 
 **功能：** 获取好友的公开帖子
 

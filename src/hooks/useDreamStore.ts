@@ -150,7 +150,7 @@ interface DreamState {
 
   // Settings
   fontSize: 'small' | 'medium' | 'large'
-  theme: 'starry' | 'aurora' | 'dark'
+  theme: 'starry' | 'aurora' | 'dark' | 'light'
   reduceMotion: boolean
   ambientSound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain'
   ambientVolume: number
@@ -181,7 +181,7 @@ interface DreamState {
   unlockMedal: (medalId: string) => void
   setShareStats: (stats: { points: number; medals: string[]; consecutiveShares: number; lastShareDate: string | null }) => void
   setFontSize: (size: 'small' | 'medium' | 'large') => void
-  setTheme: (theme: 'starry' | 'aurora' | 'dark') => void
+  setTheme: (theme: 'starry' | 'aurora' | 'dark' | 'light') => void
   setReduceMotion: (reduce: boolean) => void
   setAmbientSound: (sound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain') => void
   setAmbientVolume: (volume: number) => void

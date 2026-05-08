@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { adminApi, AdminStats } from '../../services/api'
+import { adminApi, AdminStats, MetricsSummary, MetricsTrendPoint, SlowEndpoint } from '../../services/api'
 import {
   AreaChart,
   Area,
@@ -50,12 +50,36 @@ const TrendDownIcon = () => (
   </svg>
 )
 
+const ClockIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 6v6l4 2" />
+  </svg>
+)
+
+const ZapIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </svg>
+)
+
+const AlertIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+  </svg>
+)
+
 export function Stats() {
   const [stats, setStats] = useState<AdminStats | null>(null)
+  const [metricsSummary, setMetricsSummary] = useState<MetricsSummary | null>(null)
+  const [metricsTrend, setMetricsTrend] = useState<MetricsTrendPoint[]>([])
+  const [slowEndpoints, setSlowEndpoints] = useState<SlowEndpoint[]>([])
+  const [endpointSearch, setEndpointSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     loadStats()
+    loadMetrics()
   }, [])
 
   const loadStats = async () => {
@@ -66,9 +90,34 @@ export function Stats() {
       }
     } catch (err) {
       console.error('Failed to load stats:', err)
+    }
+  }
+
+  const loadMetrics = async (search?: string) => {
+    try {
+      // Get last 7 days range
+      const endDate = new Date().toISOString().slice(0, 10)
+      const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
+      const [summaryRes, trendRes, slowRes] = await Promise.all([
+        adminApi.getMetricsSummary(startDate, endDate),
+        adminApi.getMetricsTrend(startDate, endDate, 'day'),
+        adminApi.getSlowEndpoints(startDate, endDate, 10, search || undefined)
+      ])
+
+      if (summaryRes.success) setMetricsSummary(summaryRes.data)
+      if (trendRes.success) setMetricsTrend(trendRes.data)
+      if (slowRes.success) setSlowEndpoints(slowRes.data)
+    } catch (err) {
+      console.error('Failed to load metrics:', err)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = () => {
+    setLoading(true)
+    loadMetrics(endpointSearch)
   }
 
   if (loading) {
@@ -287,6 +336,192 @@ export function Stats() {
           <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: '#f4d35e' }} />发帖</span>
           <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: '#48c78e' }} />通过</span>
           <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: '#ed6464' }} />拒绝</span>
+        </div>
+      </div>
+
+      {/* API Performance Section */}
+      <div className={styles.header} style={{ marginTop: 'var(--space-4)' }}>
+        <h2 className={styles.title}>接口性能</h2>
+        <span className={styles.subtitle}>最近7天 API 响应统计</span>
+      </div>
+
+      {/* API Metrics Cards */}
+      <div className={styles.metricsGrid}>
+        <div className={styles.metricCard}>
+          <div className={styles.metricIcon} data-color="golden">
+            <ZapIcon />
+          </div>
+          <div className={styles.metricInfo}>
+            <span className={styles.metricValue}>{metricsSummary?.totalRequests?.toLocaleString() ?? 0}</span>
+            <span className={styles.metricLabel}>总请求数</span>
+          </div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricIcon} data-color="blue">
+            <ClockIcon />
+          </div>
+          <div className={styles.metricInfo}>
+            <span className={styles.metricValue}>{Math.round(metricsSummary?.avgDuration ?? 0)}ms</span>
+            <span className={styles.metricLabel}>平均耗时</span>
+          </div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricIcon} data-color="yellow">
+            <AlertIcon />
+          </div>
+          <div className={styles.metricInfo}>
+            <span className={styles.metricValue}>{metricsSummary?.totalSlow?.toLocaleString() ?? 0}</span>
+            <span className={styles.metricLabel}>慢请求</span>
+          </div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricIcon} data-color="red">
+            <CloseIcon />
+          </div>
+          <div className={styles.metricInfo}>
+            <span className={styles.metricValue}>{metricsSummary?.totalErrors?.toLocaleString() ?? 0}</span>
+            <span className={styles.metricLabel}>错误请求</span>
+          </div>
+        </div>
+      </div>
+
+      {/* API Response Time Trend */}
+      <div className={styles.chartsRow}>
+        <div className={styles.chartCard} style={{ gridColumn: 'span 2' }}>
+          <div className={styles.chartHeader}>
+            <h2 className={styles.chartTitle}>响应时间趋势</h2>
+            <span className={styles.chartSubtitle}>每日平均响应时间 (ms)</span>
+          </div>
+          <div className={styles.chartContainer}>
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={metricsTrend}>
+                <defs>
+                  <linearGradient id="durationGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#58a6ff" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#58a6ff" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis
+                  dataKey="date"
+                  stroke="rgba(255,255,255,0.5)"
+                  fontSize={12}
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="rgba(255,255,255,0.5)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `${v}ms`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: 'rgba(20, 20, 30, 0.95)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    color: '#fff'
+                  }}
+                  labelStyle={{ color: 'rgba(255,255,255,0.7)' }}
+                  formatter={(value) => [`${Math.round(Number(value))}ms`, '平均耗时']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="avgDuration"
+                  stroke="#58a6ff"
+                  strokeWidth={2}
+                  fill="url(#durationGradient)"
+                  name="平均耗时"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Slowest Endpoints Table */}
+      <div className={styles.chartCard} style={{ gridColumn: '1 / -1' }}>
+        <div className={styles.chartHeader}>
+          <h2 className={styles.chartTitle}>最慢接口 TOP 10</h2>
+          <span className={styles.chartSubtitle}>按平均响应时间排序（已过滤 OPTIONS）</span>
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+          <input
+            type="text"
+            placeholder="搜索接口路径..."
+            value={endpointSearch}
+            onChange={(e) => setEndpointSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            style={{
+              flex: 1,
+              padding: 'var(--space-2) var(--space-3)',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 'var(--radius-lg)',
+              color: 'var(--color-moonlight)',
+              fontSize: 'var(--text-sm)',
+              outline: 'none'
+            }}
+          />
+          <button
+            onClick={handleSearch}
+            style={{
+              padding: 'var(--space-2) var(--space-4)',
+              background: 'rgba(244,211,94,0.2)',
+              border: '1px solid rgba(244,211,94,0.3)',
+              borderRadius: 'var(--radius-lg)',
+              color: 'var(--color-golden)',
+              fontSize: 'var(--text-sm)',
+              cursor: 'pointer'
+            }}
+          >
+            搜索
+          </button>
+        </div>
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>接口</th>
+                <th>方法</th>
+                <th>请求数</th>
+                <th>平均耗时</th>
+                <th>慢请求</th>
+                <th>错误</th>
+              </tr>
+            </thead>
+            <tbody>
+              {slowEndpoints.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.emptyCell}>暂无数据</td>
+                </tr>
+              ) : (
+                slowEndpoints.map((ep, idx) => (
+                  <tr key={`${ep.date}-${ep.endpoint}-${ep.method}-${idx}`}>
+                    <td>{ep.date}</td>
+                    <td className={styles.endpointCell}>{ep.endpoint}</td>
+                    <td>
+                      <span className={styles.methodBadge} data-method={ep.method}>
+                        {ep.method}
+                      </span>
+                    </td>
+                    <td>{ep.requestCount?.toLocaleString() ?? 0}</td>
+                    <td className={styles.durationCell}>{Math.round(ep.avgDuration ?? 0)}ms</td>
+                    <td className={ep.slowCount > 0 ? styles.warnCell : ''}>
+                      {ep.slowCount?.toLocaleString() ?? 0}
+                    </td>
+                    <td className={ep.errorCount > 0 ? styles.errorCell : ''}>
+                      {ep.errorCount?.toLocaleString() ?? 0}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

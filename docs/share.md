@@ -29,7 +29,7 @@
 
 ## 端点详情
 
-### POST /api/share/log
+### POST /api/v1/share/log
 
 **功能：** 记录分享行为并发放奖励
 
@@ -93,7 +93,7 @@
 
 ---
 
-### GET /api/share/stats/:openid
+### GET /api/v1/share/stats/:openid
 
 **功能：** 获取用户分享统计信息
 
@@ -133,7 +133,7 @@ const stats = await shareApi.getStats(openid)
 
 ---
 
-### POST /api/share/invite
+### POST /api/v1/share/invite
 
 **功能：** 创建邀请码
 
@@ -180,7 +180,7 @@ navigator.clipboard.writeText(result.inviteUrl)
 
 ---
 
-### POST /api/share/use-invite
+### POST /api/v1/share/use-invite
 
 **功能：** 使用邀请码（接受邀请）
 

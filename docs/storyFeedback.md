@@ -24,7 +24,7 @@
 
 ## 端点详情
 
-### POST /api/story-feedback
+### POST /api/v1/story-feedback
 
 **功能：** 提交故事反馈
 
@@ -112,7 +112,7 @@
 
 ---
 
-### GET /api/story-feedback/:sessionId
+### GET /api/v1/story-feedback/:sessionId
 
 **功能：** 获取故事的单个反馈（按时间排序的第一个）
 
@@ -157,7 +157,7 @@
 
 ---
 
-### GET /api/story-feedback/:sessionId/all
+### GET /api/v1/story-feedback/:sessionId/all
 
 **功能：** 获取该会话的所有反馈及统计
 
@@ -207,7 +207,7 @@
 
 ---
 
-### GET /api/story-feedback/:sessionId/check
+### GET /api/v1/story-feedback/:sessionId/check
 
 **功能：** 检查当前用户是否已对某故事提交反馈
 
@@ -258,7 +258,7 @@
 
 ---
 
-### GET /api/story-feedback/analytics
+### GET /api/v1/story-feedback/analytics
 
 **功能：** AI 质量分析（全局统计）
 
@@ -311,7 +311,7 @@
 
 ---
 
-### GET /api/story-feedback/recommendations
+### GET /api/v1/story-feedback/recommendations
 
 **功能：** 基于用户偏好的个性化故事推荐
 

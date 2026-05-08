@@ -23,7 +23,7 @@
 
 ## 端点详情
 
-### GET /api/wall
+### GET /api/v1/wall
 
 **功能：** 获取梦墙帖子列表（公开）
 
@@ -94,7 +94,7 @@ const result = await wallApi.getPosts({
 
 ---
 
-### GET /api/wall/highlights
+### GET /api/v1/wall/highlights
 
 **功能：** 获取今日精选帖子列表（公开）
 
@@ -146,7 +146,7 @@ if (res.success && res.data?.highlights) {
 
 ---
 
-### POST /api/wall
+### POST /api/v1/wall
 
 **功能：** 发布故事到梦墙
 
@@ -229,7 +229,7 @@ const result = await wallApi.publish({
 
 ---
 
-### GET /api/wall/my
+### GET /api/v1/wall/my
 
 **功能：** 获取当前用户发布的帖子列表
 
@@ -278,7 +278,7 @@ const result = await wallApi.getMyPosts(openid)
 
 ---
 
-### GET /api/wall/friends
+### GET /api/v1/wall/friends
 
 **功能：** 获取关注的人（好友）的帖子列表
 
@@ -341,7 +341,7 @@ const result = await wallApi.getFriendFeed({ page: pageNum, limit: 20 })
 
 ---
 
-### POST /api/wall/:postId/like
+### POST /api/v1/wall/:postId/like
 
 **功能：** 点赞或取消点赞
 
@@ -399,7 +399,7 @@ const result = await wallApi.toggleLike(postId, user.openid)
 
 ---
 
-### GET /api/wall/:postId/comments
+### GET /api/v1/wall/:postId/comments
 
 **功能：** 获取帖子的评论列表
 
@@ -442,7 +442,7 @@ const result = await wallApi.toggleLike(postId, user.openid)
 
 ---
 
-### POST /api/wall/:postId/comments
+### POST /api/v1/wall/:postId/comments
 
 **功能：** 添加评论
 

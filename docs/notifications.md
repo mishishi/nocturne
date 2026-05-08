@@ -17,7 +17,7 @@
 
 ## 端点详情
 
-### GET /api/notifications
+### GET /api/v1/notifications
 
 **功能：** 获取通知列表
 
@@ -104,7 +104,7 @@
 
 ---
 
-### GET /api/notifications/unread-count
+### GET /api/v1/notifications/unread-count
 
 **功能：** 获取未读通知数量
 
@@ -131,7 +131,7 @@
 
 ---
 
-### POST /api/notifications/mark-read
+### POST /api/v1/notifications/mark-read
 
 **功能：** 将所有通知标记为已读
 
@@ -156,7 +156,7 @@
 
 ---
 
-### POST /api/notifications/:notificationId/read
+### POST /api/v1/notifications/:notificationId/read
 
 **功能：** 将单条通知标记为已读
 

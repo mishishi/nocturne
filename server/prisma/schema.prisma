@@ -13,6 +13,8 @@ model User {
   nickname                  String?
   avatar                    String?
   phone                     String?                  @unique
+  email                     String?                  @unique
+  emailVerified             Boolean                  @default(false)
   passwordHash              String?
   firstSeen                 DateTime                 @default(now())
   lastLogin                 DateTime?
@@ -432,4 +434,38 @@ model PushSubscription {
   user User @relation(fields: [openid], references: [openid], onDelete: Cascade)
 
   @@index([openid])
+}
+
+// 特性开关
+model FeatureFlag {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  enabled        Boolean  @default(false)
+  rolloutPercent Int?     // 灰度发布百分比 0-100
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([key])
+}
+
+// API 接口性能指标（每小时聚合）
+model MetricsHourly {
+  id            String   @id @default(cuid())
+  date          String   // 2026-05-08
+  hour          Int      // 0-23
+  endpoint      String   // /api/auth/email-login
+  method        String   // POST
+  requestCount  Int      @default(0)
+  totalDuration Int      @default(0) // 累计耗时 ms
+  slowCount     Int      @default(0) // >1s 的慢请求数
+  errorCount    Int      @default(0) // 5xx 错误数
+  maxDuration   Int      @default(0) // 最大响应时间
+  minDuration   Int      @default(999999) // 最小响应时间
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([date, hour, endpoint, method])
+  @@index([date, hour])
+  @@index([endpoint, date, hour])
 }

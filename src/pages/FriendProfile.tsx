@@ -135,7 +135,7 @@ export function FriendProfile() {
           <div className={styles.friendProfile}>
             <div className={styles.avatar}>
               {friend?.avatar ? (
-                <img src={friend.avatar} alt={friend.nickname} />
+                <img src={friend.avatar} alt={friend.nickname} loading="lazy" />
               ) : (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -229,7 +229,7 @@ export function FriendProfile() {
                   <div className={styles.postAuthor}>
                     <div className={styles.authorAvatar}>
                       {post.avatar ? (
-                        <img src={post.avatar} alt={post.nickname} />
+                        <img src={post.avatar} alt={post.nickname} loading="lazy" />
                       ) : (
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>

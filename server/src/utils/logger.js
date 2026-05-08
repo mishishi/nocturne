@@ -1,7 +1,6 @@
 import pino from 'pino'
-import rotate from 'pino-rotate'
 import { join } from 'path'
-import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync, createWriteStream } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
@@ -9,48 +8,32 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const LOG_DIR = process.env.LOG_DIR || join(__dirname, '../../logs')
-const MAX_FILES = process.env.LOG_MAX_FILES || '7d' // 保留7天
 
 // Ensure log directory exists
 if (!existsSync(LOG_DIR)) {
   mkdirSync(LOG_DIR, { recursive: true })
 }
 
-// Create rotating file transport
-const transport = await rotate({
-  file: join(LOG_DIR, 'auth.%Y%m%d.log'), // 每天一个新文件
-  limit: MAX_FILES, // 保留天数
-  json: true, // JSON 格式便于后续解析
-  // 格式化：添加易读的时间戳
-  formatter: (obj) => {
-    const { time, level, msg, reqId, userId, action, duration, ip, ...rest } = obj
-    let line = `[${time}] ${level.toUpperCase()}`
-    if (reqId) line += ` [${reqId}]`
-    if (action) line += ` [${action}]`
-    if (userId) line += ` user=${userId}`
-    if (ip) line += ` ip=${ip}`
-    if (duration) line += ` duration=${duration}ms`
-    if (msg) line += ` - ${msg}`
-    if (Object.keys(rest).length > 0) {
-      line += ` ${JSON.stringify(rest)}`
-    }
-    return line + '\n'
-  }
-})
+// Get current date for log file name
+const getLogFileName = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `auth.${year}${month}${day}.log`
+}
 
-// Create pino logger with rotation transport
+// Create pino logger with file output
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
   timestamp: pino.stdTimeFunctions.isoTime,
   formatters: {
     level: (label) => ({ level: label })
   },
-  // Base fields added to every log
   base: {
     service: 'yeelin-auth',
     version: '1.0.0'
   },
-  // Sensitive fields redacted in output
   redact: {
     paths: [
       'req.headers.authorization',
@@ -64,7 +47,9 @@ const logger = pino({
     ],
     censor: '***'
   }
-}, transport)
+},
+// Write to daily rotating log file
+createWriteStream(join(LOG_DIR, getLogFileName()), { flags: 'a' }))
 
 // Create child loggers for different modules
 export const authLogger = logger.child({ module: 'auth' })

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { wallApi, DreamWallPost } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { storeDreamWallContext } from '../hooks/useDreamWallContext'
-import { Button } from '../components/ui/Button'
 import { Toast } from '../components/ui/Toast'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Breadcrumb } from '../components/Breadcrumb'
@@ -607,7 +606,7 @@ export function DreamWall() {
                   <div className={styles.postAuthor}>
                     <div className={styles.authorAvatar}>
                       {post.avatar ? (
-                        <img src={post.avatar} alt={post.nickname} />
+                        <img src={post.avatar} alt={post.nickname} loading="lazy" />
                       ) : (
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />

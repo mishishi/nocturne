@@ -73,11 +73,7 @@ const NAV_ITEMS = [
   }
 ]
 
-interface BottomNavProps {
-  onDraftConfirm?: () => void // Deprecated - kept for backwards compatibility
-}
-
-export function BottomNav({ onDraftConfirm }: BottomNavProps) {
+export function BottomNav() {
   const location = useLocation()
   const { user, recentlyUnlocked } = useDreamStore()
   const isLoggedIn = !!user?.openid && hasValidToken()
@@ -107,9 +103,9 @@ export function BottomNav({ onDraftConfirm }: BottomNavProps) {
                 {recentlyUnlocked.length > 99 ? '99+' : recentlyUnlocked.length}
               </span>
             )}
-            {item.path === '/friends' && isLoggedIn && friendRequests.length > 0 && (
-              <span className={styles.badge} aria-label={`${friendRequests.length}个待处理好友请求`}>
-                {friendRequests.length > 99 ? '99+' : friendRequests.length}
+            {item.path === '/friends' && isLoggedIn && friendRequests.requests.length > 0 && (
+              <span className={styles.badge} aria-label={`${friendRequests.requests.length}个待处理好友请求`}>
+                {friendRequests.requests.length > 99 ? '99+' : friendRequests.requests.length}
               </span>
             )}
           </Link>

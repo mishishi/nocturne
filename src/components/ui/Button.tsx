@@ -1,10 +1,11 @@
-import { ButtonHTMLAttributes, ReactNode, useState, useRef, useEffect } from 'react'
+import { ButtonHTMLAttributes, ReactNode, useState, useRef, useEffect, forwardRef } from 'react'
 import styles from './Button.module.css'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
+  danger?: boolean
   children: ReactNode
 }
 
@@ -15,7 +16,7 @@ interface Ripple {
   key: number
 }
 
-export function Button({
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -23,8 +24,9 @@ export function Button({
   className = '',
   disabled,
   onClick,
+  danger,
   ...props
-}: ButtonProps) {
+}, ref) => {
   const [ripples, setRipples] = useState<Ripple[]>([])
   const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -35,6 +37,16 @@ export function Button({
     }
   }, [disabled, loading])
 
+  // Set up ref forwarding with both internal ref and external ref
+  useEffect(() => {
+    if (!buttonRef.current) return
+    if (typeof ref === 'function') {
+      ref(buttonRef.current)
+    } else if (ref) {
+      // Use Object.assign to bypass readonly check for MutableRefObject
+      (ref as React.MutableRefObject<HTMLButtonElement | null>).current = buttonRef.current
+    }
+  }, [ref])
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (disabled || loading) return
@@ -62,7 +74,7 @@ export function Button({
   return (
     <button
       ref={buttonRef}
-      className={`${styles.button} ${styles[variant]} ${styles[size]} ${loading ? styles.loading : ''} ${className}`}
+      className={`${styles.button} ${styles[variant]} ${styles[size]} ${loading ? styles.loading : ''} ${danger ? styles.danger : ''} ${className}`}
       disabled={disabled || loading}
       aria-busy={loading}
       onClick={handleClick}
@@ -96,4 +108,4 @@ export function Button({
       </span>
     </button>
   )
-}
+})

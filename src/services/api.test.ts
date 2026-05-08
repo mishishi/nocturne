@@ -4,19 +4,46 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockFetch = vi.fn()
 globalThis.fetch = mockFetch
 
-// Mock localStorage  
+// Mock localStorage
+let cookieStore = ''
 const localStorageMock = {
   store: {} as Record<string, string>,
   getItem: function(key: string) { return this.store[key] || null },
-  setItem: function(key: string, value: string) { this.store[key] = value },
-  removeItem: function(key: string) { delete this.store[key] },
+  setItem: function(key: string, value: string) {
+    this.store[key] = value
+    // Sync yeelin_token to cookie for auth
+    if (key === 'yeelin_token') {
+      cookieStore = `yeelin_token=${value}; path=/`
+    }
+  },
+  removeItem: function(key: string) {
+    delete this.store[key]
+    if (key === 'yeelin_token') {
+      cookieStore = ''
+    }
+  },
   clear: function() { this.store = {} },
 }
 Object.defineProperty(window, 'localStorage', { value: localStorageMock })
 
+// Mock document.cookie for auth
+Object.defineProperty(document, 'cookie', {
+  get: function() { return cookieStore },
+  set: function(val) {
+    // Handle "key=value" format for yeelin_token
+    if (val.startsWith('yeelin_token=')) {
+      const eqIdx = val.indexOf('=')
+      const value = val.substring(eqIdx + 1).split(';')[0]
+      cookieStore = `yeelin_token=${value}; path=/`
+    }
+  },
+  configurable: true
+})
+
 beforeEach(() => {
   vi.clearAllMocks()
   localStorageMock.clear()
+  cookieStore = ''
 })
 
 // ============================================================
@@ -288,7 +315,7 @@ describe('api', () => {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer test_token',
           }),
-          body: JSON.stringify({ guestOpenid: 'guest_openid', userOpenid: 'user_openid' }),
+          body: JSON.stringify({ guestOpenid: 'guest_openid' }),
         })
       )
     })

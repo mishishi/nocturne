@@ -129,8 +129,6 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false, onSubmitted }: 
   const [toastMessage, setToastMessage] = useState('')
 
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const formRef = useRef<HTMLDivElement>(null)
-  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const focusTrapRef = useFocusTrap<HTMLDivElement>({ enabled: isVisible, onEscape: () => setIsVisible(false) })
 
   const handleToastClose = useCallback(() => {
@@ -326,10 +324,7 @@ export function StoryFeedbackForm({ sessionId, isAuthor = false, onSubmitted }: 
 
       {/* Feedback form */}
       <div
-        ref={(node) => {
-          formRef.current = node
-          if (node) focusTrapRef.current = node
-        }}
+        ref={focusTrapRef}
         className={`${styles.container} ${isVisible ? styles.visible : ''}`}
         role="dialog"
         aria-modal="true"

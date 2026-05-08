@@ -11,6 +11,7 @@ interface ConfirmModalProps {
   onConfirm: () => void
   onCancel: () => void
   danger?: boolean
+  loading?: boolean
 }
 
 export function ConfirmModal({
@@ -21,7 +22,8 @@ export function ConfirmModal({
   cancelText = '取消',
   onConfirm,
   onCancel,
-  danger = false
+  danger = false,
+  loading = false
 }: ConfirmModalProps) {
   const focusTrapRef = useFocusTrap<HTMLDivElement>({
     enabled: isOpen,
@@ -61,14 +63,15 @@ export function ConfirmModal({
         </div>
         <p className={styles.message}>{message}</p>
         <div className={styles.actions}>
-          <button className={styles.cancelBtn} onClick={onCancel}>
+          <button className={styles.cancelBtn} onClick={onCancel} disabled={loading}>
             {cancelText}
           </button>
           <button
-            className={`${styles.confirmBtn} ${danger ? styles.danger : ''}`}
+            className={`${styles.confirmBtn} ${danger ? styles.danger : ''} ${loading ? styles.loading : ''}`}
             onClick={onConfirm}
+            disabled={loading}
           >
-            {confirmText}
+            {loading ? '处理中...' : confirmText}
           </button>
         </div>
       </div>

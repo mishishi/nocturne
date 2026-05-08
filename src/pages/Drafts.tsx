@@ -20,7 +20,7 @@ const STATUS_LABELS: Record<string, { text: string; desc: string }> = {
 
 export function Drafts() {
   const navigate = useNavigate()
-  const { currentSession, setDreamText, setAnswer, setStatus, reset: resetSession } = useDreamStore()
+  const { currentSession, reset: resetSession } = useDreamStore()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -58,15 +58,6 @@ export function Drafts() {
         break
       default:
         navigate('/dream')
-    }
-  }
-
-  // Handle start new
-  const handleStartNew = () => {
-    if (hasDraft) {
-      setShowDeleteConfirm(true)
-    } else {
-      navigate('/dream')
     }
   }
 

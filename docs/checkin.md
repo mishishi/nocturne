@@ -22,7 +22,7 @@
 
 ## API 端点
 
-### POST /api/checkin
+### POST /api/v1/checkin
 
 **功能：** 用户每日签到
 
@@ -61,7 +61,7 @@
 
 ---
 
-### GET /api/checkin/status
+### GET /api/v1/checkin/status
 
 **功能：** 获取用户签到状态
 
@@ -94,7 +94,7 @@
 
 ---
 
-### GET /api/checkin/history
+### GET /api/v1/checkin/history
 
 **功能：** 获取用户签到历史
 

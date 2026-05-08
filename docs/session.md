@@ -14,7 +14,7 @@
 
 ## 端点详情
 
-### POST /api/sessions
+### POST /api/v1/sessions
 
 **功能：** 创建新的梦境会话
 
@@ -54,7 +54,7 @@ const { sessionId } = await api.createSession(openid)
 
 ---
 
-### POST /api/sessions/:sessionId/dream
+### POST /api/v1/sessions/:sessionId/dream
 
 **功能：** 提交梦境片段，AI 生成问题
 
@@ -105,7 +105,7 @@ const { questions } = await api.submitDream(sessionId, currentSession.dreamText)
 
 ---
 
-### POST /api/sessions/:sessionId/answer
+### POST /api/v1/sessions/:sessionId/answer
 
 **功能：** 提交问题的回答
 
@@ -165,7 +165,7 @@ const { questions } = await api.submitDream(sessionId, currentSession.dreamText)
 
 ---
 
-### GET /api/sessions/:sessionId/story
+### GET /api/v1/sessions/:sessionId/story
 
 **功能：** 获取已生成的故事
 
@@ -194,7 +194,7 @@ const { questions } = await api.submitDream(sessionId, currentSession.dreamText)
 
 ---
 
-### GET /api/sessions/users/:openid/history
+### GET /api/v1/sessions/users/:openid/history
 
 **功能：** 获取用户的所有历史会话
 
@@ -236,7 +236,7 @@ const history = await api.getHistory(openid)
 
 ---
 
-### POST /api/sessions/:sessionId/interpret
+### POST /api/v1/sessions/:sessionId/interpret
 
 **功能：** AI 生成梦境解读
 
@@ -326,7 +326,7 @@ const result = await api.interpret(sessionId, openid)
 
 ---
 
-### GET /api/sessions/:sessionId/interpretation
+### GET /api/v1/sessions/:sessionId/interpretation
 
 **功能：** 获取已有的梦境解读
 
@@ -346,7 +346,7 @@ const result = await api.interpret(sessionId, openid)
 
 ---
 
-### PATCH /api/sessions/:sessionId/interpretation-visibility
+### PATCH /api/v1/sessions/:sessionId/interpretation-visibility
 
 **功能：** 更新已有解读的可见性设置
 
@@ -393,7 +393,7 @@ const result = await api.interpret(sessionId, openid)
 
 ---
 
-### POST /api/sessions/:sessionId/interpretation-feedback
+### POST /api/v1/sessions/:sessionId/interpretation-feedback
 
 **功能：** 提交梦境解读的反馈
 
@@ -448,7 +448,7 @@ const result = await api.interpret(sessionId, openid)
 
 ---
 
-### GET /api/sessions/:sessionId/interpretation-feedback
+### GET /api/v1/sessions/:sessionId/interpretation-feedback
 
 **功能：** 获取当前用户对解读的反馈状态
 
@@ -483,7 +483,7 @@ const result = await api.interpret(sessionId, openid)
 
 ---
 
-### POST /api/sessions/migrate
+### POST /api/v1/sessions/migrate
 
 **功能：** 迁移游客会话到登录用户
 

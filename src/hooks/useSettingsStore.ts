@@ -3,12 +3,14 @@ import { persist } from 'zustand/middleware'
 
 interface SettingsState {
   fontSize: 'small' | 'medium' | 'large'
-  theme: 'starry' | 'aurora' | 'dark'
+  theme: 'starry' | 'aurora' | 'dark' | 'light'
+  language: 'zh-CN' | 'en'
   reduceMotion: boolean
   ambientSound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain'
   ambientVolume: number
   setFontSize: (size: 'small' | 'medium' | 'large') => void
-  setTheme: (theme: 'starry' | 'aurora' | 'dark') => void
+  setTheme: (theme: 'starry' | 'aurora' | 'dark' | 'light') => void
+  setLanguage: (language: 'zh-CN' | 'en') => void
   setReduceMotion: (reduce: boolean) => void
   setAmbientSound: (sound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain') => void
   setAmbientVolume: (volume: number) => void
@@ -19,12 +21,14 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       fontSize: 'medium',
       theme: 'starry',
+      language: 'zh-CN',
       reduceMotion: false,
       ambientSound: 'none',
       ambientVolume: 0.5,
 
       setFontSize: (size) => set({ fontSize: size }),
       setTheme: (theme) => set({ theme }),
+      setLanguage: (language) => set({ language }),
       setReduceMotion: (reduce) => set({ reduceMotion: reduce }),
       setAmbientSound: (sound) => set({ ambientSound: sound }),
       setAmbientVolume: (volume) => set({ ambientVolume: volume })

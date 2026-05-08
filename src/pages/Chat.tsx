@@ -334,7 +334,7 @@ export function Chat() {
                 >
                   <div className={styles.contactAvatar}>
                     {contact.friendAvatar ? (
-                      <img src={contact.friendAvatar} alt={contact.friendNickname || ''} />
+                      <img src={contact.friendAvatar} alt={contact.friendNickname || ''} loading="lazy" />
                     ) : (
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -384,7 +384,7 @@ export function Chat() {
                 </button>
                 <div className={styles.chatHeaderAvatar}>
                   {selectedFriend?.avatar ? (
-                    <img src={selectedFriend.avatar} alt={selectedFriend.nickname || ''} />
+                    <img src={selectedFriend.avatar} alt={selectedFriend.nickname || ''} loading="lazy" />
                   ) : (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />

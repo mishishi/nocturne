@@ -1,0 +1,133 @@
+{
+  "app": {
+    "name": "Nocturne",
+    "tagline": "Gateway Through Dreams"
+  },
+  "nav": {
+    "home": "Home",
+    "dream": "Record Dream",
+    "history": "History",
+    "wall": "Dream Wall",
+    "profile": "Profile",
+    "friends": "Friends",
+    "notifications": "Notifications",
+    "chat": "Chat",
+    "library": "Library",
+    "drafts": "Drafts"
+  },
+  "home": {
+    "welcome": "Welcome Back",
+    "startRecording": "Start Recording Dream",
+    "recentDreams": "Recent Dreams",
+    "highlights": "Today's Highlights",
+    "noDreams": "No dreams recorded yet",
+    "startJourney": "Start your dream journey"
+  },
+  "dream": {
+    "title": "Record Dream",
+    "placeholder": "Describe your dream...",
+    "recording": "Recording...",
+    "save": "Save",
+    "analyzing": "AI is analyzing your dream...",
+    "interpretation": "Dream Interpretation",
+    "share": "Share to Dream Wall",
+    "saveDraft": "Save Draft",
+    "clearDraft": "Clear"
+  },
+  "questions": {
+    "title": "Answer Questions",
+    "subtitle": "Help us understand your dream better",
+    "submit": "Submit",
+    "next": "Next",
+    "skip": "Skip"
+  },
+  "history": {
+    "title": "History",
+    "filter": "Filter",
+    "all": "All",
+    "noResults": "No matching records found"
+  },
+  "favorites": {
+    "title": "My Favorites",
+    "empty": "No favorites yet"
+  },
+  "wall": {
+    "title": "Dream Wall",
+    "publish": "Publish",
+    "like": "Like",
+    "comment": "Comment",
+    "share": "Share",
+    "report": "Report"
+  },
+  "profile": {
+    "title": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "points": "Points",
+    "memberSince": "Member Since",
+    "achievements": "Achievements",
+    "guest": "Guest"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "fontSize": "Font Size",
+    "reduceMotion": "Reduce Motion",
+    "language": "Language",
+    "sound": "Sound",
+    "ambientSound": "Ambient Sound",
+    "volume": "Volume",
+    "about": "About",
+    "version": "Version",
+    "feedback": "Feedback",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "themes": {
+    "starry": "Starry",
+    "aurora": "Aurora",
+    "dark": "Dark",
+    "light": "Light"
+  },
+  "fontSizes": {
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large"
+  },
+  "languages": {
+    "zh-CN": "简体中文",
+    "en": "English"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "noMore": "No more",
+    "success": "Success",
+    "failed": "Failed"
+  },
+  "errors": {
+    "networkError": "Network connection failed",
+    "serverError": "Server error",
+    "notFound": "Content not found",
+    "unauthorized": "Please login first"
+  },
+  "pwa": {
+    "install": "Install App",
+    "update": "Update Available",
+    "offline": "You are currently offline"
+  }
+}

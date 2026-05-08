@@ -20,7 +20,7 @@ export function Register() {
   }>({ open: false, message: '', onConfirm: () => {} })
 
   // Form data
-  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
@@ -31,13 +31,13 @@ export function Register() {
     e.preventDefault()
     setError('')
 
-    if (!phone || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword) {
       setError('请填写所有必填项')
       return
     }
 
-    if (phone.length !== 11) {
-      setError('请输入正确的手机号')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('请输入有效的邮箱地址')
       return
     }
 
@@ -65,7 +65,7 @@ export function Register() {
     setError('')
 
     try {
-      const result = await authApi.register(phone, password, nickname || undefined)
+      const result = await authApi.emailRegister(email, password, nickname || undefined)
 
       if (result.success && result.data?.user) {
         const user = result.data.user
@@ -142,7 +142,7 @@ export function Register() {
           <div className={styles.stepIndicator}>
             <div className={`${styles.step} ${step === 'credentials' ? styles.stepActive : styles.stepDone}`}>
               <span className={styles.stepNumber}>1</span>
-              <span className={styles.stepLabel}>验证手机</span>
+              <span className={styles.stepLabel}>验证邮箱</span>
             </div>
             <div className={styles.stepLine} />
             <div className={`${styles.step} ${step === 'nickname' ? styles.stepActive : ''}`}>
@@ -156,15 +156,16 @@ export function Register() {
               <div className={styles.inputGroup}>
                 <div className={styles.inputWrapper}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.inputIcon}>
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
                   </svg>
                   <input
-                    type="tel"
-                    placeholder="手机号"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                    type="email"
+                    placeholder="邮箱"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className={styles.input}
-                    autoComplete="tel"
+                    autoComplete="email"
                   />
                 </div>
 

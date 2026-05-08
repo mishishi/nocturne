@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Button } from './Button'
 import styles from './EmptyState.module.css'
 
@@ -81,6 +82,18 @@ const ICONS: Record<EmptyStateIcon, React.ReactNode> = {
 }
 
 export function EmptyState({ icon = 'inbox', title, description, action, className }: EmptyStateProps) {
+  const actionButtonRef = useRef<HTMLButtonElement>(null)
+
+  // Auto-focus action button for keyboard users
+  useEffect(() => {
+    if (action && actionButtonRef.current) {
+      const timer = setTimeout(() => {
+        actionButtonRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [action])
+
   return (
     <div className={`${styles.container} ${className || ''}`}>
       <div className={styles.iconWrapper}>
@@ -89,7 +102,7 @@ export function EmptyState({ icon = 'inbox', title, description, action, classNa
       <h3 className={styles.title}>{title}</h3>
       {description && <p className={styles.description}>{description}</p>}
       {action && (
-        <Button onClick={action.onClick} className={styles.action}>
+        <Button ref={actionButtonRef} onClick={action.onClick} className={styles.action}>
           {action.label}
         </Button>
       )}

@@ -166,7 +166,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
         <div className={styles.commentHeader}>
           <div className={styles.avatar}>
             {comment.avatar ? (
-              <img src={comment.avatar} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove(styles.hidden); }} />
+              <img src={comment.avatar} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove(styles.hidden); }} />
             ) : (
               <div className={`${styles.avatarPlaceholder} ${styles.hidden}`}>
                 {displayNickname.charAt(0)}
