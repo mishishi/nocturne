@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react'
+import { I18nextProvider } from 'react-i18next'
+import i18n from './i18n'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
 import { registerToastCallback, unregisterToastCallback } from './hooks/useDreamStore'
+import { useSettingsStore } from './hooks/useSettingsStore'
+import { usePageTracking, usePageTrackingOnUnmount } from './hooks/useAnalytics'
+import { analyticsService } from './services/analytics'
 import { Toast } from './components/ui/Toast'
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
@@ -18,6 +23,8 @@ import { ConfirmModal } from './components/ui/ConfirmModal'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { OfflineBanner } from './components/OfflineBanner'
 import { SWUpdatePrompt } from './components/SWUpdatePrompt'
+import { SupportChat } from './components/SupportChat'
+import { CookieConsent, hasCookieConsent, getCookiePreferences } from './components/CookieConsent'
 import { useDreamStore, ACHIEVEMENTS } from './hooks/useDreamStore'
 import { useAchievementSound } from './hooks/useAchievementSound'
 import { hasValidToken } from './utils/auth'
@@ -28,9 +35,12 @@ import { Story } from './pages/Story'
 import { History } from './pages/History'
 import { Favorites } from './pages/Favorites'
 import { Profile } from './pages/Profile'
+import { PrivacyPolicy } from './pages/PrivacyPolicy'
+import { TermsOfService } from './pages/TermsOfService'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { ForgotPassword } from './pages/ForgotPassword'
+import { AccountRecovery } from './pages/AccountRecovery'
 import { Friends } from './pages/Friends'
 import { FriendProfile } from './pages/FriendProfile'
 import { DreamWall } from './pages/DreamWall'
@@ -69,6 +79,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/login': '登录 - 夜棂',
   '/register': '注册 - 夜棂',
   '/forgot-password': '忘记密码 - 夜棂',
+  '/account-recovery': '找回密码 - 夜棂',
+  '/privacy': '隐私政策 - 夜棂',
+  '/terms': '用户协议 - 夜棂',
   '/profile': '个人中心 - 夜棂',
   '/friends': '好友列表 - 夜棂',
   '/notifications': '通知 - 夜棂',
@@ -87,6 +100,7 @@ function App() {
   const location = useLocation()
   const navigate = useNavigate()
   const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, user, syncAchievementsFromServer } = useDreamStore()
+  const { language: settingsLanguage } = useSettingsStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
@@ -94,6 +108,16 @@ function App() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
+  const [cookieConsent, setCookieConsent] = useState<{
+    necessary: boolean
+    analytics: boolean
+    客服: boolean
+  } | null>(() => {
+    if (hasCookieConsent()) {
+      return getCookiePreferences()
+    }
+    return null
+  })
 
   // PWA: Register Service Worker
   useEffect(() => {
@@ -108,6 +132,34 @@ function App() {
         })
     }
   }, [])
+
+  // Handle cookie consent changes
+  const handleCookieConsentChange = (prefs: typeof cookieConsent) => {
+    if (prefs?.analytics) {
+      const endpoint = import.meta.env.VITE_UMAMI_ENDPOINT
+      const websiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID
+      if (endpoint && websiteId) {
+        analyticsService.configure({ endpoint, websiteId })
+      }
+    }
+    setCookieConsent(prefs)
+  }
+
+  // Analytics: Configure and track page views (only if analytics consent given)
+  useEffect(() => {
+    if (!cookieConsent?.analytics) return
+    const endpoint = import.meta.env.VITE_UMAMI_ENDPOINT
+    const websiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID
+    if (endpoint && websiteId) {
+      analyticsService.configure({ endpoint, websiteId })
+    }
+  }, [cookieConsent?.analytics])
+
+  // Track page views on route changes
+  usePageTracking()
+
+  // Flush analytics on page unload
+  usePageTrackingOnUnmount()
 
   // Re-engagement: check if should show modal based on last active date
   useEffect(() => {
@@ -169,6 +221,11 @@ function App() {
     document.documentElement.setAttribute('data-reduce-motion', String(reduceMotion))
   }, [reduceMotion])
 
+  // Sync language setting with i18n
+  useEffect(() => {
+    i18n.changeLanguage(settingsLanguage)
+  }, [settingsLanguage])
+
   // Play achievement sound when achievement is unlocked
   useEffect(() => {
     if (recentlyUnlocked.length > 0 && recentlyUnlocked[0] !== lastPlayedRef.current) {
@@ -227,6 +284,7 @@ function App() {
   }
 
   return (
+    <I18nextProvider i18n={i18n}>
     <div data-font-size={fontSize} data-theme={theme}>
       <SkipLink />
       <AtmosphereEffects />
@@ -247,6 +305,9 @@ function App() {
             <Route path="/login" element={<PageErrorBoundary><Login /></PageErrorBoundary>} />
             <Route path="/register" element={<PageErrorBoundary><Register /></PageErrorBoundary>} />
             <Route path="/forgot-password" element={<PageErrorBoundary><ForgotPassword /></PageErrorBoundary>} />
+            <Route path="/account-recovery" element={<PageErrorBoundary><AccountRecovery /></PageErrorBoundary>} />
+            <Route path="/privacy" element={<PageErrorBoundary><PrivacyPolicy /></PageErrorBoundary>} />
+            <Route path="/terms" element={<PageErrorBoundary><TermsOfService /></PageErrorBoundary>} />
             <Route path="/profile" element={
               <PageErrorBoundary><ProtectedRoute><Profile /></ProtectedRoute></PageErrorBoundary>
             } />
@@ -291,7 +352,7 @@ function App() {
       </PageTransition>
 
       {!location.pathname.startsWith('/admin') && (
-        <BottomNav onDraftConfirm={() => setShowDraftConfirm(true)} />
+        <BottomNav />
       )}
 
       <ConfirmModal
@@ -322,7 +383,16 @@ function App() {
       <OfflineBanner />
       <PWAInstallPrompt />
       <SWUpdatePrompt />
+
+      {/* Cookie Consent Banner */}
+      <CookieConsent onConsentChange={handleCookieConsentChange} />
+
+      {/* Customer Support - Crisp.chat (only if user consented) */}
+      {import.meta.env.VITE_CRISP_WEBSITE_ID && cookieConsent?.客服 && (
+        <SupportChat websiteId={import.meta.env.VITE_CRISP_WEBSITE_ID} />
+      )}
     </div>
+    </I18nextProvider>
   )
 }
 

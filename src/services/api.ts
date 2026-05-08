@@ -151,8 +151,8 @@ function authHeaders(): HeadersInit {
 }
 
 // Types - import from shared types and re-export for backwards compatibility
-export type { User, Friend } from '../types'
-import type { User, Friend } from '../types'
+export type { User } from '../types'
+import type { User } from '../types'
 
 // Friend system API response types (per spec)
 export interface FriendListItem {
@@ -511,6 +511,87 @@ export const authApi = {
       body: JSON.stringify({ phone, code, password })
     })
     if (!res.ok) throw new Error(`重置密码失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Delete user account
+  async deleteAccount(): Promise<ApiResponse<{ success: boolean; message?: string }>> {
+    const token = getAuthToken()
+    if (!token) throw new Error('Not authenticated')
+
+    const res = await fetchWithTimeout(`${API_BASE}/auth/account`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    if (!res.ok) throw new Error(`删除账号失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Email + password login
+  async emailLogin(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/email-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    if (!res.ok) throw new Error(`邮箱登录失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Email + password registration
+  async emailRegister(email: string, password: string, nickname?: string): Promise<ApiResponse<{ user: User; token: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/email-register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, nickname })
+    })
+    if (!res.ok) throw new Error(`邮箱注册失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Send email verification code
+  async sendEmailCode(email: string, purpose: 'login' | 'bind' | 'reset'): Promise<ApiResponse<{ success: boolean; message?: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/send-email-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, purpose })
+    })
+    if (!res.ok) throw new Error(`发送验证码失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Verify email code
+  async verifyEmailCode(email: string, code: string): Promise<ApiResponse<{ success: boolean; message?: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/verify-email-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code })
+    })
+    if (!res.ok) throw new Error(`验证失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Bind email to existing account
+  async bindEmail(email: string, code: string): Promise<ApiResponse<{ user: User }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/bind-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ email, code })
+    })
+    if (!res.ok) throw new Error(`绑定邮箱失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Change password
+  async changePassword(oldPassword: string, newPassword: string): Promise<ApiResponse<{ success: boolean; message?: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/change-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ oldPassword, newPassword })
+    })
+    if (!res.ok) throw new Error(`修改密码失败: ${res.status}`)
     return res.json()
   }
 }
