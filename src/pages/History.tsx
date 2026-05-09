@@ -8,7 +8,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { HistorySkeleton } from '../components/ui/Skeleton'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamWeather } from '../components/DreamWeather'
-import { api } from '../services/api'
+import { api, Session } from '../services/api'
 import styles from './History.module.css'
 
 const SWIPE_THRESHOLD = 100
@@ -62,14 +62,32 @@ export function History() {
 
       setIsSyncing(true)
       try {
-        const res = await api.getHistory(openid)
-        if (!isMounted) return
-        if (!res.success) return
-        const sessions = res.data?.sessions
+        // Paginated fetch: request page by page until all data is loaded
+        const allSessions: Session[] = []
+        let page = 1
+        let hasMore = true
 
-        if (sessions && sessions.length > 0) {
+        while (hasMore) {
+          const res = await api.getHistory(openid, page, 50)
+          if (!isMounted) return
+          if (!res.success) break
+
+          const sessions = res.data?.sessions || []
+          const pagination = res.data?.pagination
+
+          allSessions.push(...sessions)
+          hasMore = pagination?.hasMore ?? false
+          page++
+
+          // Safety: if any page returns 0 sessions, stop to avoid infinite loop
+          if (sessions.length === 0) break
+        }
+
+        if (!isMounted) return
+
+        if (allSessions.length > 0) {
           // Build backend map for merging
-          const backendMap = new Map(sessions.map((s: any) => [s.id, s]))
+          const backendMap = new Map(allSessions.map((s: Session) => [s.id, s]))
 
           // Merge: use backend data but preserve local-only fields (tags, privateNote, isFavorite, answers)
           // Use getState() to avoid stale closure
@@ -90,7 +108,7 @@ export function History() {
           })
 
           // Add new items from backend that don't exist locally
-          sessions.forEach((s: any) => {
+          allSessions.forEach((s: Session) => {
             // Check by both id and sessionId to avoid duplicates
             // Local entries use id like "session_xxx", backend uses sessionId as id
             if (!merged.find(item => item.id === s.id || item.sessionId === s.sessionId)) {
@@ -119,7 +137,7 @@ export function History() {
         setToastMessage('同步失败，请检查网络连接')
         setToastVisible(true)
       } finally {
-        setIsSyncing(false)
+        if (isMounted) setIsSyncing(false)
       }
     }
 
