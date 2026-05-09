@@ -4,6 +4,48 @@
   position: relative;
 }
 
+/* Golden aurora effect for Home page */
+.page::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 30%, rgba(244, 211, 94, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 70% 20%, rgba(244, 160, 60, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 30% at 50% 70%, rgba(244, 180, 80, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: auroraPulse 15s ease-in-out infinite alternate;
+}
+
+.page::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(ellipse 40% 60% at 80% 80%, rgba(244, 200, 80, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 10% 60%, rgba(244, 220, 120, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: auroraShift 20s ease-in-out infinite alternate;
+}
+
+@keyframes auroraPulse {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.03); }
+}
+
+@keyframes auroraShift {
+  0% { opacity: 0.5; transform: translateX(-1%); }
+  100% { opacity: 0.9; transform: translateX(1%); }
+}
+
 /* Achievement Badge */
 .achievementBadge {
   position: fixed;
@@ -25,9 +67,10 @@
 }
 
 .achievementBadge:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
   border-color: var(--color-golden);
-  box-shadow: 0 4px 20px rgba(244, 211, 94, 0.2);
+  box-shadow: 0 6px 28px rgba(244, 211, 94, 0.35), 0 0 20px rgba(244, 211, 94, 0.2);
+  text-shadow: 0 0 10px rgba(244, 211, 94, 0.5);
 }
 
 .achievementBadgeIcon {
@@ -160,6 +203,7 @@
   padding: var(--space-8);
   position: relative;
   overflow: hidden;
+  z-index: 1;
 }
 
 /* Gradient fade at bottom for visual separation */
@@ -294,6 +338,8 @@
   margin: 0 auto var(--space-8);
   animation: fadeInUp 0.6s var(--ease-dream) 0.3s forwards;
   opacity: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .checkInCard {
@@ -440,6 +486,8 @@
   max-width: 1000px;
   margin: 0 auto;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .sampleTitle {
@@ -587,6 +635,7 @@
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
+  z-index: 1;
 }
 
 .steps::before {
@@ -689,6 +738,8 @@
   padding: var(--space-16) var(--space-8);
   padding-bottom: calc(var(--space-16) + env(safe-area-inset-bottom));
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .quote {
