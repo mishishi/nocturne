@@ -3,6 +3,8 @@
  * All auth-related helpers should be placed here for easy maintenance
  */
 
+import { storage } from '../services/storageService'
+
 const TOKEN_COOKIE_NAME = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 
@@ -44,22 +46,22 @@ export function clearAuthToken(): void {
 }
 
 /**
- * Get the refresh token from localStorage
+ * Get the refresh token from storage service
  */
 export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY)
+  return storage.get(REFRESH_TOKEN_KEY)
 }
 
 /**
- * Set the refresh token in localStorage
+ * Set the refresh token (immediate write for critical auth data)
  */
 export function setRefreshToken(token: string): void {
-  localStorage.setItem(REFRESH_TOKEN_KEY, token)
+  storage.setImmediate(REFRESH_TOKEN_KEY, token)
 }
 
 /**
- * Clear the refresh token from localStorage
+ * Clear the refresh token
  */
 export function clearRefreshToken(): void {
-  localStorage.removeItem(REFRESH_TOKEN_KEY)
+  storage.remove(REFRESH_TOKEN_KEY)
 }

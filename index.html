@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="夜棂 - 把醒来就忘的梦，变成能留住的文字" />
     <title>夜棂 Yeelin - 梦境记录</title>
+    <!-- Theme FOUC prevention - must run before any render -->
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('yeelin_theme') || 'dark'
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, lazy, Suspense } from 'react'
+import { useEffect, useRef, useState, lazy, Suspense, useCallback } from 'react'
 import { I18nextProvider } from 'react-i18next'
 import i18n from './i18n'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
@@ -107,7 +107,8 @@ function App() {
   const [showReEngagement, setShowReEngagement] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error'>('success')
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
+  const handleToastClose = useCallback(() => setToastVisible(false), [])
   const [cookieConsent, setCookieConsent] = useState<{
     necessary: boolean
     analytics: boolean
@@ -244,7 +245,7 @@ function App() {
 
   // Register Toast callback for background task error notifications
   useEffect(() => {
-    registerToastCallback((message: string, type: 'success' | 'error') => {
+    registerToastCallback((message: string, type: 'success' | 'error' | 'info') => {
       setToastMessage(message)
       setToastType(type)
       setToastVisible(true)
@@ -377,7 +378,7 @@ function App() {
         visible={toastVisible}
         message={toastMessage}
         type={toastType}
-        onClose={() => setToastVisible(false)}
+        onClose={handleToastClose}
       />
 
       <OfflineBanner />
