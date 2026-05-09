@@ -6,7 +6,7 @@ import { verifyToken } from '../services/authService.js'
  */
 export async function authMiddleware(req, res) {
   // 优先从 httpOnly Cookie 获取 token
-  const tokenFromCookie = req.cookies?.yeelin_token
+  const tokenFromCookie = req.cookies?.access_token
 
   // Fallback 到 Authorization Header（兼容旧版）
   let token = tokenFromCookie

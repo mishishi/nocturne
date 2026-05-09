@@ -45,6 +45,7 @@ model User {
   notificationsFrom         Notification[]           @relation("NotificationFrom")
   checkIns                  CheckIn[]
   pushSubscriptions        PushSubscription[]
+  refreshTokens            RefreshToken[]
 }
 
 model Friend {
@@ -468,4 +469,18 @@ model MetricsHourly {
   @@unique([date, hour, endpoint, method])
   @@index([date, hour])
   @@index([endpoint, date, hour])
+}
+
+// Refresh token for dual-token auth
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
 }
