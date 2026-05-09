@@ -15,7 +15,6 @@ export function Register() {
   // Single-step registration - all fields on one page
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
@@ -24,8 +23,8 @@ export function Register() {
     setIsLoading(true)
     setError('')
 
-    if (!email || !password || !confirmPassword) {
-      setError('请填写所有必填项')
+    if (!email || !password) {
+      setError('请填写邮箱和密码')
       setIsLoading(false)
       return
     }
@@ -38,12 +37,6 @@ export function Register() {
 
     if (password.length < 6) {
       setError('密码至少6位')
-      setIsLoading(false)
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError('两次密码不一致')
       setIsLoading(false)
       return
     }
@@ -165,22 +158,6 @@ export function Register() {
 
               <div className={styles.inputWrapper}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.inputIcon}>
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  <circle cx="12" cy="16" r="1"/>
-                </svg>
-                <input
-                  type="password"
-                  placeholder="确认密码"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={styles.input}
-                  autoComplete="new-password"
-                />
-              </div>
-
-              <div className={styles.inputWrapper}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.inputIcon}>
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
@@ -192,16 +169,6 @@ export function Register() {
                   className={styles.input}
                   maxLength={20}
                 />
-              </div>
-
-              <div className={styles.inputWrapper}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.inputIcon}>
-                  <path d="M20 12v10H4V12"/>
-                  <path d="M2 7h20v5H2z"/>
-                  <path d="M12 22V7"/>
-                  <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-                  <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-                </svg>
               </div>
             </div>
 

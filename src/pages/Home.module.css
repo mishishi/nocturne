@@ -162,6 +162,23 @@
   overflow: hidden;
 }
 
+/* Gradient fade at bottom for visual separation */
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(13, 27, 42, 0.8) 50%,
+    var(--color-night-deep) 100%
+  );
+  pointer-events: none;
+}
+
 .moon {
   position: absolute;
   top: 10%;
@@ -213,6 +230,61 @@
 .heroCta {
   animation: fadeInUp 0.8s var(--ease-dream) 0.4s forwards;
   opacity: 0;
+}
+
+/* Social Proof */
+.socialProof {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+  padding: var(--space-4) var(--space-6);
+  background: rgba(244, 211, 94, 0.08);
+  border: 1px solid rgba(244, 211, 94, 0.15);
+  border-radius: var(--radius-xl);
+  animation: fadeInUp 0.8s var(--ease-dream) 0.6s forwards;
+  opacity: 0;
+}
+
+.socialProofItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.socialProofNumber {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-golden);
+}
+
+.socialProofLabel {
+  font-size: 0.75rem;
+  color: var(--color-silver);
+  white-space: nowrap;
+}
+
+.socialProofDivider {
+  width: 1px;
+  height: 32px;
+  background: rgba(244, 211, 94, 0.2);
+}
+
+@media (max-width: 480px) {
+  .socialProof {
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .socialProofNumber {
+    font-size: 1rem;
+  }
+
+  .socialProofLabel {
+    font-size: 0.65rem;
+  }
 }
 
 /* Check-in Section */
@@ -275,6 +347,13 @@
   margin: 0;
 }
 
+.checkInHint {
+  font-size: 0.75rem;
+  color: var(--color-golden);
+  margin: 2px 0 0;
+  opacity: 0.8;
+}
+
 .checkInRight {
   display: flex;
   align-items: center;
@@ -290,6 +369,69 @@
 
 .checkInDoneIcon {
   font-size: 1.25rem;
+}
+
+/* Guest Check-in Card */
+.checkInGuestCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  background: linear-gradient(
+    135deg,
+    rgba(139, 157, 195, 0.12) 0%,
+    rgba(139, 157, 195, 0.06) 100%
+  );
+  border: 1px solid rgba(139, 157, 195, 0.25);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(10px);
+  text-decoration: none;
+  transition: all 0.3s var(--ease-dream);
+}
+
+.checkInGuestCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 157, 195, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.checkInGuestLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.checkInGuestIcon {
+  font-size: 1.5rem;
+}
+
+.checkInGuestText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkInGuestTitle {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-moonlight);
+}
+
+.checkInGuestDesc {
+  font-size: 0.8125rem;
+  color: var(--color-silver);
+}
+
+.checkInGuestArrow {
+  font-size: 1.25rem;
+  color: var(--color-silver);
+  transition: transform 0.2s ease;
+}
+
+.checkInGuestCard:hover .checkInGuestArrow {
+  transform: translateX(4px);
+  color: var(--color-moonlight);
 }
 
 /* Sample Stories Section */

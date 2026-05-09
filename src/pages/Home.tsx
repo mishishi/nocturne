@@ -240,8 +240,8 @@ export function Home() {
       {/* Daily Highlights - visible to all users */}
       <DailyHighlights />
 
-      {/* Check-in Card - only for logged-in users */}
-      {user && (
+      {/* Check-in Card - visible to all users */}
+      {user ? (
         <section className={styles.checkInSection}>
           <div className={styles.checkInCard}>
             <div className={styles.checkInLeft}>
@@ -274,6 +274,19 @@ export function Home() {
               )}
             </div>
           </div>
+        </section>
+      ) : (
+        <section className={styles.checkInSection}>
+          <Link to="/login" className={styles.checkInGuestCard}>
+            <div className={styles.checkInGuestLeft}>
+              <span className={styles.checkInGuestIcon}>🔓</span>
+              <div className={styles.checkInGuestText}>
+                <span className={styles.checkInGuestTitle}>开启连续签到</span>
+                <span className={styles.checkInGuestDesc}>登录后记录梦境，养成签到习惯</span>
+              </div>
+            </div>
+            <span className={styles.checkInGuestArrow}>→</span>
+          </Link>
         </section>
       )}
 

@@ -5,6 +5,7 @@ import { authApi, api } from '../services/api'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import { setRefreshToken } from '../utils/auth'
 import styles from './Login.module.css'
 
 export function Login() {
@@ -12,7 +13,7 @@ export function Login() {
   const location = useLocation()
   const { setUser } = useDreamStore()
   const [isLoading, setIsLoading] = useState(false)
-  const [loginMode, setLoginMode] = useState<'wechat' | 'email' | 'phone'>('wechat')
+  const [loginMode, setLoginMode] = useState<'wechat' | 'email' | 'phone'>('email')
 
   // Form states
   const [email, setEmail] = useState('')
@@ -117,6 +118,11 @@ export function Login() {
       if (result.success && result.data?.user) {
         const user = result.data.user
         const token = result.data.token
+        const refreshToken = result.data.refreshToken
+        // Store refresh token for token refresh
+        if (refreshToken) {
+          setRefreshToken(refreshToken)
+        }
         // Token is stored via setUser (useDreamStore) which handles Cookie persistence
         // Server also sets httpOnly Cookie via Set-Cookie header
 
@@ -165,6 +171,11 @@ export function Login() {
       if (result.success && result.data?.user) {
         const user = result.data.user
         const token = result.data.token
+        const refreshToken = result.data.refreshToken
+        // Store refresh token for token refresh
+        if (refreshToken) {
+          setRefreshToken(refreshToken)
+        }
 
         // Migrate guest sessions if exists
         const guestOpenid = localStorage.getItem('yeelin_openid')
@@ -332,6 +343,23 @@ export function Login() {
                 和
                 <span className={styles.link}>《隐私政策》</span>
               </p>
+
+              {/* Trust Badges */}
+              <div className={styles.trustBadges}>
+                <div className={styles.trustBadge}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  <span>数据加密</span>
+                </div>
+                <div className={styles.trustBadge}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <span>隐私保护</span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -438,14 +466,31 @@ export function Login() {
                   {isLoading ? (
                     <LoadingSpinner />
                   ) : (
-                    '进入夜棂'
+                    '立即开始探索'
                   )}
                 </button>
 
                 <div className={styles.formFooter}>
                   <Link to="/forgot-password" className={styles.link}>忘记密码？</Link>
                   <span className={styles.separator}>|</span>
-                  <a href="/register" className={styles.link}>注册账号</a>
+                  <Link to="/register" className={styles.link}>注册账号</Link>
+                </div>
+
+                {/* Trust Badges */}
+                <div className={styles.trustBadges}>
+                  <div className={styles.trustBadge}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span>数据加密</span>
+                  </div>
+                  <div className={styles.trustBadge}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>隐私保护</span>
+                  </div>
                 </div>
               </form>
             </div>
@@ -552,14 +597,31 @@ export function Login() {
                   {isLoading ? (
                     <LoadingSpinner />
                   ) : (
-                    '进入夜棂'
+                    '立即开始探索'
                   )}
                 </button>
 
                 <div className={styles.formFooter}>
                   <Link to="/forgot-password" className={styles.link}>忘记密码？</Link>
                   <span className={styles.separator}>|</span>
-                  <a href="/register" className={styles.link}>注册账号</a>
+                  <Link to="/register" className={styles.link}>注册账号</Link>
+                </div>
+
+                {/* Trust Badges */}
+                <div className={styles.trustBadges}>
+                  <div className={styles.trustBadge}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span>数据加密</span>
+                  </div>
+                  <div className={styles.trustBadge}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>隐私保护</span>
+                  </div>
                 </div>
               </form>
             </div>
