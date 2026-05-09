@@ -73,31 +73,75 @@ export default async function sessionRoutes(fastify) {
   fastify.get('/sessions/:sessionId/story/stream', async (req, res) => {
     const { sessionId } = req.params
 
-    // Verify auth token from Authorization header
-    const authHeader = req.headers.authorization
-    if (!authHeader) {
-      return res.status(401).send(errorResponse('未授权，请先登录', 'UNAUTHORIZED'))
+    // Verify auth token from Cookie (httpOnly) or Authorization header
+    const tokenFromCookie = req.cookies?.access_token
+    let token = tokenFromCookie
+    if (!token) {
+      const authHeader = req.headers.authorization
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.slice(7)
+      }
     }
-    const token = authHeader.replace(/^Bearer\s+/i, '')
+    const corsOrigin = process.env.FRONTEND_URL || 'http://localhost:4001'
+
+    if (!token) {
+      res.raw.writeHead(401, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Credentials': 'true'
+      })
+      res.raw.end(JSON.stringify(errorResponse('未授权，请先登录', 'UNAUTHORIZED')))
+      return
+    }
     const tokenUser = await authService.verifyToken(token)
     if (!tokenUser) {
-      return res.status(401).send(errorResponse('登录已过期，请重新登录', 'TOKEN_EXPIRED'))
+      res.raw.writeHead(401, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Credentials': 'true'
+      })
+      res.raw.end(JSON.stringify(errorResponse('登录已过期，请重新登录', 'TOKEN_EXPIRED')))
+      return
     }
 
     const session = await sessionService.getSession(sessionId)
     if (!session) {
-      return res.status(404).send(errorResponse('Session not found', 'NOT_FOUND'))
+      res.raw.writeHead(404, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Credentials': 'true'
+      })
+      res.raw.end(JSON.stringify(errorResponse('Session not found', 'NOT_FOUND')))
+      return
     }
 
     // Verify session belongs to the authenticated user
     if (session.openid !== tokenUser.openid) {
-      return res.status(403).send(errorResponse('无权访问此会话', 'FORBIDDEN'))
+      res.raw.writeHead(403, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Credentials': 'true'
+      })
+      res.raw.end(JSON.stringify(errorResponse('无权访问此会话', 'FORBIDDEN')))
+      return
     }
 
     // Check if story already exists
     const existingStory = await prisma.story.findUnique({ where: { sessionId } })
     if (existingStory) {
-      return res.send(successResponse({ story: { title: existingStory.title, content: existingStory.content } }))
+      // Return as SSE event so client can handle consistently
+      res.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+        'Access-Control-Allow-Origin': corsOrigin,
+        'Access-Control-Allow-Credentials': 'true'
+      })
+      res.raw.write(`event: start\ndata: ${JSON.stringify({ title: existingStory.title })}\n\n`)
+      res.raw.write(`event: done\ndata: ${JSON.stringify({ title: existingStory.title, content: existingStory.content })}\n\n`)
+      res.raw.end()
+      return
     }
 
     // Get answers
@@ -106,13 +150,13 @@ export default async function sessionRoutes(fastify) {
       orderBy: { questionIndex: 'asc' }
     })
 
-    // Set SSE headers with CORS support
+    // Set SSE headers
     res.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
       'X-Accel-Buffering': 'no',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': corsOrigin,
       'Access-Control-Allow-Credentials': 'true'
     })
 

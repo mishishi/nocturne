@@ -9,12 +9,23 @@ export const sessionService = {
       update: {}
     })
 
-    // 检查是否有活跃会话
+    // 查找未完成的会话
     const activeSession = await prisma.session.findFirst({
       where: { openid, status: { not: 'COMPLETED' } }
     })
-    if (activeSession) return activeSession
 
+    if (activeSession) {
+      // 检查是否已有故事（意味着之前的流程已走完，应该创建新的）
+      const existingStory = await prisma.story.findUnique({
+        where: { sessionId: activeSession.id }
+      })
+      if (!existingStory) {
+        // 没有故事，说明流程未完成，复用这个会话
+        return activeSession
+      }
+    }
+
+    // 有已完成故事的会话，或者没有活跃会话 → 创建新会话
     return prisma.session.create({
       data: { openid }
     })
@@ -25,6 +36,10 @@ export const sessionService = {
   },
 
   async submitDream(sessionId, dreamText, styleTag) {
+    // 删除旧的故事和答案（新梦境需要重新生成）
+    await prisma.story.deleteMany({ where: { sessionId } })
+    await prisma.answer.deleteMany({ where: { sessionId } })
+
     const session = await prisma.session.update({
       where: { id: sessionId },
       data: {

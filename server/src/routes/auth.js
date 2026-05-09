@@ -805,7 +805,7 @@ export default async function authRoutes(fastify) {
       }
 
       // 生成新的 access token
-      const newToken = authService.generateAccessToken(user.id)
+      const newToken = await authService.generateAccessToken(user.id)
 
       // 轮转 refresh token（用新token替换旧token）
       await authService.revokeRefreshToken(refreshToken)
