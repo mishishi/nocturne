@@ -1,9 +1,73 @@
 // Real API service - connects to Express backend
 // In development, use mock API for UI testing
 
-import { getAuthToken } from '../utils/auth'
+import { getRefreshToken, setRefreshToken } from '../utils/auth'
+import { useDreamStore } from '../hooks/useDreamStore'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1'
+
+// ============ Token 自动刷新逻辑 ============
+
+// 标记是否有刷新请求正在进行中
+let isRefreshing = false
+
+// 尝试刷新 token (使用原生 fetch，不经过 401 处理层避免递归)
+// 如果已经在刷新中，会等待当前刷新完成后再返回结果
+async function tryRefreshToken(): Promise<boolean> {
+  // 如果已经在刷新中，等待刷新完成
+  if (isRefreshing) {
+    // 轮询等待刷新完成
+    while (isRefreshing) {
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    // 刷新完成后，假设成功（因为如果失败会已经 logout 了）
+    return true
+  }
+
+  isRefreshing = true
+  try {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) {
+      return false
+    }
+
+    // 使用原生 fetch，不经过 401 处理层
+    const res = await fetch(`${API_BASE}/auth/refresh-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken })
+    })
+
+    if (!res.ok) {
+      // 刷新失败，清除本地状态并重定向到登录
+      useDreamStore.getState().logout()
+      window.location.href = '/login'
+      return false
+    }
+
+    const data = await res.json()
+    if (!data.success) {
+      useDreamStore.getState().logout()
+      window.location.href = '/login'
+      return false
+    }
+
+    // 更新 localStorage 中的 refresh token
+    if (data.data?.refreshToken) {
+      setRefreshToken(data.data.refreshToken)
+    }
+
+    return true
+  } catch (err) {
+    console.error('[API] Token refresh failed:', err)
+    useDreamStore.getState().logout()
+    window.location.href = '/login'
+    return false
+  } finally {
+    isRefreshing = false
+  }
+}
 
 // ============ 统一响应类型 ============
 export interface ApiSuccessResponse<T> {
@@ -43,27 +107,72 @@ export function isApiSuccess<T>(res: ApiResponse<T>): res is ApiSuccessResponse<
 const FETCH_TIMEOUT = 15000
 const LONG_FETCH_TIMEOUT = 60000 // For AI generation endpoints (questions, story, interpretation)
 
-// Re-export getAuthToken for backwards compatibility
-export { getAuthToken } from '../utils/auth'
-
-// Fetch with timeout using AbortSignal
-async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+// Fetch with timeout and auto token refresh
+async function fetchWithTimeout(url: string, options: RequestInit = {}, retryAfterRefresh = false): Promise<Response> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
   try {
     const res = await fetch(url, { ...options, credentials: 'include', signal: controller.signal })
+
+    // 收到 401 且尚未尝试过刷新 token
+    if (res.status === 401 && !retryAfterRefresh) {
+      // 先消耗 body，否则某些浏览器会报错
+      const clonedRes = res.clone()
+      let bodyText = ''
+      try {
+        bodyText = await clonedRes.text()
+      } catch {}
+
+      // 检查是否是认证错误（不是业务逻辑返回的 401）
+      const data = bodyText ? JSON.parse(bodyText) : {}
+      if (data.error?.code === 'TOKEN_INVALID' || data.error?.code === 'TOKEN_EXPIRED') {
+        // 尝试刷新 token
+        const refreshed = await tryRefreshToken()
+        if (refreshed) {
+          // 重新发起请求（httpOnly cookie 会自动随请求发送）
+          const retryRes = await fetch(url, { ...options, credentials: 'include', signal: controller.signal })
+          return retryRes
+        }
+      }
+
+      // 返回原始 401 响应
+      return res
+    }
+
     return res
   } finally {
     clearTimeout(timeoutId)
   }
 }
 
-// Fetch with longer timeout for AI endpoints
-async function fetchWithLongTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+// Fetch with longer timeout for AI endpoints (also handles 401 refresh)
+async function fetchWithLongTimeout(url: string, options: RequestInit = {}, retryAfterRefresh = false): Promise<Response> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), LONG_FETCH_TIMEOUT)
   try {
     const res = await fetch(url, { ...options, credentials: 'include', signal: controller.signal })
+
+    // 收到 401 且尚未尝试过刷新 token
+    if (res.status === 401 && !retryAfterRefresh) {
+      // 先消耗 body
+      const clonedRes = res.clone()
+      let bodyText = ''
+      try {
+        bodyText = await clonedRes.text()
+      } catch {}
+
+      const data = bodyText ? JSON.parse(bodyText) : {}
+      if (data.error?.code === 'TOKEN_INVALID' || data.error?.code === 'TOKEN_EXPIRED') {
+        const refreshed = await tryRefreshToken()
+        if (refreshed) {
+          const retryRes = await fetch(url, { ...options, credentials: 'include', signal: controller.signal })
+          return retryRes
+        }
+      }
+
+      return res
+    }
+
     return res
   } finally {
     clearTimeout(timeoutId)

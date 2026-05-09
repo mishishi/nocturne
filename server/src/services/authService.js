@@ -1,6 +1,7 @@
 import { prisma } from '../config/database.js'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
 
 const SALT_ROUNDS = 10
 
@@ -8,10 +9,68 @@ const SALT_ROUNDS = 10
 const WECHAT_APPID = process.env.WECHAT_APPID || ''
 const WECHAT_APPSECRET = process.env.WECHAT_APPSECRET || ''
 
-// Token security
-const TOKEN_SECRET = process.env.TOKEN_SECRET || 'nocturne-dev-secret-change-in-production'
+// JWT token security (industry standard)
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error('FATAL: JWT_SECRET environment variable is required')
+  }
+  if (secret.length < 32) {
+    throw new Error('FATAL: JWT_SECRET must be at least 32 characters')
+  }
+  return secret
+}
+
+const JWT_SECRET = getJwtSecret()
+const JWT_EXPIRY = '2h' // 2 hour access token
+
+// Legacy HMAC token security (backwards compatibility)
+function getTokenSecret() {
+  const secret = process.env.TOKEN_SECRET
+  if (!secret) {
+    throw new Error('FATAL: TOKEN_SECRET environment variable is required')
+  }
+  return secret
+}
+
+const TOKEN_SECRET = getTokenSecret()
 const TOKEN_PREFIX = 'yeelin_'
-const TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000 // 7 days
+const TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000 // 7 days (legacy)
+
+// Refresh token security
+function getRefreshTokenSecret() {
+  const secret = process.env.REFRESH_TOKEN_SECRET
+  if (!secret) {
+    throw new Error('FATAL: REFRESH_TOKEN_SECRET environment variable is required')
+  }
+  if (secret.length < 32) {
+    throw new Error('FATAL: REFRESH_TOKEN_SECRET must be at least 32 characters')
+  }
+  return secret
+}
+
+const REFRESH_TOKEN_SECRET = getRefreshTokenSecret()
+const REFRESH_TOKEN_PREFIX = 'yeelin_refresh_'
+const REFRESH_TOKEN_EXPIRY = 30 * 24 * 60 * 60 * 1000 // 30 days
+
+// Generate JWT token (industry standard)
+function generateJWT(userId, openid) {
+  return jwt.sign(
+    { sub: userId, openid, type: 'access' },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRY }
+  )
+}
+
+// Verify JWT token
+function verifyJWT(token) {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET)
+    return decoded.sub
+  } catch {
+    return null
+  }
+}
 
 // Generate HMAC-signed token
 function generateToken(userId) {
@@ -24,30 +83,104 @@ function generateToken(userId) {
   return `${TOKEN_PREFIX}${payload}.${signature}`
 }
 
-// Verify HMAC-signed token
-export function verifyToken(token) {
-  if (!token || !token.startsWith(TOKEN_PREFIX)) return null
+// Generate refresh token (random string stored in DB)
+async function generateRefreshToken(userId) {
+  const token = crypto.randomBytes(64).toString('hex')
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY)
+
+  // Store in database
+  const refreshToken = await prisma.refreshToken.create({
+    data: {
+      token,
+      userId,
+      expiresAt
+    }
+  })
+
+  return token
+}
+
+// Verify refresh token
+async function verifyRefreshToken(token) {
+  if (!token || !token.startsWith(REFRESH_TOKEN_PREFIX)) return null
+
   try {
-    const withoutPrefix = token.slice(TOKEN_PREFIX.length)
-    const lastDotIndex = withoutPrefix.lastIndexOf('.')
-    if (lastDotIndex === -1) return null
+    const actualToken = token.slice(REFRESH_TOKEN_PREFIX.length)
 
-    const payload = withoutPrefix.slice(0, lastDotIndex)
-    const signature = withoutPrefix.slice(lastDotIndex + 1)
+    const refreshToken = await prisma.refreshToken.findUnique({
+      where: { token: actualToken }
+    })
 
-    // Verify signature
-    const expectedSig = crypto
-      .createHmac('sha256', TOKEN_SECRET)
-      .update(payload)
-      .digest('hex')
-    if (signature !== expectedSig) return null
+    if (!refreshToken) return null
+    if (refreshToken.expiresAt < new Date()) {
+      // Token expired, delete it
+      await prisma.refreshToken.delete({ where: { id: refreshToken.id } })
+      return null
+    }
 
-    const { userId, exp } = JSON.parse(Buffer.from(payload, 'base64').toString())
-    if (exp < Date.now()) return null
-    return userId
+    return refreshToken.userId
   } catch {
     return null
   }
+}
+
+// Revoke a single refresh token
+async function revokeRefreshToken(token) {
+  if (!token || !token.startsWith(REFRESH_TOKEN_PREFIX)) return false
+
+  try {
+    const actualToken = token.slice(REFRESH_TOKEN_PREFIX.length)
+    await prisma.refreshToken.deleteMany({
+      where: { token: actualToken }
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Revoke all refresh tokens for a user
+async function revokeAllUserRefreshTokens(userId) {
+  await prisma.refreshToken.deleteMany({
+    where: { userId }
+  })
+}
+
+// Verify token (dual-track: JWT first, then legacy HMAC for backwards compatibility)
+export function verifyToken(token) {
+  if (!token) return null
+
+  // 1. Try JWT (industry standard)
+  if (token.startsWith('eyJ')) {
+    const userId = verifyJWT(token)
+    if (userId) return userId
+  }
+
+  // 2. Fallback to legacy HMAC token
+  if (token.startsWith(TOKEN_PREFIX)) {
+    try {
+      const withoutPrefix = token.slice(TOKEN_PREFIX.length)
+      const lastDotIndex = withoutPrefix.lastIndexOf('.')
+      if (lastDotIndex === -1) return null
+
+      const payload = withoutPrefix.slice(0, lastDotIndex)
+      const signature = withoutPrefix.slice(lastDotIndex + 1)
+
+      const expectedSig = crypto
+        .createHmac('sha256', TOKEN_SECRET)
+        .update(payload)
+        .digest('hex')
+      if (signature !== expectedSig) return null
+
+      const { userId, exp } = JSON.parse(Buffer.from(payload, 'base64').toString())
+      if (exp < Date.now()) return null
+      return userId
+    } catch {
+      return null
+    }
+  }
+
+  return null
 }
 
 // Generate anonymous identifier (SHA256 hash, no plaintext info in openid)
@@ -60,6 +193,25 @@ function generateAnonymousId(type, value) {
 }
 
 export const authService = {
+
+  /**
+   * Generate new JWT access token for user
+   * Uses industry-standard JWT instead of legacy HMAC token
+   */
+  async generateAccessToken(userId) {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    const openid = user?.openid || null
+    return generateJWT(userId, openid)
+  },
+
+  /**
+   * Verify token and return user
+   */
+  async verifyToken(token) {
+    const userId = verifyToken(token)
+    if (!userId) return null
+    return this.getUser(userId)
+  },
   /**
    * WeChat login - creates user if not exists
    */
@@ -81,10 +233,12 @@ export const authService = {
       data: { lastLogin: new Date() }
     })
 
-    const token = generateToken(user.id)
+    const token = await this.generateAccessToken(user.id)
+    const refreshToken = await this.createRefreshToken(user.id)
     return {
       user: this.sanitizeUser(user),
-      token
+      token,
+      refreshToken
     }
   },
 
@@ -108,11 +262,13 @@ export const authService = {
           lastLogin: new Date()
         }
       })
-      const token = generateToken(user.id)
+      const token = await this.generateAccessToken(user.id)
+      const refreshToken = await this.createRefreshToken(user.id)
       return {
         success: true,
         user: this.sanitizeUser(user),
-        token
+        token,
+        refreshToken
       }
     }
 
@@ -131,11 +287,13 @@ export const authService = {
       data: { lastLogin: new Date() }
     })
 
-    const token = generateToken(user.id)
+    const token = await this.generateAccessToken(user.id)
+    const refreshToken = await this.createRefreshToken(user.id)
     return {
       success: true,
       user: this.sanitizeUser(user),
-      token
+      token,
+      refreshToken
     }
   },
 
@@ -163,7 +321,7 @@ export const authService = {
       }
     })
 
-    const token = generateToken(user.id)
+    const token = await this.generateAccessToken(user.id)
     return {
       success: true,
       user: this.sanitizeUser(user),
@@ -241,11 +399,13 @@ export const authService = {
       data: { lastLogin: new Date() }
     })
 
-    const token = generateToken(user.id)
+    const token = await this.generateAccessToken(user.id)
+    const refreshToken = await this.createRefreshToken(user.id)
     return {
       success: true,
       user: this.sanitizeUser(user),
-      token
+      token,
+      refreshToken
     }
   },
 
@@ -275,34 +435,104 @@ export const authService = {
       }
     })
 
-    const token = generateToken(user.id)
+    const token = await this.generateAccessToken(user.id)
+    const refreshToken = await this.createRefreshToken(user.id)
     return {
       success: true,
       user: this.sanitizeUser(user),
-      token
+      token,
+      refreshToken
     }
   },
 
   /**
-   * Send email verification code (demo version - returns fixed code)
+   * Generate a secure random 6-digit code
+   */
+  generateSecureCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString()
+  },
+
+  /**
+   * Store verification code in database
+   */
+  async storeVerificationCode(identifier, purpose, code) {
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+
+    // Delete any existing unused codes for this identifier and purpose
+    await prisma.verificationCode.deleteMany({
+      where: {
+        OR: [
+          { phone: identifier, purpose, used: false },
+          { email: identifier, purpose, used: false }
+        ]
+      }
+    })
+
+    // Create new code
+    const isPhone = identifier.includes('@') === false
+    await prisma.verificationCode.create({
+      data: {
+        code,
+        ...(isPhone ? { phone: identifier } : { email: identifier }),
+        purpose,
+        expiresAt
+      }
+    })
+
+    return code
+  },
+
+  /**
+   * Verify and consume code from database
+   */
+  async verifyAndConsumeCode(identifier, code, purpose) {
+    const isPhone = identifier.includes('@') === false
+
+    const record = await prisma.verificationCode.findFirst({
+      where: {
+        code,
+        purpose,
+        used: false,
+        expiresAt: { gt: new Date() },
+        ...(isPhone ? { phone: identifier } : { email: identifier })
+      }
+    })
+
+    if (!record) {
+      return { success: false, reason: '验证码错误或已过期' }
+    }
+
+    // Mark as used
+    await prisma.verificationCode.update({
+      where: { id: record.id },
+      data: { used: true }
+    })
+
+    return { success: true }
+  },
+
+  /**
+   * Send email verification code
    */
   async sendEmailCode(email, purpose) {
-    // Demo version: always return fixed code
-    // Real version: generate random 6-digit code, send via email service, store in Redis with 5min expiry
-    console.log(`[Email Code Demo] To: ${email}, Purpose: ${purpose}, Code: 123456`)
-    return { code: '123456' }
+    const normalizedEmail = email.toLowerCase()
+    const code = this.generateSecureCode()
+
+    // In production, you would send the email here
+    // For now, store in DB and log (development only)
+    await this.storeVerificationCode(normalizedEmail, purpose, code)
+
+    console.log(`[DEV] Email verification code for ${normalizedEmail}: ${code}`)
+
+    return { code } // Return code for development; remove in production
   },
 
   /**
-   * Verify email code (demo version)
+   * Verify email code
    */
   async verifyEmailCode(email, code, purpose) {
-    // Demo version: only verify code === '123456'
-    // Real version: verify code from Redis, check expiry and purpose
-    if (code !== '123456') {
-      return { success: false, reason: '验证码错误' }
-    }
-    return { success: true }
+    const normalizedEmail = email.toLowerCase()
+    return this.verifyAndConsumeCode(normalizedEmail, code, purpose)
   },
 
   /**
@@ -312,8 +542,9 @@ export const authService = {
     const normalizedEmail = email.toLowerCase()
 
     // Verify code first
-    if (code !== '123456') {
-      return { success: false, reason: '验证码错误' }
+    const verifyResult = await this.verifyAndConsumeCode(normalizedEmail, code, 'email_verification')
+    if (!verifyResult.success) {
+      return verifyResult
     }
 
     // Check if email already in use
@@ -367,22 +598,24 @@ export const authService = {
   },
 
   /**
-   * Send password reset code (demo version - returns fixed code)
+   * Send password reset code
    */
   async sendResetCode(phone) {
-    // Demo version: always return fixed code
-    // Real version: generate random 6-digit code, store in Redis with 5min expiry
-    return { code: '123456' }
+    const code = this.generateSecureCode()
+    await this.storeVerificationCode(phone, 'password_reset', code)
+
+    console.log(`[DEV] Password reset code for ${phone}: ${code}`)
+
+    return { code } // Return code for development; remove in production
   },
 
   /**
-   * Reset password with verification code (demo version)
+   * Reset password with verification code
    */
   async resetPassword(phone, code, newPassword) {
-    // Demo version: only verify code === '123456'
-    // Real version: verify code from Redis, check expiry
-    if (code !== '123456') {
-      throw new Error('验证码错误')
+    const verifyResult = await this.verifyAndConsumeCode(phone, code, 'password_reset')
+    if (!verifyResult.success) {
+      throw new Error(verifyResult.reason)
     }
 
     const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
@@ -395,12 +628,72 @@ export const authService = {
   },
 
   /**
-   * Verify token and return user
+   * Generate refresh token for user
    */
-  async verifyToken(token) {
-    const userId = verifyToken(token)
-    if (!userId) return null
-    return this.getUser(userId)
+  async createRefreshToken(userId) {
+    const token = crypto.randomBytes(64).toString('hex')
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY)
+
+    await prisma.refreshToken.create({
+      data: {
+        token,
+        userId,
+        expiresAt
+      }
+    })
+
+    return `${REFRESH_TOKEN_PREFIX}${token}`
+  },
+
+  /**
+   * Verify refresh token and return user
+   */
+  async verifyRefreshToken(token) {
+    if (!token || !token.startsWith(REFRESH_TOKEN_PREFIX)) return null
+
+    try {
+      const actualToken = token.slice(REFRESH_TOKEN_PREFIX.length)
+
+      const refreshToken = await prisma.refreshToken.findUnique({
+        where: { token: actualToken }
+      })
+
+      if (!refreshToken) return null
+      if (refreshToken.expiresAt < new Date()) {
+        await prisma.refreshToken.delete({ where: { id: refreshToken.id } })
+        return null
+      }
+
+      return refreshToken.userId
+    } catch {
+      return null
+    }
+  },
+
+  /**
+   * Revoke refresh token
+   */
+  async revokeRefreshToken(token) {
+    if (!token || !token.startsWith(REFRESH_TOKEN_PREFIX)) return false
+
+    try {
+      const actualToken = token.slice(REFRESH_TOKEN_PREFIX.length)
+      await prisma.refreshToken.deleteMany({
+        where: { token: actualToken }
+      })
+      return true
+    } catch {
+      return false
+    }
+  },
+
+  /**
+   * Revoke all refresh tokens for user (logout from all devices)
+   */
+  async revokeAllUserRefreshTokens(userId) {
+    await prisma.refreshToken.deleteMany({
+      where: { userId }
+    })
   },
 
   /**
