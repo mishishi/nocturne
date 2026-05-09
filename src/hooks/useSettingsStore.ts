@@ -1,5 +1,19 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { storage } from '../services/storageService'
+
+// Zustand persist 存储适配器 - 使用 storageService 实现内存缓存+防抖写入
+const storageAdapter = {
+  getItem: (name: string): string | null => {
+    return storage.get(name) ?? null
+  },
+  setItem: (name: string, value: string): void => {
+    storage.set(name, value)
+  },
+  removeItem: (name: string): void => {
+    storage.remove(name)
+  }
+}
 
 interface SettingsState {
   fontSize: 'small' | 'medium' | 'large'
@@ -34,7 +48,8 @@ export const useSettingsStore = create<SettingsState>()(
       setAmbientVolume: (volume) => set({ ambientVolume: volume })
     }),
     {
-      name: 'yeelin-settings-storage'
+      name: 'yeelin-settings-storage',
+      storage: storageAdapter
     }
   )
 )

@@ -3,7 +3,21 @@ import { persist } from 'zustand/middleware'
 import { checkInApi, achievementApi, apiWithRetry } from '../services/api'
 import { useAuthStore } from './useAuthStore'
 import { openidService } from '../services/openidService'
+import { storage } from '../services/storageService'
 import { getAuthToken, setAuthToken, clearAuthToken } from '../utils/auth'
+
+// Zustand persist 存储适配器 - 使用 storageService 实现内存缓存+防抖写入
+const storageAdapter = {
+  getItem: (name: string): string | null => {
+    return storage.get(name) ?? null
+  },
+  setItem: (name: string, value: string): void => {
+    storage.set(name, value)
+  },
+  removeItem: (name: string): void => {
+    storage.remove(name)
+  }
+}
 import type { User } from '../types'
 
 // Re-export User from shared types
@@ -638,6 +652,7 @@ export const useDreamStore = create<DreamState>()(
     }),
     {
       name: 'yeelin-dream-storage',
+      storage: storageAdapter,
       partialize: (state) => ({
         // Limit history to last 50 items to prevent localStorage bloat
         history: state.history.slice(0, 50),
