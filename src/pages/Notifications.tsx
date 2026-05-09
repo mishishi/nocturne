@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { notificationApi, Notification as ApiNotification } from '../services/api'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import styles from './Notifications.module.css'
 
 export function Notifications() {
@@ -9,9 +9,6 @@ export function Notifications() {
   const [notifications, setNotifications] = useState<ApiNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
 
   const loadNotifications = async () => {
     setLoading(true)
@@ -44,12 +41,6 @@ export function Notifications() {
       cancelled = true
     }
   }, [])
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToastMessage(message)
-    setToastType(type)
-    setToastVisible(true)
-  }
 
   const handleMarkAllRead = async () => {
     setIsMarkingAllRead(true)
@@ -239,13 +230,6 @@ export function Notifications() {
           全部已读
         </button>
       )}
-
-      <Toast
-        message={toastMessage}
-        visible={toastVisible}
-        onClose={() => setToastVisible(false)}
-        type={toastType}
-      />
     </div>
   )
 }

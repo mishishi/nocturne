@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { wallApi, DreamWallPost } from '../services/api'
-import { useDreamStore } from '../hooks/useDreamStore'
+import { useDreamStore, showToast } from '../hooks/useDreamStore'
 import { storeDreamWallContext } from '../hooks/useDreamWallContext'
-import { Toast } from '../components/ui/Toast'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { FriendRequestButton } from '../components/FriendRequestButton'
@@ -22,9 +21,6 @@ export function DreamWall() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [likingId, setLikingId] = useState<string | null>(null)
   const [favoritingId, setFavoritingId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -76,9 +72,7 @@ export function DreamWall() {
       console.error('Failed to load posts:', err)
       setPosts([])
       setHasMore(false)
-      setToastType('error')
-      setToastMessage('加载失败，请重试')
-      setToastVisible(true)
+      showToast('加载失败，请重试', 'error')
     } finally {
       if (pageNum === 1) {
         setLoading(false)
@@ -145,9 +139,7 @@ export function DreamWall() {
       console.error('Failed to load friend posts:', err)
       setPosts([])
       setHasMore(false)
-      setToastType('error')
-      setToastMessage('加载失败，请重试')
-      setToastVisible(true)
+      showToast('加载失败，请重试', 'error')
     } finally {
       if (pageNum === 1) {
         setLoading(false)
@@ -232,9 +224,7 @@ export function DreamWall() {
 
   const handleLike = async (postId: string) => {
     if (!user?.openid) {
-      setToastType('info')
-      setToastMessage('登录后可点赞收藏故事')
-      setToastVisible(true)
+      showToast('登录后可点赞收藏故事', 'info')
       setTimeout(() => navigate('/login'), 1500)
       return
     }
@@ -260,17 +250,13 @@ export function DreamWall() {
       if (!result.success) {
         // Revert on failure
         setPosts(previousPosts)
-        setToastType('error')
-        setToastMessage('点赞失败，请重试')
-        setToastVisible(true)
+        showToast('点赞失败，请重试', 'error')
       }
     } catch (err) {
       // Revert on error
       setPosts(previousPosts)
       console.error('Failed to toggle like:', err)
-      setToastType('error')
-      setToastMessage('点赞失败，请重试')
-      setToastVisible(true)
+      showToast('点赞失败，请重试', 'error')
     } finally {
       setLikingId(null)
     }
@@ -278,9 +264,7 @@ export function DreamWall() {
 
   const handleFavorite = async (postId: string) => {
     if (!user?.openid) {
-      setToastType('info')
-      setToastMessage('登录后可点赞收藏故事')
-      setToastVisible(true)
+      showToast('登录后可点赞收藏故事', 'info')
       setTimeout(() => navigate('/login'), 1500)
       return
     }
@@ -305,17 +289,13 @@ export function DreamWall() {
       if (!result.success) {
         // Revert on failure
         setPosts(previousPosts)
-        setToastType('error')
-        setToastMessage('收藏失败，请重试')
-        setToastVisible(true)
+        showToast('收藏失败，请重试', 'error')
       }
     } catch (err) {
       // Revert on error
       setPosts(previousPosts)
       console.error('Failed to toggle favorite:', err)
-      setToastType('error')
-      setToastMessage('收藏失败，请重试')
-      setToastVisible(true)
+      showToast('收藏失败，请重试', 'error')
     } finally {
       setFavoritingId(null)
     }
@@ -333,19 +313,13 @@ export function DreamWall() {
       const result = await wallApi.deletePost(deletingPostId)
       if (result.success) {
         setPosts(prev => prev.filter(p => p.id !== deletingPostId))
-        setToastType('success')
-        setToastMessage('删除成功')
-        setToastVisible(true)
+        showToast('删除成功', 'success')
       } else {
-        setToastType('error')
-        setToastMessage('删除失败，请重试')
-        setToastVisible(true)
+        showToast('删除失败，请重试', 'error')
       }
     } catch (err) {
       console.error('Failed to delete post:', err)
-      setToastType('error')
-      setToastMessage('删除失败，请重试')
-      setToastVisible(true)
+      showToast('删除失败，请重试', 'error')
     } finally {
       setShowDeleteConfirm(false)
       setDeletingPostId(null)
@@ -656,9 +630,7 @@ export function DreamWall() {
                       className={styles.actionBtn}
                       onClick={() => {
                         navigator.clipboard.writeText(`${post.storyTitle}\n\n${post.storyFull || post.storySnippet}`)
-                        setToastType('success')
-                        setToastMessage('内容已复制')
-                        setToastVisible(true)
+                        showToast('内容已复制', 'success')
                       }}
                       aria-label="复制"
                     >
@@ -728,13 +700,6 @@ export function DreamWall() {
           )}
         </div>
       </div>
-
-      <Toast
-        message={toastMessage}
-        visible={toastVisible}
-        onClose={() => setToastVisible(false)}
-        type={toastType}
-      />
 
       <ConfirmModal
         isOpen={showDeleteConfirm}

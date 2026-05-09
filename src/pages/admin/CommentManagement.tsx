@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { adminApi, AdminComment } from '../../services/api'
-import { Toast } from '../../components/ui/Toast'
+import { showToast } from '../../hooks/useDreamStore'
 import styles from './Admin.module.css'
 
 // SVG Icons
@@ -12,9 +12,6 @@ const EmptyIcon = () => (
 
 export function CommentManagement() {
   const [loading, setLoading] = useState(true)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
 
   const [comments, setComments] = useState<AdminComment[]>([])
   const [commentsPage, setCommentsPage] = useState(1)
@@ -23,12 +20,6 @@ export function CommentManagement() {
   useEffect(() => {
     loadComments(1, true)
   }, [])
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToastMessage(message)
-    setToastType(type)
-    setToastVisible(true)
-  }
 
   const loadComments = async (page: number, reset = false) => {
     if (page === 1) setLoading(true)
@@ -120,13 +111,6 @@ export function CommentManagement() {
           加载更多
         </button>
       )}
-
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onClose={() => setToastVisible(false)}
-      />
     </div>
   )
 }

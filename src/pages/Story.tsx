@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
-import { useDreamStore } from '../hooks/useDreamStore'
+import { useDreamStore, showToast } from '../hooks/useDreamStore'
 import { useIsAuthor } from '../hooks/useAuthorization'
 import { useAchievementSound } from '../hooks/useAchievementSound'
 import { useTextToSpeech } from '../hooks/useTextToSpeech'
 import { useDreamWallContext, clearDreamWallContext } from '../hooks/useDreamWallContext'
 import { Button } from '../components/ui/Button'
-import { Toast } from '../components/ui/Toast'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { SharePoster } from '../components/SharePoster'
 import { Breadcrumb } from '../components/Breadcrumb'
@@ -33,9 +32,6 @@ export function Story() {
   const { sessionId: urlSessionId } = useParams()
   const { currentSession, addToHistory, reset, user } = useDreamStore()
   const { playSound } = useAchievementSound()
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [showAiMenu, setShowAiMenu] = useState(false)
   const [showFabMenu, setShowFabMenu] = useState(false)
@@ -86,11 +82,6 @@ export function Story() {
       animationDuration: `${6 + Math.random() * 6}s`
     })), []
   )
-
-  // Stable callback for toast close to prevent effect re-runs
-  const handleToastClose = useCallback(() => {
-    setToastVisible(false)
-  }, [])
 
   // Check if we navigated from history with state
   const fromHistory = location.state?.fromHistory
@@ -394,9 +385,7 @@ export function Story() {
 
     if (!isAuthor || !openid) {
       // Non-authors just get feedback without reward
-      setToastType('info')
-      setToastMessage('请长按复制内容分享')
-      setToastVisible(true)
+      showToast('请长按复制内容分享', 'info')
       return
     }
 
@@ -407,9 +396,7 @@ export function Story() {
       const limit = stats.data?.dailyLimit[type]
       const todayCount = stats.data?.todayShareCount[type]
       if (todayCount >= limit) {
-        setToastType('info')
-        setToastMessage('分享次数已达今日上限')
-        setToastVisible(true)
+        showToast('分享次数已达今日上限', 'info')
         return
       }
     } catch (err) {
@@ -429,9 +416,7 @@ export function Story() {
     setPendingShareType(null)
 
     if (!navigator.share) {
-      setToastType('info')
-      setToastMessage('分享功能不可用，请长按复制内容分享')
-      setToastVisible(true)
+      showToast('分享功能不可用，请长按复制内容分享', 'info')
       return
     }
 
@@ -447,27 +432,19 @@ export function Story() {
           const parts: string[] = ['分享成功']
           if (result.data.pointsEarned) parts.push(`+${result.data.pointsEarned} 积分`)
           if (result.data.medalsUnlocked?.length) parts.push(`${result.data.medalsUnlocked.join(',')} 已解锁`)
-          setToastType('success')
-          setToastMessage(parts.join(' '))
-          setToastVisible(true)
+          showToast(parts.join(' '), 'success')
         } else if (result.success && result.data?.reason) {
-          setToastType('info')
-          setToastMessage(result.data.reason)
-          setToastVisible(true)
+          showToast(result.data.reason, 'info')
         }
       } catch {
-        setToastType('error')
-        setToastMessage('记录分享失败')
-        setToastVisible(true)
+        showToast('记录分享失败', 'error')
       }
     } catch (err) {
       if ((err as Error).name === 'AbortError') {
         // User cancelled share
         return
       }
-      setToastType('info')
-      setToastMessage('分享失败，请长按复制内容分享')
-      setToastVisible(true)
+      showToast('分享失败，请长按复制内容分享', 'info')
     }
   }
 
@@ -478,9 +455,7 @@ export function Story() {
 
     navigator.clipboard.writeText(url).then(async () => {
       // Immediate feedback
-      setToastType('success')
-      setToastMessage('链接已复制到剪贴板')
-      setToastVisible(true)
+      showToast('链接已复制到剪贴板', 'success')
 
       // Log share and show rewards - only for author
       if (isAuthor && openid) {
@@ -496,16 +471,12 @@ export function Story() {
                 clearTimeout(copyTimeoutRef.current)
               }
               copyTimeoutRef.current = setTimeout(() => {
-                setToastType('success')
-                setToastMessage(parts.join(' '))
-                setToastVisible(true)
+                showToast(parts.join(' '), 'success')
                 copyTimeoutRef.current = null
               }, 1000)
             }
           } else if (result.success && result.data?.reason) {
-            setToastType('error')
-            setToastMessage(result.data.reason)
-            setToastVisible(true)
+            showToast(result.data.reason, 'error')
           }
         } catch (err) {
           console.error('[Story] Failed to log link share:', err)
@@ -524,8 +495,7 @@ export function Story() {
     addToHistory()
     reset()
     playSound('celebration')
-    setToastMessage('故事已保存')
-    setToastVisible(true)
+    showToast('故事已保存', 'success')
     setTimeout(() => navigate('/'), 800)
   }
 
@@ -551,16 +521,12 @@ export function Story() {
     const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId || urlSessionId
 
     if (!openid) {
-      setToastType('error')
-      setToastMessage('请先登录')
-      setToastVisible(true)
+      showToast('请先登录', 'error')
       return
     }
 
     if (!sessionId) {
-      setToastType('error')
-      setToastMessage('无法获取梦境ID')
-      setToastVisible(true)
+      showToast('无法获取梦境ID', 'error')
       return
     }
 
@@ -597,20 +563,14 @@ export function Story() {
 
         // Show points used toast with earning hint
         if (result.data.pointsUsed) {
-          setToastType('info')
-          setToastMessage(`解读消耗 ${result.data.pointsUsed} 积分，签到可获得更多`)
-          setToastVisible(true)
+          showToast(`解读消耗 ${result.data.pointsUsed} 积分，签到可获得更多`, 'info')
         }
       } else if (result.success && result.data?.reason) {
-        setToastType('error')
-        setToastMessage(result.data.reason)
-        setToastVisible(true)
+        showToast(result.data.reason, 'error')
       }
     } catch (err) {
       console.error('[Story] Failed to interpret:', err)
-      setToastType('error')
-      setToastMessage('解读失败，请重试')
-      setToastVisible(true)
+      showToast('解读失败，请重试', 'error')
     } finally {
       setIsInterpreting(false)
     }
@@ -629,9 +589,7 @@ export function Story() {
     }
 
     if (!sessionId) {
-      setToastType('error')
-      setToastMessage('无法获取梦境ID')
-      setToastVisible(true)
+      showToast('无法获取梦境ID', 'error')
       return
     }
 
@@ -651,9 +609,7 @@ export function Story() {
           publishedSessions.push(sessionId)
           localStorage.setItem(PUBLISHED_SESSIONS_KEY, JSON.stringify(publishedSessions))
         }
-        setToastType('success')
-        setToastMessage('发布成功！')
-        setToastVisible(true)
+        showToast('发布成功！', 'success')
       } else {
         // Check if already published error
         const errorMsg = result.error?.message || ''
@@ -665,13 +621,9 @@ export function Story() {
             publishedSessions.push(sessionId)
             localStorage.setItem(PUBLISHED_SESSIONS_KEY, JSON.stringify(publishedSessions))
           }
-          setToastType('info')
-          setToastMessage('已在梦墙发布过')
-          setToastVisible(true)
+          showToast('已在梦墙发布过', 'info')
         } else {
-          setToastType('error')
-          setToastMessage(errorMsg || '发布失败')
-          setToastVisible(true)
+          showToast(errorMsg || '发布失败', 'error')
         }
       }
     } catch (err) {
@@ -684,13 +636,9 @@ export function Story() {
           publishedSessions.push(sessionId)
           localStorage.setItem(PUBLISHED_SESSIONS_KEY, JSON.stringify(publishedSessions))
         }
-        setToastType('info')
-        setToastMessage('已在梦墙发布过')
-        setToastVisible(true)
+        showToast('已在梦墙发布过', 'info')
       } else {
-        setToastType('error')
-        setToastMessage('网络错误，请重试')
-        setToastVisible(true)
+        showToast('网络错误，请重试', 'error')
       }
     } finally {
       setIsPublishing(false)
@@ -1240,9 +1188,6 @@ export function Story() {
         onSubmitted={() => setFeedbackRefreshKey(k => k + 1)}
       />
 
-      {/* Toast */}
-      <Toast message={toastMessage} visible={toastVisible} onClose={handleToastClose} type={toastType} />
-
       {/* Dream Interpretation Loading Modal */}
       {isInterpreting && <DreamInterpretationLoadingModal />}
 
@@ -1281,9 +1226,7 @@ export function Story() {
           onShare={async (type) => {
             const openid = currentUserOpenid
             // Show immediate feedback
-            setToastType('success')
-            setToastMessage('海报已保存')
-            setToastVisible(true)
+            showToast('海报已保存', 'success')
             if (openid) {
               try {
                 const result = await shareApi.logShare(openid, type)
@@ -1292,14 +1235,10 @@ export function Story() {
                   if (result.data.pointsEarned) parts.push(`+${result.data.pointsEarned} 积分`)
                   if (result.data.medalsUnlocked?.length) parts.push(`${result.data.medalsUnlocked.join(',')} 已解锁`)
                   if (parts.length) {
-                    setToastType('success')
-                    setToastMessage(parts.join(' '))
-                    setToastVisible(true)
+                    showToast(parts.join(' '), 'success')
                   }
                 } else if (result.success && result.data?.reason) {
-                  setToastType('error')
-                  setToastMessage(result.data.reason)
-                  setToastVisible(true)
+                  showToast(result.data.reason, 'error')
                 }
               } catch (err) {
                 console.error('[Story] Failed to log share:', err)

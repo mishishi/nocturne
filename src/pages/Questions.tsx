@@ -5,7 +5,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap'
 import { api } from '../services/api'
 import { createStoryStream } from '../services/sseClient'
 import { Textarea } from '../components/ui/Textarea'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import { TypewriterText } from '../components/ui/TypewriterText'
 import { RevealScreen } from '../components/RevealScreen'
 import { Breadcrumb } from '../components/Breadcrumb'
@@ -24,9 +24,6 @@ export function Questions() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hasFailed, setHasFailed] = useState(false)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [showInput, setShowInput] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [storyReady, setStoryReady] = useState(false)
@@ -87,9 +84,7 @@ export function Questions() {
     setError('')
 
     const timeoutId = setTimeout(() => {
-      setToastType('info')
-      setToastMessage('请求较慢，请稍候...')
-      setToastVisible(true)
+      showToast('请求较慢，请稍候...', 'info')
     }, 90000)
 
     try {
@@ -112,9 +107,7 @@ export function Questions() {
       clearTimeout(timeoutId)
       const errorMsg = '发送失败了，请稍后重试'
       setError(errorMsg)
-      setToastType('error')
-      setToastMessage(errorMsg)
-      setToastVisible(true)
+      showToast(errorMsg, 'error')
     } finally {
       if (!showReveal) {
         setLoading(false)
@@ -153,9 +146,7 @@ export function Questions() {
 
     const hasValidAnswer = allAnswers.some(a => a && a.trim() !== '' && a !== SKIPPED_ANSWER)
     if (!hasValidAnswer && currentQuestionIndex === questions.length - 1) {
-      setToastType('error')
-      setToastMessage('请至少回答一个问题，让我更好地为你编织梦境')
-      setToastVisible(true)
+      showToast('请至少回答一个问题，让我更好地为你编织梦境', 'error')
       return
     }
 
@@ -172,9 +163,7 @@ export function Questions() {
     isSubmittingRef = true
 
     let timeoutId = setTimeout(() => {
-      setToastType('info')
-      setToastMessage('生成中，请稍候...')
-      setToastVisible(true)
+      showToast('生成中，请稍候...', 'info')
     }, 30000)
 
     try {
@@ -201,9 +190,7 @@ export function Questions() {
         console.log('[Questions] nextIndex set to:', currentIdx, 'loop condition:', currentIdx < questions.length)
         clearTimeout(timeoutId)
         timeoutId = setTimeout(() => {
-          setToastType('info')
-          setToastMessage('生成中，请稍候...')
-          setToastVisible(true)
+          showToast('生成中，请稍候...', 'info')
         }, 30000)
       }
       console.log('[Questions] While loop done, currentIdx=', currentIdx, 'questions.length=', questions.length)
@@ -236,9 +223,7 @@ export function Questions() {
           setHasFailed(true)
           setShowReveal(false)
           setLoading(false)
-          setToastType('error')
-          setToastMessage(errorMsg)
-          setToastVisible(true)
+          showToast(errorMsg, 'error')
         }
       })
       sseCleanupRef.current = cleanup
@@ -250,9 +235,7 @@ export function Questions() {
       setHasFailed(true)
       setShowReveal(false)
       setLoading(false)
-      setToastType('error')
-      setToastMessage(errorMsg)
-      setToastVisible(true)
+      showToast(errorMsg, 'error')
     } finally {
       isSubmittingRef = false
     }
@@ -492,8 +475,6 @@ export function Questions() {
           <p className={styles.tip}>✨ 回答越详细，故事越精彩</p>
         </div>
       </div>
-
-      <Toast message={toastMessage} visible={toastVisible} onClose={() => setToastVisible(false)} type={toastType} />
 
       {/* Permission guide modal */}
       {showPermissionGuide && (

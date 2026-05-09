@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { adminApi, PendingPost } from '../../services/api'
-import { Toast } from '../../components/ui/Toast'
+import { showToast } from '../../hooks/useDreamStore'
 import styles from './Admin.module.css'
 
 // SVG Icons
@@ -19,9 +19,6 @@ const REJECT_REASONS = [
 
 export function PendingPosts() {
   const [loading, setLoading] = useState(true)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
 
   const [pendingPosts, setPendingPosts] = useState<PendingPost[]>([])
   const [postsPage, setPostsPage] = useState(1)
@@ -36,12 +33,6 @@ export function PendingPosts() {
   useEffect(() => {
     loadPendingPosts(1, true)
   }, [])
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToastMessage(message)
-    setToastType(type)
-    setToastVisible(true)
-  }
 
   const loadPendingPosts = async (page: number, reset = false) => {
     if (page === 1) setLoading(true)
@@ -264,13 +255,6 @@ export function PendingPosts() {
           加载更多
         </button>
       )}
-
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onClose={() => setToastVisible(false)}
-      />
 
       {rejectModalPost && (
         <div className={styles.modalOverlay} onClick={() => setRejectModalPost(null)}>

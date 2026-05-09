@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { messageApi, Conversation, Message, friendApi, FriendListItem } from '../services/api'
+import { showToast } from '../hooks/useDreamStore'
 import { ChatBubble } from '../components/ChatBubble'
 import { Breadcrumb } from '../components/Breadcrumb'
-import { Toast } from '../components/ui/Toast'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import styles from './Chat.module.css'
@@ -24,9 +24,6 @@ export function Chat() {
   const [sending, setSending] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [mobileChatOpen, setMobileChatOpen] = useState(false)
   const [pendingMessageId, setPendingMessageId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null)
@@ -45,9 +42,7 @@ export function Chat() {
       }
     } catch (err) {
       console.error('Failed to load conversations:', err)
-      setToastType('error')
-      setToastMessage('加载会话失败')
-      setToastVisible(true)
+      showToast('加载会话失败', 'error')
     }
   }, [])
 
@@ -60,9 +55,7 @@ export function Chat() {
       }
     } catch (err) {
       console.error('Failed to load friends:', err)
-      setToastType('error')
-      setToastMessage('加载好友列表失败')
-      setToastVisible(true)
+      showToast('加载好友列表失败', 'error')
     }
   }, [])
 
@@ -81,9 +74,7 @@ export function Chat() {
       }
     } catch (err) {
       console.error('Failed to load messages:', err)
-      setToastType('error')
-      setToastMessage('加载消息失败')
-      setToastVisible(true)
+      showToast('加载消息失败', 'error')
     }
   }, [])
 
@@ -197,18 +188,14 @@ export function Chat() {
         // Remove optimistic message on failure
         setMessages(prev => prev.filter(msg => msg.id !== tempId))
         setInputText(inputText.trim()) // Restore input
-        setToastType('error')
-        setToastMessage('发送失败，请重试')
-        setToastVisible(true)
+        showToast('发送失败，请重试', 'error')
       }
     } catch (err) {
       console.error('Failed to send message:', err)
       // Remove optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempId))
       setInputText(inputText.trim()) // Restore input
-      setToastType('error')
-      setToastMessage('发送失败，请重试')
-      setToastVisible(true)
+      showToast('发送失败，请重试', 'error')
     } finally {
       setSending(false)
       setPendingMessageId(null)
@@ -239,14 +226,10 @@ export function Chat() {
     try {
       await messageApi.deleteMessage(deleteTarget.id)
       setMessages(prev => prev.filter(m => m.id !== deleteTarget.id))
-      setToastType('success')
-      setToastMessage('消息已删除')
-      setToastVisible(true)
+      showToast('消息已删除', 'success')
     } catch (err) {
       console.error('Failed to delete message:', err)
-      setToastType('error')
-      setToastMessage('删除失败，请重试')
-      setToastVisible(true)
+      showToast('删除失败，请重试', 'error')
     } finally {
       setShowDeleteConfirm(false)
       setDeleteTarget(null)
@@ -478,13 +461,6 @@ export function Chat() {
         </main>
         </div>
       </div>
-
-      <Toast
-        message={toastMessage}
-        visible={toastVisible}
-        onClose={() => setToastVisible(false)}
-        type={toastType}
-      />
 
       <ConfirmModal
         isOpen={showDeleteConfirm}

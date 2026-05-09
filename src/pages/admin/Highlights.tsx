@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { adminApi, HighlightCandidate } from '../../services/api'
+import { showToast } from '../../hooks/useDreamStore'
 import styles from '../Admin.module.css'
 
 type CandidateStatus = 'pending' | 'approved' | 'rejected'
@@ -28,15 +29,6 @@ export function Highlights() {
   const [candidatesHasMore, setCandidatesHasMore] = useState(true)
   const [candidateStatus, setCandidateStatus] = useState<CandidateStatus>('pending')
   const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set())
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToastMessage(message)
-    setToastType(type)
-    setToastVisible(true)
-  }
 
   useEffect(() => {
     loadCandidates(1, true)
@@ -311,13 +303,6 @@ export function Highlights() {
         >
           加载更多
         </button>
-      )}
-
-      {/* Toast */}
-      {toastVisible && (
-        <div className={`${styles.toast} ${styles[toastType]}`}>
-          {toastMessage}
-        </div>
       )}
     </div>
   )

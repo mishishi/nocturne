@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { friendApi, authApi, DreamWallPost } from '../services/api'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './FriendProfile.module.css'
 
@@ -13,9 +13,6 @@ export function FriendProfile() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
 
   const loadFriendPosts = useCallback(async (pageNum: number, reset = false) => {
     if (!openid) return
@@ -33,9 +30,7 @@ export function FriendProfile() {
       }
     } catch (err) {
       console.error('Failed to load friend posts:', err)
-      setToastType('error')
-      setToastMessage('加载失败，请重试')
-      setToastVisible(true)
+      showToast('加载失败，请重试', 'error')
     } finally {
       setLoading(false)
     }
@@ -58,15 +53,11 @@ export function FriendProfile() {
           })
         } else {
           console.error('Failed to load friend info:', result)
-          setToastType('error')
-          setToastMessage('加载好友信息失败')
-          setToastVisible(true)
+          showToast('加载好友信息失败', 'error')
         }
       } catch (err) {
         console.error('Failed to load friend info:', err)
-        setToastType('error')
-        setToastMessage('加载好友信息失败')
-        setToastVisible(true)
+        showToast('加载好友信息失败', 'error')
       }
     }
 
@@ -288,13 +279,6 @@ export function FriendProfile() {
           )}
         </section>
       </div>
-
-      <Toast
-        message={toastMessage}
-        visible={toastVisible}
-        onClose={() => setToastVisible(false)}
-        type={toastType}
-      />
     </div>
   )
 }

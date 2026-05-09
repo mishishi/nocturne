@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useDreamStore } from '../hooks/useDreamStore'
+import { useDreamStore, showToast } from '../hooks/useDreamStore'
 import { wallApi, DreamWallPost } from '../services/api'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { DreamWallSkeleton } from '../components/ui/Skeleton'
-import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
 import styles from './Favorites.module.css'
 
@@ -25,7 +24,6 @@ export function Favorites() {
   const [unfavoritingId, setUnfavoritingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [storySearchQuery, setStorySearchQuery] = useState('')
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
 
   const fetchFavorites = useCallback(async (pageNum: number, append = false) => {
     if (!user?.openid) return
@@ -42,7 +40,7 @@ export function Favorites() {
       }
     } catch (err) {
       console.error('Failed to fetch favorites:', err)
-      setToast({ visible: true, message: '加载失败，请检查网络连接', type: 'error' })
+      showToast('加载失败，请检查网络连接', 'error')
     } finally {
       setLoading(false)
       setLoadingMore(false)
@@ -99,7 +97,7 @@ export function Favorites() {
       // Revert on error
       setPosts(previousPosts)
       console.error('Failed to unfavorite:', err)
-      setToast({ visible: true, message: '取消收藏失败，请重试', type: 'error' })
+      showToast('取消收藏失败，请重试', 'error')
     } finally {
       setUnfavoritingId(null)
     }
@@ -491,14 +489,6 @@ export function Favorites() {
           </>
         )}
       </div>
-
-      {/* Toast */}
-      <Toast
-        message={toast.message}
-        visible={toast.visible}
-        type={toast.type}
-        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
-      />
     </div>
   )
 }

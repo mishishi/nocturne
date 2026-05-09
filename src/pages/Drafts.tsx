@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDreamStore } from '../hooks/useDreamStore'
+import { useDreamStore, showToast } from '../hooks/useDreamStore'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
-import { Toast } from '../components/ui/Toast'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { EmptyState } from '../components/ui/EmptyState'
 import styles from './Drafts.module.css'
@@ -22,9 +21,6 @@ export function Drafts() {
   const navigate = useNavigate()
   const { currentSession, reset: resetSession } = useDreamStore()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
   // Check if there's a draft to show
   const hasDraft = currentSession.dreamText || currentSession.questions.length > 0
@@ -36,9 +32,7 @@ export function Drafts() {
   const handleDeleteDraft = () => {
     resetSession()
     setShowDeleteConfirm(false)
-    setToastMessage('草稿已删除')
-    setToastType('success')
-    setToastVisible(true)
+    showToast('草稿已删除', 'success')
   }
 
   // Handle continue draft
@@ -197,13 +191,6 @@ export function Drafts() {
           onConfirm={handleDeleteDraft}
           onCancel={() => setShowDeleteConfirm(false)}
           danger
-        />
-
-        <Toast
-          message={toastMessage}
-          visible={toastVisible}
-          type={toastType}
-          onClose={() => setToastVisible(false)}
         />
       </div>
     </div>

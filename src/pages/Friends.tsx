@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { friendApi, FriendListItem, FriendRequestItem } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { FriendsSkeleton } from '../components/ui/Skeleton'
@@ -17,9 +17,6 @@ export function Friends() {
   const [requests, setRequests] = useState<FriendRequestItem[]>([])
   const [sentRequests, setSentRequests] = useState<FriendRequestItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Array<{ id: string; openid: string; nickname?: string; avatar?: string; isMember: boolean }>>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -95,12 +92,6 @@ export function Friends() {
       cancelled = true
     }
   }, [user, navigate])
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToastMessage(message)
-    setToastType(type)
-    setToastVisible(true)
-  }
 
   const handleAcceptRequest = async (requestId: string) => {
     if (isAccepting) return
@@ -575,13 +566,6 @@ export function Friends() {
           )}
         </div>
       </div>
-
-      <Toast
-        message={toastMessage}
-        visible={toastVisible}
-        onClose={() => setToastVisible(false)}
-        type={toastType}
-      />
 
       <ConfirmModal
         isOpen={confirmModal.open}

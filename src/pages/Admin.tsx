@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminApi, AdminStats, PendingPost, AdminComment, HighlightCandidate } from '../services/api'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import styles from './Admin.module.css'
 
 type TabType = 'pending' | 'comments' | 'stats' | 'highlights'
@@ -18,9 +18,6 @@ export function Admin() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>('pending')
   const [loading, setLoading] = useState(true)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
 
   // Stats data
   const [stats, setStats] = useState<AdminStats | null>(null)
@@ -63,12 +60,6 @@ export function Admin() {
       loadCandidates(1, true)
     }
   }, [activeTab])
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToastMessage(message)
-    setToastType(type)
-    setToastVisible(true)
-  }
 
   const loadStats = async () => {
     try {
@@ -802,13 +793,6 @@ export function Admin() {
           </div>
         </div>
       )}
-
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onClose={() => setToastVisible(false)}
-      />
     </div>
   )
 }

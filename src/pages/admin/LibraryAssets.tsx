@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { adminLibraryApi } from '../../services/api'
+import { showToast } from '../../hooks/useDreamStore'
 import styles from '../Admin.module.css'
 
 type CandidateStatus = 'pending' | 'approved' | 'rejected' | 'all'
@@ -62,15 +63,6 @@ export function LibraryAssets() {
   const [candidatesHasMore, setCandidatesHasMore] = useState(false)
   const [candidateStatus, setCandidateStatus] = useState<CandidateStatus>('pending')
   const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set())
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToastMessage(message)
-    setToastType(type)
-    setToastVisible(true)
-  }
 
   useEffect(() => {
     loadCandidates(1, true)
@@ -418,12 +410,6 @@ export function LibraryAssets() {
         </button>
       )}
 
-      {/* Toast */}
-      {toastVisible && (
-        <div className={`${styles.toast} ${styles[toastType]}`}>
-          {toastMessage}
-        </div>
-      )}
     </div>
   )
 }

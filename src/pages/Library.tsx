@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { libraryApi, LibraryCollection } from '../services/api'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import { EmptyState } from '../components/ui/EmptyState'
 import styles from './Library.module.css'
 
@@ -51,9 +51,6 @@ export function Library() {
   const [loading, setLoading] = useState(true)
   const [collections, setCollections] = useState<Collection[]>([])
   const [readingProgress] = useState<ReadingProgress | null>(null)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
   useEffect(() => {
     async function fetchCollections() {
@@ -78,9 +75,7 @@ export function Library() {
       } catch (error) {
         console.error('获取合集列表失败:', error)
         setCollections([])
-        setToastType('error')
-        setToastMessage('加载失败，请检查网络连接')
-        setToastVisible(true)
+        showToast('加载失败，请检查网络连接', 'error')
       } finally {
         setLoading(false)
       }
@@ -214,12 +209,6 @@ export function Library() {
         )}
       </div>
 
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onClose={() => setToastVisible(false)}
-      />
     </div>
   )
 }
