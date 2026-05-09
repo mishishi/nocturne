@@ -299,8 +299,8 @@ function App() {
             <Route path="/demo" element={<PageErrorBoundary><DemoExperience /></PageErrorBoundary>} />
             <Route path="/questions" element={<PageErrorBoundary><Questions /></PageErrorBoundary>} />
             <Route path="/story/:sessionId" element={<PageErrorBoundary><Story /></PageErrorBoundary>} />
-            <Route path="/history" element={<PageErrorBoundary><History /></PageErrorBoundary>} />
-            <Route path="/favorites" element={<PageErrorBoundary><Favorites /></PageErrorBoundary>} />
+            <Route path="/history" element={<PageErrorBoundary><ProtectedRoute><History /></ProtectedRoute></PageErrorBoundary>} />
+            <Route path="/favorites" element={<PageErrorBoundary><ProtectedRoute><Favorites /></ProtectedRoute></PageErrorBoundary>} />
             <Route path="/wall" element={<PageErrorBoundary><DreamWall /></PageErrorBoundary>} />
             <Route path="/login" element={<PageErrorBoundary><Login /></PageErrorBoundary>} />
             <Route path="/register" element={<PageErrorBoundary><Register /></PageErrorBoundary>} />
@@ -318,7 +318,7 @@ function App() {
               <PageErrorBoundary><ProtectedRoute><FriendProfile /></ProtectedRoute></PageErrorBoundary>
             } />
             <Route path="/auth/wechat/callback" element={<PageErrorBoundary><WeChatCallback /></PageErrorBoundary>} />
-            <Route path="/notifications" element={<PageErrorBoundary><Notifications /></PageErrorBoundary>} />
+            <Route path="/notifications" element={<PageErrorBoundary><ProtectedRoute><Notifications /></ProtectedRoute></PageErrorBoundary>} />
             <Route path="/chat" element={
               <PageErrorBoundary><ProtectedRoute><Chat /></ProtectedRoute></PageErrorBoundary>
             } />

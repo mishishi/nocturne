@@ -3,7 +3,8 @@
  * All auth-related helpers should be placed here for easy maintenance
  */
 
-const TOKEN_COOKIE_NAME = 'yeelin_token'
+const TOKEN_COOKIE_NAME = 'access_token'
+const REFRESH_TOKEN_KEY = 'refresh_token'
 
 /**
  * Check if a valid authentication token exists in Cookie
@@ -40,4 +41,25 @@ export function setAuthToken(token: string, maxAgeDays = 7): void {
  */
 export function clearAuthToken(): void {
   document.cookie = `${TOKEN_COOKIE_NAME}=; path=/; max-age=0`
+}
+
+/**
+ * Get the refresh token from localStorage
+ */
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+/**
+ * Set the refresh token in localStorage
+ */
+export function setRefreshToken(token: string): void {
+  localStorage.setItem(REFRESH_TOKEN_KEY, token)
+}
+
+/**
+ * Clear the refresh token from localStorage
+ */
+export function clearRefreshToken(): void {
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
 }
