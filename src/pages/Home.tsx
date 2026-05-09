@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { OnboardingOverlay } from '../components/ui/OnboardingOverlay'
+import { LiveNotification } from '../components/ui/LiveNotification'
 import { AchievementCenter } from '../components/AchievementCenter'
 import { DailyHighlights } from '../components/DailyHighlights'
-import { useDreamStore, ACHIEVEMENTS, type DreamSession } from '../hooks/useDreamStore'
+import { useDreamStore, ACHIEVEMENTS, showToast, type DreamSession } from '../hooks/useDreamStore'
 import { checkInApi } from '../services/api'
 import { hasValidToken } from '../utils/auth'
 import styles from './Home.module.css'
@@ -48,17 +49,27 @@ export function Home() {
 
   // Handle check-in
   const handleCheckIn = async () => {
-    if (!user?.openid || !hasValidToken() || isCheckingIn) return
+    if (!user?.openid) {
+      showToast('请先登录后再签到', 'error')
+      return
+    }
+    if (!hasValidToken()) {
+      showToast('登录已过期，请重新登录', 'error')
+      return
+    }
+    if (isCheckingIn) return
     setIsCheckingIn(true)
     try {
       const result = await checkInApi.checkIn()
       if (result.success && result.data) {
-        // alreadyCheckedIn: true = 重复签到, false = 新签到成功
-        // 无论哪种情况，result.success 为 true 就表示今日可以签到
         setCheckInStatus(true, result.data.consecutiveDays)
+        showToast('签到成功！', 'success')
+      } else {
+        showToast(result.error?.message || '签到失败，请稍后重试', 'error')
       }
     } catch (err) {
       console.error('Failed to check in:', err)
+      showToast('签到失败，请稍后重试', 'error')
     } finally {
       setIsCheckingIn(false)
     }
@@ -167,9 +178,9 @@ export function Home() {
         <h1 className={styles.heroTitle}>
           {isNewUser ? (
             <>
-              <span className={styles.heroTitleLine}>你在夜棂存的</span>
-              <span className={styles.heroTitleLine}>每一篇梦</span>
-              <span className={styles.heroTitleAccent}>都是你自己</span>
+              <span className={styles.heroTitleLine}>醒来就忘的梦</span>
+              <span className={styles.heroTitleLine}>让 AI 帮你记得</span>
+              <span className={styles.heroTitleAccent}>5分钟，变成故事</span>
             </>
           ) : isReturningUser && leftOffMessage ? (
             <>
@@ -186,7 +197,7 @@ export function Home() {
 
         <p className={styles.heroSubtitle}>
           {isNewUser
-            ? '把醒来就忘的梦，变成能留住的文字'
+            ? '碎片化的梦境，AI 编织成完整故事'
             : isReturningUser && leftOffMessage
               ? leftOffMessage
               : lastDreamDate
@@ -200,6 +211,24 @@ export function Home() {
               {isNewUser ? '开始记录' : '继续记录'}
             </Button>
           </Link>
+        </div>
+
+        {/* Social Proof */}
+        <div className={styles.socialProof}>
+          <div className={styles.socialProofItem}>
+            <span className={styles.socialProofNumber}>10,000+</span>
+            <span className={styles.socialProofLabel}>人已记录梦境</span>
+          </div>
+          <div className={styles.socialProofDivider} />
+          <div className={styles.socialProofItem}>
+            <span className={styles.socialProofNumber}>5分钟</span>
+            <span className={styles.socialProofLabel}>完成一个故事</span>
+          </div>
+          <div className={styles.socialProofDivider} />
+          <div className={styles.socialProofItem}>
+            <span className={styles.socialProofNumber}>100%</span>
+            <span className={styles.socialProofLabel}>AI 智能解读</span>
+          </div>
         </div>
 
         {/* Achievement progress hint - only for returning users */}
@@ -224,6 +253,9 @@ export function Home() {
               <p className={styles.checkInStatus}>
                 {checkedInToday ? '今日已签到' : '今日未签到'}
               </p>
+              {!checkedInToday && (
+                <p className={styles.checkInHint}>连续签到解锁成就</p>
+              )}
             </div>
             <div className={styles.checkInRight}>
               {checkedInToday ? (
@@ -322,6 +354,9 @@ export function Home() {
         isOpen={showAchievementCenter}
         onClose={() => setShowAchievementCenter(false)}
       />
+
+      {/* Live Notification - Social Proof */}
+      <LiveNotification />
     </div>
   )
 }

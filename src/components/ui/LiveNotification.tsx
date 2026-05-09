@@ -7,56 +7,49 @@ interface NotificationItem {
   icon: string
 }
 
-// Fallback mock data when API fails
-const FALLBACK_NOTIFICATIONS: NotificationItem[] = [
-  { message: '北京的王同学刚开始探索', icon: '🌙' },
-  { message: '广州的陈小姐记录了第3个梦', icon: '✨' },
-  { message: '成都的李同学收到了故事', icon: '📖' },
-  { message: '上海的周先生完成了签到', icon: '🔥' },
-  { message: '深圳的吴同学解锁了新成就', icon: '🏆' },
-  { message: '杭州的赵同学刚开始探索', icon: '🌙' },
-  { message: '南京的孙同学记录了第7个梦', icon: '📝' },
-  { message: '武汉的周先生收到了故事', icon: '✨' },
-  { message: '西安的李同学完成了签到', icon: '🔥' },
-  { message: '重庆的吴小姐刚开始探索', icon: '🌙' },
-  { message: '苏州的陈先生解锁了新成就', icon: '🏆' },
-  { message: '天津的赵同学记录了第12个梦', icon: '📖' },
-]
-
 export function LiveNotification() {
-  const [notification, setNotification] = useState<NotificationItem>(FALLBACK_NOTIFICATIONS[0])
+  const [notification, setNotification] = useState<NotificationItem | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
-  const [index, setIndex] = useState(0)
+  const indexRef = useRef(0)
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const activitiesRef = useRef<NotificationItem[]>([])
   const isLoadingRef = useRef(false)
 
+  // 清理所有定时器
+  const clearAllTimers = useCallback(() => {
+    timersRef.current.forEach(t => clearTimeout(t))
+    timersRef.current = []
+  }, [])
+
   const showNext = useCallback(() => {
     const activities = activitiesRef.current
-    if (activities.length === 0) {
-      activitiesRef.current = FALLBACK_NOTIFICATIONS
-    }
-    const currentActivities = activitiesRef.current
-    const nextIndex = (index + 1) % currentActivities.length
-    setIndex(nextIndex)
-    setNotification(currentActivities[nextIndex])
+    // 没有真实数据时不显示
+    if (activities.length === 0) return
+
+    const nextIndex = (indexRef.current + 1) % activities.length
+    indexRef.current = nextIndex
+    setNotification(activities[nextIndex])
     setIsExiting(false)
     setIsVisible(true)
 
+    // 清理之前的定时器
+    clearAllTimers()
+
     // Start exit after 3.5s
-    setTimeout(() => {
+    timersRef.current.push(setTimeout(() => {
       setIsExiting(true)
-    }, 3500)
+    }, 3500))
 
     // Hide after 4s
-    setTimeout(() => {
+    timersRef.current.push(setTimeout(() => {
       setIsVisible(false)
-    }, 4000)
+    }, 4000))
 
     // Show next after 5-9s random delay
     const delay = 5000 + Math.random() * 4000
-    setTimeout(showNext, delay)
-  }, [index])
+    timersRef.current.push(setTimeout(showNext, delay))
+  }, [clearAllTimers])
 
   // Fetch activities from API
   useEffect(() => {
@@ -70,7 +63,8 @@ export function LiveNotification() {
         }
       })
       .catch(() => {
-        // Use fallback data on error
+        // API 失败时静默忽略，不生成假数据
+        activitiesRef.current = []
       })
       .finally(() => {
         isLoadingRef.current = false
@@ -82,11 +76,14 @@ export function LiveNotification() {
     const initialTimer = setTimeout(() => {
       showNext()
     }, 3000)
+    timersRef.current.push(initialTimer)
 
-    return () => clearTimeout(initialTimer)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      clearAllTimers()
+    }
+  }, [showNext, clearAllTimers])
 
-  if (!isVisible) return null
+  if (!isVisible || !notification) return null
 
   return (
     <div
