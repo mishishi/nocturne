@@ -125,23 +125,27 @@ html[data-font-size="large"] {
    THEME: Aurora
    ========================================== */
 [data-theme="aurora"] {
-  /* Aurora color overrides */
+  /* Aurora backgrounds */
   --color-night-deep: #071520;
   --color-night-surface: #0F3545;
   --color-night-mid: #1A4A4A;
-  --color-golden: #64D8CB;
-  --color-golden-bright: #8EEEE6;
+
+  /* Aurora text */
   --color-moonlight: #E0F4F1;
   --color-silver: #7EC8C2;
   --color-silver-dim: #4FAFB0;
 
-  /* Aurora gradients */
+  /* Aurora accent - teal for aurora-specific highlights */
+  --aurora-accent: #64D8CB;
+  --aurora-accent-bright: #8EEEE6;
+
+  /* Aurora gradients - atmospheric teal */
   --aurora-gradient: linear-gradient(135deg,
     rgba(100, 216, 203, 0.15) 0%,
     rgba(78, 205, 196, 0.1) 50%,
     rgba(138, 180, 180, 0.15) 100%);
 
-  /* Aurora glow */
+  /* Aurora glow - teal atmosphere */
   --shadow-glow: 0 0 30px rgba(100, 216, 203, 0.3);
   --shadow-glow-strong: 0 0 60px rgba(100, 216, 203, 0.5);
 }
