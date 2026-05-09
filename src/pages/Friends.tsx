@@ -40,6 +40,7 @@ export function Friends() {
   const [isAccepting, setIsAccepting] = useState(false)
   const [isRejecting, setIsRejecting] = useState(false)
   const [removingFriendId, setRemovingFriendId] = useState<string | null>(null)
+  const [sendingRequestId, setSendingRequestId] = useState<string | null>(null)
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean
     friendOpenid: string | null
@@ -181,6 +182,28 @@ export function Friends() {
         }
       }
     })
+  }
+
+  const handleSendFriendRequest = async (friendOpenid: string) => {
+    if (sendingRequestId) return
+    setSendingRequestId(friendOpenid)
+    try {
+      const result = await friendApi.sendFriendRequest(friendOpenid)
+      if (result.success) {
+        showToast('已发送好友请求', 'success')
+        // Remove from search results
+        setSearchResults(prev => prev.filter(r => r.openid !== friendOpenid))
+        // Reload sent requests
+        await loadData()
+      } else {
+        showToast(result.error?.message || '发送失败', 'error')
+      }
+    } catch (err) {
+      console.error('Failed to send friend request:', err)
+      showToast('网络错误', 'error')
+    } finally {
+      setSendingRequestId(null)
+    }
   }
 
   const handleSearch = async () => {
@@ -501,9 +524,8 @@ export function Friends() {
                         <div
                           key={result.id}
                           className={styles.searchResultCard}
-                          onClick={() => navigate(`/friends/${result.openid}`)}
                         >
-                          <div className={styles.friendAvatar}>
+                          <div className={styles.friendAvatar} onClick={() => navigate(`/friends/${result.openid}`)}>
                             {result.avatar ? (
                               <img src={result.avatar} alt={result.nickname} loading="lazy" />
                             ) : (
@@ -513,11 +535,30 @@ export function Friends() {
                               </svg>
                             )}
                           </div>
-                          <div className={styles.friendInfo}>
+                          <div className={styles.friendInfo} onClick={() => navigate(`/friends/${result.openid}`)}>
                             <span className={styles.friendName}>
                               {result.nickname || '匿名旅人'}
                             </span>
                           </div>
+                          <button
+                            className={styles.addButton}
+                            onClick={() => handleSendFriendRequest(result.openid)}
+                            disabled={sendingRequestId === result.openid}
+                          >
+                            {sendingRequestId === result.openid ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <div className={styles.spinner} />
+                                发送中...
+                              </span>
+                            ) : (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                                添加
+                              </span>
+                            )}
+                          </button>
                         </div>
                       ))}
                     </div>

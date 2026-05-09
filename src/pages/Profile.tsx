@@ -8,11 +8,11 @@ import { Statistics } from '../components/Statistics'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
-import { useDreamStore, ACHIEVEMENTS } from '../hooks/useDreamStore'
+import { useDreamStore, ACHIEVEMENTS, DreamSession } from '../hooks/useDreamStore'
 import { useSettingsStore } from '../hooks/useSettingsStore'
 import { usePushNotification } from '../hooks/usePushNotification'
 import { useSupportChat } from '../hooks/useSupportChat'
-import { shareApi, UserStats, checkInApi, api, wallApi, authApi, type DreamWallPost } from '../services/api'
+import { shareApi, UserStats, checkInApi, api, wallApi, authApi, type Session, type DreamWallPost } from '../services/api'
 import styles from './Profile.module.css'
 
 // Medal definitions (mirrors server-side MEDALS)
@@ -90,15 +90,15 @@ export function Profile() {
 
         if (res.data?.sessions && res.data.sessions.length > 0) {
           // Calculate total words from backend sessions
-          const words = res.data.sessions.reduce((acc: number, s: any) => acc + (s.story?.length || 0), 0)
+          const words = res.data.sessions.reduce((acc: number, s: Session) => acc + (s.story?.length || 0), 0)
           setTotalWords(words)
 
           // Build backend map for merging (same logic as History.tsx)
-          const backendMap = new Map(res.data.sessions.map((s: any) => [s.id, s]))
+          const backendMap = new Map(res.data.sessions.map((s: Session) => [s.id, s]))
 
           // Use backend data for authoritative fields, preserve local-only fields
           const currentHistory = useDreamStore.getState().history
-          const merged = currentHistory.map((item: any) => {
+          const merged = currentHistory.map((item: DreamSession) => {
             const backend = backendMap.get(item.id)
             if (!backend) return item // Local-only item (e.g., draft), keep it
             return {
@@ -111,11 +111,12 @@ export function Profile() {
           })
 
           // Add new items from backend that don't exist locally
-          ;(res.data?.sessions || []).forEach((s: any) => {
-            if (!merged.find((item: any) => item.id === s.id || item.sessionId === s.sessionId)) {
+          ;(res.data?.sessions || []).forEach((s: Session) => {
+            if (!merged.find((item: DreamSession) => item.id === s.id || item.sessionId === s.sessionId)) {
               merged.push({
                 id: s.id,
                 sessionId: s.sessionId || s.id,
+                openid: s.openid,
                 date: s.date,
                 dreamSnippet: s.dreamFragment?.slice(0, 100) + (s.dreamFragment?.length > 100 ? '...' : '') || '',
                 storyTitle: s.storyTitle || '',
@@ -850,7 +851,7 @@ export function Profile() {
           </div>
         )}
 
-        {/* AI Quality Analytics (for team review) */}
+        {/* AI Quality Analytics */}
         <AIQualityAnalytics />
       </div>
 

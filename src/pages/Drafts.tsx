@@ -82,6 +82,11 @@ export function Drafts() {
         />
 
         <header className={styles.header}>
+          <button className={styles.closeBtn} onClick={() => navigate('/')} aria-label="关闭">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
           <h1 className={styles.title}>草稿箱</h1>
           <p className={styles.subtitle}>管理你的未完成梦境记录</p>
         </header>
