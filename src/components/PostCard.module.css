@@ -1,5 +1,11 @@
 .postCard {
-  background: rgba(255, 255, 255, 0.03);
+  background:
+    linear-gradient(135deg,
+      rgba(244, 211, 94, 0.03) 0%,
+      transparent 50%,
+      rgba(139, 157, 195, 0.02) 100%),
+    rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 20px;
@@ -7,13 +13,24 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeInUp 0.4s ease-out both;
   position: relative;
+  box-shadow:
+    inset 0 0 40px rgba(244, 211, 94, 0.015),
+    0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 .postCard:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
+  background:
+    linear-gradient(135deg,
+      rgba(244, 211, 94, 0.06) 0%,
+      transparent 50%,
+      rgba(139, 157, 195, 0.03) 100%),
+    rgba(255, 255, 255, 0.05);
+  border-color: rgba(244, 211, 94, 0.15);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 0 50px rgba(244, 211, 94, 0.04),
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(244, 211, 94, 0.08);
 }
 
 @keyframes fadeInUp {
@@ -35,7 +52,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  background: linear-gradient(135deg, #FFD666, #F4D35E);
+  background: linear-gradient(135deg, var(--color-golden-bright), var(--color-golden));
   border-radius: 20px;
   font-size: 0.7rem;
   font-weight: 600;
@@ -145,15 +162,16 @@
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(244, 211, 94, 0.45);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .actionBtn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(244, 211, 94, 0.08);
+  color: rgba(244, 211, 94, 0.85);
+  box-shadow: 0 0 12px rgba(244, 211, 94, 0.15);
 }
 
 .actionBtn svg {
@@ -162,19 +180,51 @@
 }
 
 .actionBtn.liked {
-  color: #FF6B6B;
+  color: var(--color-heart, #FF6B6B);
 }
 
 .actionBtn.favorited {
-  color: #FFD666;
+  color: var(--color-golden);
 }
 
 .actionBtn.deleteBtn:hover {
-  background: rgba(255, 107, 107, 0.15);
-  color: #FF6B6B;
+  background: var(--color-heart-light, rgba(255, 107, 107, 0.15));
+  color: var(--color-heart, #FF6B6B);
 }
 
 .actionBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (max-width: 400px) {
+  .postActions {
+    gap: 2px;
+  }
+
+  .actionBtn {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .actionBtn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .postActions {
+    gap: 1px;
+  }
+
+  .actionBtn {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .actionBtn svg {
+    width: 12px;
+    height: 12px;
+  }
 }

@@ -76,14 +76,38 @@
 
 /* Variants */
 .primary {
-  background: var(--color-golden);
+  background: linear-gradient(135deg,
+    rgba(255, 214, 102, 0.9) 0%,
+    var(--color-golden) 50%,
+    rgba(244, 211, 94, 0.85) 100%);
   color: var(--color-night-deep);
   border: none;
+  box-shadow:
+    0 0 20px rgba(244, 211, 94, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation: gentlePulse 4s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(244, 211, 94, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 35px rgba(244, 211, 94, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
 }
 
 .primary:hover:not(:disabled) {
+  animation: none;
   background: var(--color-golden-bright);
-  box-shadow: 0 8px 24px rgba(244, 211, 94, 0.35), 0 0 20px rgba(244, 211, 94, 0.15);
+  box-shadow:
+    0 8px 24px rgba(244, 211, 94, 0.4),
+    0 0 40px rgba(244, 211, 94, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transform: translateY(0);
 }
 

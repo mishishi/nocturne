@@ -17,8 +17,12 @@
 .searchInput {
   width: 100%;
   padding: 12px 40px 12px 42px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(135deg,
+      rgba(244, 211, 94, 0.04) 0%,
+      rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   color: #ffffff;
   font-size: 14px;
@@ -31,9 +35,10 @@
 }
 
 .searchInput:focus {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+  border-color: rgba(244, 211, 94, 0.4);
+  box-shadow:
+    0 0 0 3px rgba(244, 211, 94, 0.12),
+    inset 0 0 20px rgba(244, 211, 94, 0.05);
 }
 
 /* Remove default search input styles */
