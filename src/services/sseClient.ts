@@ -1,7 +1,5 @@
 // SSE client for story streaming using fetch + ReadableStream
 
-import { getAuthToken } from '../utils/auth'
-
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1'
 
 export interface StoryStreamCallbacks {
@@ -15,18 +13,14 @@ export function createStoryStream(
   sessionId: string,
   callbacks: StoryStreamCallbacks
 ): () => void {
-  const token = getAuthToken()
-  console.log('[SSE Client] Token present:', !!token, 'Token prefix:', token?.substring(0, 20))
-
   const url = `${API_BASE}/sessions/${sessionId}/story/stream`
   console.log('[SSE Client] Connecting to:', url)
 
   let aborted = false
 
+  // Use credentials: 'include' to send httpOnly cookie automatically
   fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
+    credentials: 'include'
   }).then(response => {
     if (!response.ok) {
       const errorMessages: Record<number, string> = {
