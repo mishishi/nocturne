@@ -1583,8 +1583,18 @@ export const checkInApi = {
       method: 'POST',
       headers: authHeaders()
     })
-    if (!res.ok) throw new Error(`签到失败: ${res.status}`)
-    return res.json()
+    const data = await res.json() as ApiResponse<{ consecutiveDays: number; alreadyCheckedIn?: boolean }>
+    if (!res.ok) {
+      return {
+        success: false,
+        error: {
+          code: 'CHECKIN_FAILED',
+          message: data?.error?.message || `签到失败(${res.status})，请稍后重试`
+        },
+        timestamp: new Date().toISOString()
+      }
+    }
+    return data
   },
 
   // Get check-in status
@@ -2002,6 +2012,21 @@ export const pushApi = {
       headers: authHeaders()
     })
     if (!res.ok) throw new Error(`发送测试通知失败: ${res.status}`)
+    return res.json()
+  }
+}
+
+// Activity API - for social proof notifications
+export interface Activity {
+  message: string
+  icon: string
+}
+
+export const activityApi = {
+  // Get recent activities for live notifications
+  async getRecentActivities(limit = 10): Promise<ApiResponse<{ activities: Activity[] }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/activities/recent?limit=${limit}`)
+    if (!res.ok) throw new Error(`获取活动失败: ${res.status}`)
     return res.json()
   }
 }
