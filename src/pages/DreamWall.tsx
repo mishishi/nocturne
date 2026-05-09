@@ -532,7 +532,7 @@ export function DreamWall() {
                 </svg>
               </button>
             )}
-            {isSearching && <span className={styles.searching}>搜索中...</span>}
+            {isSearching && searchQuery && <span className={styles.searching}>搜索中...</span>}
           </div>
         )}
 

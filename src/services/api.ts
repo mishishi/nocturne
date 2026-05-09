@@ -51,7 +51,7 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
   try {
-    const res = await fetch(url, { ...options, signal: controller.signal })
+    const res = await fetch(url, { ...options, credentials: 'include', signal: controller.signal })
     return res
   } finally {
     clearTimeout(timeoutId)
@@ -63,7 +63,7 @@ async function fetchWithLongTimeout(url: string, options: RequestInit = {}): Pro
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), LONG_FETCH_TIMEOUT)
   try {
-    const res = await fetch(url, { ...options, signal: controller.signal })
+    const res = await fetch(url, { ...options, credentials: 'include', signal: controller.signal })
     return res
   } finally {
     clearTimeout(timeoutId)
@@ -144,10 +144,10 @@ export const apiWithRetry = {
   }
 }
 
-// Common headers including auth
+// Common headers - auth now handled via httpOnly cookies (auto-sent by browser)
+// Kept for backward compatibility - returns empty object
 function authHeaders(): HeadersInit {
-  const token = getAuthToken()
-  return token ? { 'Authorization': `Bearer ${token}` } : {}
+  return {}
 }
 
 // Types - import from shared types and re-export for backwards compatibility
@@ -192,6 +192,8 @@ export interface DreamInterpretationData {
 // Session API
 export interface Session {
   id: string
+  sessionId: string  // Same as id, returned for clarity
+  openid: string
   date: string
   dreamFragment: string
   storyTitle: string
@@ -331,14 +333,8 @@ export const api = {
 
   // Export user data
   async exportData(): Promise<void> {
-    const token = getAuthToken()
-    if (!token) throw new Error('Not authenticated')
-
     const res = await fetchWithTimeout(`${API_BASE}/auth/export-data`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      method: 'POST'
     })
 
     if (!res.ok) {
@@ -431,7 +427,7 @@ export const shareApi = {
 // Auth API
 export const authApi = {
   // WeChat login
-  async wechatLogin(openid: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  async wechatLogin(openid: string): Promise<ApiResponse<{ user: User; token: string; refreshToken: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/wechat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -442,7 +438,7 @@ export const authApi = {
   },
 
   // Phone + password login
-  async phoneLogin(phone: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  async phoneLogin(phone: string, password: string): Promise<ApiResponse<{ user: User; token: string; refreshToken: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/phone-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -516,21 +512,15 @@ export const authApi = {
 
   // Delete user account
   async deleteAccount(): Promise<ApiResponse<{ success: boolean; message?: string }>> {
-    const token = getAuthToken()
-    if (!token) throw new Error('Not authenticated')
-
     const res = await fetchWithTimeout(`${API_BASE}/auth/account`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      method: 'DELETE'
     })
     if (!res.ok) throw new Error(`删除账号失败: ${res.status}`)
     return res.json()
   },
 
   // Email + password login
-  async emailLogin(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  async emailLogin(email: string, password: string): Promise<ApiResponse<{ user: User; token: string; refreshToken: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/email-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -541,7 +531,7 @@ export const authApi = {
   },
 
   // Email + password registration
-  async emailRegister(email: string, password: string, nickname?: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  async emailRegister(email: string, password: string, nickname?: string): Promise<ApiResponse<{ user: User; token: string; refreshToken: string }>> {
     const res = await fetchWithTimeout(`${API_BASE}/auth/email-register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -592,6 +582,33 @@ export const authApi = {
       body: JSON.stringify({ oldPassword, newPassword })
     })
     if (!res.ok) throw new Error(`修改密码失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Refresh access token using refresh token
+  async refreshToken(refreshToken: string): Promise<ApiResponse<{ user: User; token: string; refreshToken: string }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/refresh-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    })
+    if (!res.ok) throw new Error(`刷新Token失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Logout (revoke refresh token) - server reads from httpOnly cookie
+  async logout(): Promise<ApiResponse<{ success: boolean }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/refresh-token`, {
+      method: 'DELETE'
+    })
+    if (!res.ok) throw new Error(`登出失败: ${res.status}`)
+    return res.json()
+  },
+
+  // Get current logged-in user (uses httpOnly cookie for auth)
+  async getCurrentUser(): Promise<ApiResponse<{ user: User }>> {
+    const res = await fetchWithTimeout(`${API_BASE}/auth/me`)
+    if (!res.ok) throw new Error(`获取当前用户失败: ${res.status}`)
     return res.json()
   }
 }
@@ -1073,7 +1090,9 @@ export const storyFeedbackApi = {
       suggestions: string[]
     }
   }>> {
-    const res = await fetchWithTimeout(`${API_BASE}/story-feedback/analytics`)
+    const res = await fetchWithTimeout(`${API_BASE}/story-feedback/analytics`, {
+      headers: authHeaders()
+    })
     if (!res.ok) throw new Error(`获取分析失败: ${res.status}`)
     return res.json()
   },
