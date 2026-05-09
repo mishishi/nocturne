@@ -64,8 +64,10 @@ export function Home() {
       if (result.success && result.data) {
         setCheckInStatus(true, result.data.consecutiveDays)
         showToast('签到成功！', 'success')
-      } else {
+      } else if (!result.success && 'error' in result) {
         showToast(result.error?.message || '签到失败，请稍后重试', 'error')
+      } else {
+        showToast('签到失败，请稍后重试', 'error')
       }
     } catch (err) {
       console.error('Failed to check in:', err)

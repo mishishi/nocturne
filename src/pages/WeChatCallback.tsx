@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
-import { api } from '../services/api'
+import { api, authApi } from '../services/api'
 import { Toast } from '../components/ui/Toast'
-import { setAuthToken } from '../utils/auth'
 import styles from './Login.module.css'
 
 export function WeChatCallback() {
@@ -32,11 +31,9 @@ export function WeChatCallback() {
 
   useEffect(() => {
     const completeWeChatLogin = async () => {
-      const token = searchParams.get('wechat_token')
-      const userJson = searchParams.get('wechat_user')
       const error = searchParams.get('wechat_error')
 
-      if (error || !token || !userJson) {
+      if (error) {
         // 登录失败，显示错误并跳转回登录页
         setIsLoading(false)
         showToast('微信授权失败，请尝试其他登录方式', 'error')
@@ -47,20 +44,21 @@ export function WeChatCallback() {
       }
 
       try {
-        const user = JSON.parse(userJson)
-
-        // Save guest openid before setting new token
+        // Save guest openid before login
         const guestOpenid = localStorage.getItem('yeelin_openid')
 
-        // Set token as Cookie (for server reads) and localStorage for openid
-        setAuthToken(token)
-        localStorage.setItem('yeelin_openid', user.openid)
+        // 获取用户信息（服务器从 httpOnly cookie 读取 token 进行认证）
+        const result = await authApi.getCurrentUser()
+        if (!result.success) {
+          throw new Error('Failed to get user info')
+        }
+        const user = result.data.user
 
         // Migrate guest sessions if exists (失败不影响登录流程)
         if (guestOpenid && guestOpenid !== user.openid) {
           try {
-            const result = await api.migrateSession(guestOpenid)
-            if (result.success && (result.data?.migrated ?? 0) > 0) {
+            const migrateResult = await api.migrateSession(guestOpenid)
+            if (migrateResult.success && (migrateResult.data?.migrated ?? 0) > 0) {
               showToast('检测到您有未完成的梦境，已为您保留')
             }
           } catch (err) {
@@ -69,10 +67,11 @@ export function WeChatCallback() {
         }
 
         // Set user in store
-        setUser(user, token)
+        setUser(user)
 
         // 清除本地游客数据
         localStorage.removeItem('yeelin_guest_openid')
+        localStorage.setItem('yeelin_openid', user.openid)
 
         // 确定重定向目标
         let redirectTo = '/'
@@ -98,12 +97,15 @@ export function WeChatCallback() {
         navigate(user.isAdmin ? '/admin' : redirectTo, { replace: true })
       } catch (err) {
         console.error('WeChat callback error:', err)
-        navigate('/login', { replace: true })
+        showToast('登录失败，请重试', 'error')
+        setTimeout(() => {
+          navigate('/login', { replace: true })
+        }, 2000)
       }
     }
 
     completeWeChatLogin()
-  }, [searchParams, navigate, setUser, showToast])
+  }, [searchParams, navigate, setUser, showToast, currentSession])
 
   return (
     <div className={styles.page}>

@@ -1694,11 +1694,14 @@ export const checkInApi = {
     })
     const data = await res.json() as ApiResponse<{ consecutiveDays: number; alreadyCheckedIn?: boolean }>
     if (!res.ok) {
+      const errorMessage = !isApiSuccess(data) && 'error' in data
+        ? data.error?.message
+        : `签到失败(${res.status})，请稍后重试`
       return {
         success: false,
         error: {
           code: 'CHECKIN_FAILED',
-          message: data?.error?.message || `签到失败(${res.status})，请稍后重试`
+          message: errorMessage || `签到失败(${res.status})，请稍后重试`
         },
         timestamp: new Date().toISOString()
       }
