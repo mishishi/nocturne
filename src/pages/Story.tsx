@@ -20,6 +20,7 @@ import { CommentThread } from '../components/CommentThread'
 import { FriendRequestButton } from '../components/FriendRequestButton'
 import { StoryContentSkeleton } from '../components/ui/Skeleton'
 import { shareApi, api, apiWithRetry } from '../services/api'
+import { openidService } from '../services/openidService'
 import { getAuthToken } from '../utils/auth'
 import { ExpandableCard } from '../components/ExpandableCard'
 import styles from './Story.module.css'
@@ -99,7 +100,7 @@ export function Story() {
   const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId || urlSessionId
 
   // 从梦墙进入时，判断当前用户是否是作者
-  const currentUserOpenid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
+  const currentUserOpenid = openidService.get() || user?.openid || currentSession.openid
   const storyAuthorOpenid = location.state?.authorOpenid
   const authorIsFriend = location.state?.isFriend
   // 只有在梦墙场景下才需要判断作者身份：当前用户openid与故事作者openid相同才是作者
@@ -546,7 +547,7 @@ export function Story() {
   }, [stop])
 
   const handleInterpret = async () => {
-    const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
+    const openid = openidService.get() || user?.openid || currentSession.openid
     const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || location.state?.sessionId || currentSession.sessionId || urlSessionId
 
     if (!openid) {
@@ -618,7 +619,7 @@ export function Story() {
   const handlePublishToWall = async () => {
     // Get token from Cookie
     const token = getAuthToken()
-    const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
+    const openid = openidService.get() || user?.openid || currentSession.openid
     const sessionId = location.state?.fromHistory?.sessionId || location.state?.fromHistory?.id || urlSessionId
 
     if (!openid || !user || !token) {

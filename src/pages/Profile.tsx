@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import { ExportDataModal } from '../components/ExportDataModal'
 import { Statistics } from '../components/Statistics'
 import { Breadcrumb } from '../components/Breadcrumb'
@@ -13,6 +13,7 @@ import { useSettingsStore } from '../hooks/useSettingsStore'
 import { usePushNotification } from '../hooks/usePushNotification'
 import { useSupportChat } from '../hooks/useSupportChat'
 import { shareApi, UserStats, checkInApi, api, wallApi, authApi, type Session, type DreamWallPost } from '../services/api'
+import { openidService } from '../services/openidService'
 import styles from './Profile.module.css'
 
 // Medal definitions (mirrors server-side MEDALS)
@@ -58,8 +59,6 @@ export function Profile() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [showPushConfirm, setShowPushConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [toastVisible, setToastVisible] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
   const [shareStats, setShareStatsLocal] = useState<UserStats | null>(null)
   const [favorites, setFavorites] = useState<DreamWallPost[]>([])
   const [storyFavorites, setStoryFavorites] = useState<Array<{ sessionId: string; storyTitle: string; story: string; createdAt: string; date: string }>>([])
@@ -73,7 +72,7 @@ export function Profile() {
   // Sync history from backend when user is logged in
   useEffect(() => {
     let isMounted = true
-    const openid = localStorage.getItem('yeelin_openid') || user?.openid
+    const openid = openidService.get() || user?.openid
     if (!openid) return
 
     const syncHistory = async () => {
@@ -154,7 +153,7 @@ export function Profile() {
   // Fetch favorites when tab is active
   useEffect(() => {
     if (activeTab !== 'favorites') return
-    const openid = localStorage.getItem('yeelin_openid') || user?.openid
+    const openid = openidService.get() || user?.openid
     if (!openid) return
 
     const fetchFavorites = async () => {
@@ -187,7 +186,7 @@ export function Profile() {
 
   // Fetch share stats on mount
   useEffect(() => {
-    const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
+    const openid = openidService.get() || user?.openid || currentSession.openid
     if (!openid) return
 
     const fetchStats = async () => {
@@ -223,27 +222,24 @@ export function Profile() {
   }, [user?.openid, currentSession.openid])
 
   const handleCreateInvite = async () => {
-    const openid = localStorage.getItem('yeelin_openid') || user?.openid || currentSession.openid
+    const openid = openidService.get() || user?.openid || currentSession.openid
     if (!openid) return
 
     try {
       const result = await shareApi.createInvite(openid)
       if (result.success && result.data?.inviteUrl) {
         await navigator.clipboard.writeText(result.data.inviteUrl)
-        setToastMessage('邀请链接已复制到剪贴板')
-        setToastVisible(true)
+        showToast('邀请链接已复制到剪贴板')
       }
     } catch (err) {
-      setToastMessage('创建邀请失败')
-      setToastVisible(true)
+      showToast('创建邀请失败', 'error')
     }
   }
 
   const handleClearHistory = () => {
     clearHistory()
     setShowClearConfirm(false)
-    setToastMessage('历史记录已清除')
-    setToastVisible(true)
+    showToast('历史记录已清除')
   }
 
   const handleDeleteAccount = async () => {
@@ -254,15 +250,12 @@ export function Profile() {
         setShowDeleteAccountConfirm(false)
         logout()
         navigate('/')
-        setToastMessage('账号已删除')
-        setToastVisible(true)
+        showToast('账号已删除')
       } else {
-        setToastMessage(res.error?.message || '删除失败')
-        setToastVisible(true)
+        showToast(res.error?.message || '删除失败', 'error')
       }
     } catch (err) {
-      setToastMessage('删除账号失败')
-      setToastVisible(true)
+      showToast('删除账号失败', 'error')
     } finally {
       setIsDeleting(false)
     }
@@ -902,12 +895,6 @@ export function Profile() {
           await subscribe()
         }}
         onCancel={() => setShowPushConfirm(false)}
-      />
-
-      <Toast
-        message={toastMessage}
-        visible={toastVisible}
-        onClose={() => setToastVisible(false)}
       />
 
       <ExportDataModal

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { setAuthToken, clearAuthToken } from '../utils/auth'
+import { openidService } from '../services/openidService'
 import type { User } from '../types'
 
 export { type User }
@@ -26,7 +27,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('yeelin_openid')
+        openidService.remove()
         clearAuthToken()
         set({
           user: null,

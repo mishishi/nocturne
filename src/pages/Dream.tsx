@@ -3,11 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDreamStore, DREAM_TAGS } from '../hooks/useDreamStore'
 import { useVoiceWaveform } from '../hooks/useVoiceWaveform'
 import { api } from '../services/api'
+import { openidService } from '../services/openidService'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Textarea'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import styles from './Dream.module.css'
 
 // Web Speech API types
@@ -97,8 +98,6 @@ export function Dream() {
   const [pendingTranscript, setPendingTranscript] = useState('')
   const [showTranscriptConfirm, setShowTranscriptConfirm] = useState(false)
   const [showClearDraftConfirm, setShowClearDraftConfirm] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [toastVisible, setToastVisible] = useState(false)
   const lastSavedRef = useRef<string>(currentSession.dreamText)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const finalTranscriptRef = useRef<string>('')
@@ -289,8 +288,7 @@ export function Dream() {
 
   const handleStartRecording = async () => {
     if (!recognitionRef.current) {
-      setToastMessage('您的浏览器不支持语音输入，请使用键盘输入')
-      setToastVisible(true)
+      showToast('您的浏览器不支持语音输入，请使用键盘输入')
       return
     }
     if (recognitionRef.current && !isRecording) {
@@ -407,8 +405,7 @@ export function Dream() {
     setStep('submitting')
 
     try {
-      const openid = localStorage.getItem('yeelin_openid') || `web_${Date.now()}`
-      localStorage.setItem('yeelin_openid', openid)
+      const openid = openidService.getOrCreate()
 
       const result = await api.createSession(openid)
       if (!result.success) throw new Error('创建会话失败')
@@ -750,13 +747,6 @@ export function Dream() {
           danger
         />
 
-        {/* Toast for browser unsupported */}
-        <Toast
-          message={toastMessage}
-          visible={toastVisible}
-          type="info"
-          onClose={() => setToastVisible(false)}
-        />
       </div>
     </div>
   )

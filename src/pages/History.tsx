@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDreamStore, DreamSession, DREAM_TAGS } from '../hooks/useDreamStore'
+import { useDreamStore, DreamSession, DREAM_TAGS, showToast } from '../hooks/useDreamStore'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
@@ -9,6 +9,7 @@ import { HistorySkeleton } from '../components/ui/Skeleton'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamWeather } from '../components/DreamWeather'
 import { api, Session } from '../services/api'
+import { openidService } from '../services/openidService'
 import styles from './History.module.css'
 
 const SWIPE_THRESHOLD = 100
@@ -57,7 +58,7 @@ export function History() {
   useEffect(() => {
     let isMounted = true
     const syncHistoryFromBackend = async () => {
-      const openid = localStorage.getItem('yeelin_openid')
+      const openid = openidService.get()
       if (!openid) return
 
       setIsSyncing(true)
@@ -133,9 +134,7 @@ export function History() {
         }
       } catch (err) {
         console.error('Failed to sync history from backend:', err)
-        setToastType('error')
-        setToastMessage('同步失败，请检查网络连接')
-        setToastVisible(true)
+        showToast('同步失败，请检查网络连接', 'error')
       } finally {
         if (isMounted) setIsSyncing(false)
       }
@@ -335,9 +334,7 @@ export function History() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
-      setToastType('success')
-      setToastMessage('内容已复制到剪贴板')
-      setToastVisible(true)
+      showToast('内容已复制到剪贴板', 'success')
     })
   }
 
@@ -385,8 +382,7 @@ export function History() {
     setSelectedIds(new Set())
     setMultiSelectMode(false)
     setBatchDeleteConfirm(false)
-    setToastMessage(`已删除 ${count} 个故事`)
-    setToastVisible(true)
+    showToast(`已删除 ${count} 个故事`, 'success')
   }
 
   const cancelBatchDelete = () => {

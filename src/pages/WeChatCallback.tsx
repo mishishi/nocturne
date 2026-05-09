@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useDreamStore } from '../hooks/useDreamStore'
+import { useDreamStore, showToast } from '../hooks/useDreamStore'
 import { api, authApi } from '../services/api'
-import { Toast } from '../components/ui/Toast'
+import { openidService } from '../services/openidService'
 import styles from './Login.module.css'
 
 export function WeChatCallback() {
@@ -11,11 +11,7 @@ export function WeChatCallback() {
   const { setUser, currentSession } = useDreamStore()
 
   // Toast state
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
   const [isLoading, setIsLoading] = useState(true)
-  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ visible: true, message, type })
-  }, [])
 
   // Memoized star positions to avoid Math.random() on each render
   const stars = useMemo(() =>
@@ -45,7 +41,7 @@ export function WeChatCallback() {
 
       try {
         // Save guest openid before login
-        const guestOpenid = localStorage.getItem('yeelin_openid')
+        const guestOpenid = openidService.get()
 
         // 获取用户信息（服务器从 httpOnly cookie 读取 token 进行认证）
         const result = await authApi.getCurrentUser()
@@ -71,7 +67,7 @@ export function WeChatCallback() {
 
         // 清除本地游客数据
         localStorage.removeItem('yeelin_guest_openid')
-        localStorage.setItem('yeelin_openid', user.openid)
+        openidService.set(user.openid)
 
         // 确定重定向目标
         let redirectTo = '/'
@@ -156,13 +152,6 @@ export function WeChatCallback() {
         </div>
       </div>
 
-      {/* Toast */}
-      <Toast
-        message={toast.message}
-        visible={toast.visible}
-        type={toast.type}
-        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
-      />
     </div>
   )
 }

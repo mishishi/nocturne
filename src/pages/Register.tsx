@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { authApi, api } from '../services/api'
+import { openidService } from '../services/openidService'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { setAuthToken, setRefreshToken } from '../utils/auth'
 import styles from './Register.module.css'
@@ -61,13 +62,13 @@ export function Register() {
           setRefreshToken(refreshToken)
         }
 
-        const guestOpenid = localStorage.getItem('yeelin_openid')
+        const guestOpenid = openidService.get()
         if (guestOpenid && guestOpenid !== user.openid) {
           await api.migrateSession(guestOpenid)
         }
 
         setUser(user, token, guestOpenid ?? undefined)
-        localStorage.setItem('yeelin_openid', user.openid)
+        openidService.set(user.openid)
         navigate('/')
       } else {
         setError((!result.success ? result.error?.message : result.message) || '注册失败')

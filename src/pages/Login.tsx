@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { authApi, api } from '../services/api'
+import { openidService } from '../services/openidService'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
-import { Toast } from '../components/ui/Toast'
+import { showToast } from '../hooks/useDreamStore'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { setRefreshToken } from '../utils/auth'
 import styles from './Login.module.css'
@@ -30,9 +31,6 @@ export function Login() {
     onConfirm: () => void
   }>({ open: false, message: '', onConfirm: () => {} })
 
-  // Toast state
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' })
-
   // Real-time validation
   const validateField = (field: 'email' | 'phone' | 'password', value: string): string => {
     if (field === 'email') {
@@ -57,9 +55,6 @@ export function Login() {
     const value = field === 'email' ? email : field === 'phone' ? phone : password
     return touched[field] ? validateField(field, value) : ''
   }
-  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ visible: true, message, type })
-  }, [])
 
   // Generate star positions once, not on each render
   const stars = useMemo(() =>
@@ -127,7 +122,7 @@ export function Login() {
         // Server also sets httpOnly Cookie via Set-Cookie header
 
         // Migrate guest sessions if exists
-        const guestOpenid = localStorage.getItem('yeelin_openid')
+        const guestOpenid = openidService.get()
         if (guestOpenid && guestOpenid !== user.openid) {
           try {
             const result = await api.migrateSession(guestOpenid)
@@ -141,7 +136,7 @@ export function Login() {
         }
 
         setUser(user, token, guestOpenid ?? undefined)
-        localStorage.setItem('yeelin_openid', user.openid)
+        openidService.set(user.openid)
         // Respect 'from' if user came from a specific page, otherwise use role-based default
         const destination = from !== '/' ? from : (user.isAdmin ? '/admin' : '/')
         navigate(destination, { replace: true })
@@ -178,7 +173,7 @@ export function Login() {
         }
 
         // Migrate guest sessions if exists
-        const guestOpenid = localStorage.getItem('yeelin_openid')
+        const guestOpenid = openidService.get()
         if (guestOpenid && guestOpenid !== user.openid) {
           try {
             const result = await api.migrateSession(guestOpenid)
@@ -192,7 +187,7 @@ export function Login() {
         }
 
         setUser(user, token, guestOpenid ?? undefined)
-        localStorage.setItem('yeelin_openid', user.openid)
+        openidService.set(user.openid)
         const destination = from !== '/' ? from : (user.isAdmin ? '/admin' : '/')
         navigate(destination, { replace: true })
       } else {
@@ -644,13 +639,6 @@ export function Login() {
         onCancel={() => setConfirmModal(prev => ({ ...prev, open: false }))}
       />
 
-      {/* Toast */}
-      <Toast
-        message={toast.message}
-        visible={toast.visible}
-        type={toast.type}
-        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
-      />
     </div>
   )
 }

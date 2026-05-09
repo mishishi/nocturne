@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { checkInApi, achievementApi, apiWithRetry } from '../services/api'
 import { useAuthStore } from './useAuthStore'
+import { openidService } from '../services/openidService'
 import { getAuthToken, setAuthToken, clearAuthToken } from '../utils/auth'
 import type { User } from '../types'
 
@@ -9,7 +10,7 @@ import type { User } from '../types'
 export { type User } from '../types'
 
 // Toast 通知回调函数（用于后台任务失败时通知用户）
-type ToastCallback = (message: string, type: 'success' | 'error') => void
+type ToastCallback = (message: string, type: 'success' | 'error' | 'info') => void
 let toastCallback: ToastCallback | null = null
 
 /**
@@ -26,6 +27,13 @@ export function registerToastCallback(fn: ToastCallback) {
  */
 export function unregisterToastCallback() {
   toastCallback = null
+}
+
+/**
+ * 显示 Toast 通知（供页面组件调用）
+ */
+export function showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
+  toastCallback?.(message, type)
 }
 
 export interface DreamSession {
@@ -590,7 +598,7 @@ export const useDreamStore = create<DreamState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('yeelin_openid')
+        openidService.remove()
         // Clear token Cookie
         clearAuthToken()
         // Clear the persist storage entirely

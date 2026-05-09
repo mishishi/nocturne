@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { storyFeedbackApi } from '../services/api'
+import { openidService } from '../services/openidService'
 import styles from './PersonalizedRecommendations.module.css'
 
 interface Recommendation {
@@ -19,7 +20,7 @@ export function PersonalizedRecommendations() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const openid = localStorage.getItem('yeelin_openid')
+  const openid = openidService.get()
 
   useEffect(() => {
     if (!openid) {
