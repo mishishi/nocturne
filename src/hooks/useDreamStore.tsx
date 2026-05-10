@@ -321,6 +321,9 @@ interface DreamState {
   hasSharedToWall: boolean  // Track first_share
   tagsUsed: string[]  // Track unique tags used
 
+  // Hydration state (for auth-dependent content)
+  _hasHydrated: boolean
+
   // Settings
   fontSize: 'small' | 'medium' | 'large'
   theme: 'starry' | 'aurora' | 'dark' | 'light'
@@ -434,6 +437,7 @@ const initialState = {
   wallPostCount: 0,
   hasSharedToWall: false,
   tagsUsed: [],
+  _hasHydrated: false,
   fontSize: 'medium' as const,
   theme: 'starry' as const,
   reduceMotion: false,
@@ -936,6 +940,8 @@ export const useDreamStore = create<DreamState>()(
       }) as DreamState,
       // Restore login state flag when rehydrating user
       onRehydrateStorage: () => (state) => {
+        // Mark store as hydrated
+        state?._hasHydrated && (state._hasHydrated = true)
         if (state?.user) {
           markLogin()
         }
