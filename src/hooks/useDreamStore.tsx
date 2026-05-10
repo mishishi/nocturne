@@ -940,8 +940,10 @@ export const useDreamStore = create<DreamState>()(
       }) as DreamState,
       // Restore login state flag when rehydrating user
       onRehydrateStorage: () => (state) => {
-        // Mark store as hydrated
-        state?._hasHydrated && (state._hasHydrated = true)
+        // Mark store as hydrated after rehydration completes
+        if (state) {
+          state._hasHydrated = true
+        }
         if (state?.user) {
           markLogin()
         }
