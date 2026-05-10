@@ -38,6 +38,7 @@
 | 2026-05-05 | 新增解读可见性控制 API（interpretation-visibility）|
 | 2026-05-05 | 新增每日精选功能（GET /api/wall/highlights、POST /api/admin/posts/:postId/feature）|
 | 2026-05-06 | 新增精选候选算法生成功能（POST /api/admin/highlights/generate、GET /api/admin/highlights/candidates）|
+| 2026-05-11 | 新增推送订阅 API（POST /api/push/subscribe、/unsubscribe、/test、GET /api/push/status）|
 
 ---
 
@@ -124,6 +125,15 @@
 | `/api/notifications/unread-count` | GET | 获取未读数 | **是** |
 | `/api/notifications/mark-read` | POST | 全部已读 | **是** |
 | `/api/notifications/:notificationId/read` | POST | 单条已读 | **是** |
+
+### 推送订阅相关
+
+| 端点 | 方法 | 功能 | 需要认证 |
+|------|------|------|----------|
+| `/api/push/subscribe` | POST | 订阅推送通知 | **是** |
+| `/api/push/unsubscribe` | POST | 取消订阅 | **是** |
+| `/api/push/test` | POST | 发送测试通知 | **是** |
+| `/api/push/status` | GET | 获取订阅状态 | **是** |
 
 ### 签到相关
 
@@ -222,7 +232,9 @@ User
 ├── DreamWallLike (1:N)
 ├── DreamWallComment (1:N)
 ├── CheckIn (1:N)
-└── Message (1:N)
+├── Message (1:N)
+├── Notification (1:N)
+└── PushSubscription (1:N)
 ```
 
 ---
