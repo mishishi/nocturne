@@ -180,7 +180,7 @@
 .approveBtn {
   background: rgba(72, 199, 142, 0.15);
   border: 1px solid rgba(72, 199, 142, 0.3);
-  color: #48c78e;
+  color: var(--color-success);
 }
 
 .approveBtn:hover {
@@ -193,7 +193,7 @@
 .deleteBtn {
   background: rgba(237, 100, 100, 0.15);
   border: 1px solid rgba(237, 100, 100, 0.3);
-  color: #ed6464;
+  color: var(--color-error);
 }
 
 .rejectBtn:hover,
@@ -255,7 +255,7 @@
 .batchApproveBtn {
   background: rgba(72, 199, 142, 0.15);
   border: 1px solid rgba(72, 199, 142, 0.3);
-  color: #48c78e;
+  color: var(--color-success);
 }
 
 .batchApproveBtn:hover:not(:disabled) {
@@ -267,7 +267,7 @@
 .batchRejectBtn {
   background: rgba(237, 100, 100, 0.15);
   border: 1px solid rgba(237, 100, 100, 0.3);
-  color: #ed6464;
+  color: var(--color-error);
 }
 
 .batchRejectBtn:hover:not(:disabled) {
@@ -284,12 +284,12 @@
 
 /* Trend indicators */
 .positive {
-  color: #48c78e !important;
+  color: var(--color-success) !important;
   text-shadow: 0 0 16px rgba(72, 199, 142, 0.3);
 }
 
 .negative {
-  color: #ed6464 !important;
+  color: var(--color-error) !important;
   text-shadow: 0 0 16px rgba(237, 100, 100, 0.3);
 }
 
@@ -516,7 +516,7 @@
   background: rgba(237, 100, 100, 0.15);
   border: 1px solid rgba(237, 100, 100, 0.3);
   border-radius: var(--radius-lg);
-  color: #ed6464;
+  color: var(--color-error);
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
@@ -534,7 +534,7 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: var(--text-xs);
   font-weight: 500;
 }
@@ -551,7 +551,7 @@
 
 .levelCurated {
   background: rgba(147, 112, 219, 0.2);
-  color: #9370db;
+  color: var(--color-golden);
 }
 
 /* Library Header */
@@ -586,7 +586,7 @@
   transition: all 0.3s var(--ease-dream);
   background: rgba(147, 112, 219, 0.15);
   border: 1px solid rgba(147, 112, 219, 0.3);
-  color: #9370db;
+  color: var(--color-golden);
 }
 
 .autoUpgradeBtn:hover:not(:disabled) {
@@ -688,17 +688,17 @@
 
 .toast.success {
   background: rgba(72, 199, 142, 0.9);
-  color: white;
+  color: var(--color-night-deep);
 }
 
 .toast.error {
   background: rgba(237, 100, 100, 0.9);
-  color: white;
+  color: var(--color-moonlight);
 }
 
 .toast.info {
   background: rgba(244, 211, 94, 0.9);
-  color: #1a1a2e;
+  color: var(--color-night-deep);
 }
 
 @keyframes slideUp {
@@ -744,5 +744,24 @@
   .modal {
     padding: var(--space-4);
     margin: var(--space-4);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .fadeInUp {
+    animation: none;
+  }
+  .fadeIn {
+    animation: none;
+  }
+  .spin {
+    animation: none;
+  }
+  .scaleIn {
+    animation: none;
+  }
+  .slideUp {
+    animation: none;
   }
 }

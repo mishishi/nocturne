@@ -9,7 +9,8 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
 import { DreamTrendReport } from '../components/DreamTrendReport'
-import { useDreamStore, ACHIEVEMENTS, MEDALS, DreamSession } from '../hooks/useDreamStore'
+import { MonthlyDreamBook } from '../components/MonthlyDreamBook'
+import { useDreamStore, ACHIEVEMENTS, MEDALS, AchievementIcon, DreamSession } from '../hooks/useDreamStore'
 import { useSettingsStore } from '../hooks/useSettingsStore'
 import { usePushNotification } from '../hooks/usePushNotification'
 import { useSupportChat } from '../hooks/useSupportChat'
@@ -25,10 +26,10 @@ const FONT_SIZE_OPTIONS = [
 ]
 
 const THEME_OPTIONS = [
-  { value: 'starry' as const, label: '星夜', icon: '🌙', desc: '深邃星空' },
-  { value: 'aurora' as const, label: '极光', icon: '🌌', desc: '神秘极光' },
-  { value: 'dark' as const, label: '暗黑', icon: '🌑', desc: '深邃静谧' },
-  { value: 'light' as const, label: '日光', icon: '☀️', desc: '明亮清爽' }
+  { value: 'starry' as const, label: '星夜', iconKey: 'moon', desc: '深邃星空' },
+  { value: 'aurora' as const, label: '极光', iconKey: 'galaxy', desc: '神秘极光' },
+  { value: 'dark' as const, label: '暗黑', iconKey: 'moon', desc: '深邃静谧' },
+  { value: 'light' as const, label: '日光', iconKey: 'sun', desc: '明亮清爽' }
 ]
 
 const LANGUAGE_OPTIONS = [
@@ -59,6 +60,7 @@ export function Profile() {
   const [storyFavorites, setStoryFavorites] = useState<Array<{ sessionId: string; storyTitle: string; story: string; createdAt: string; date: string }>>([])
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'favorites' | 'settings'>('overview')
   const [showPointsInfo, setShowPointsInfo] = useState(false)
+  const [showDreamBook, setShowDreamBook] = useState(false)
 
   // Initialize with local history to avoid flash of zeros, will be updated by backend sync
   const [totalDreams, setTotalDreams] = useState<number | null>(null)
@@ -369,6 +371,28 @@ export function Profile() {
             {/* Dream Trend Report */}
             <DreamTrendReport history={history} />
 
+            {/* Monthly Dream Book */}
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>月度梦境手册</h2>
+              <div className={styles.shareStats}>
+                <button
+                  className={styles.inviteBtn}
+                  onClick={() => setShowDreamBook(true)}
+                  disabled={history.length === 0}
+                  style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, rgba(244, 211, 94, 0.15), rgba(244, 211, 94, 0.05))', border: '1px solid rgba(244, 211, 94, 0.3)', borderRadius: '12px', cursor: history.length === 0 ? 'not-allowed' : 'pointer', opacity: history.length === 0 ? 0.5 : 1 }}
+                >
+                  <AchievementIcon iconKey="book" />
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <span style={{ display: 'block', fontSize: '0.9375rem', fontWeight: 500, color: 'var(--color-moonlight, #F4D35E)' }}>生成月度手册</span>
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-silver, #A8B5C9)', marginTop: '2px' }}>将本月梦境整理成精美图片</span>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 20, height: 20, color: 'var(--color-silver, #A8B5C9)' }}>
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
             {/* Check-in Stats */}
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>每日签到</h2>
@@ -379,7 +403,7 @@ export function Profile() {
                 </div>
                 <div className={styles.shareInfo}>
                   <div className={styles.streakInfo}>
-                    <span className={styles.streakIcon}>{checkedInToday ? '✅' : '📅'}</span>
+                    <span className={styles.streakIcon}><AchievementIcon iconKey={checkedInToday ? 'heart' : 'sparkle'} /></span>
                     <span>{checkedInToday ? '今日已签到' : '今日未签到'}</span>
                   </div>
                 </div>
@@ -396,7 +420,7 @@ export function Profile() {
             </div>
             <div className={styles.shareInfo}>
               <div className={styles.streakInfo}>
-                <span className={styles.streakIcon}>🔥</span>
+                <span className={styles.streakIcon}><AchievementIcon iconKey="bolt" /></span>
                 <span>连续分享 <strong>{consecutiveShares}</strong> 天</span>
               </div>
               <p className={styles.earningHint}>发朋友圈 +5 · 发链接 +2 · 好友完成 +10</p>
@@ -454,7 +478,7 @@ export function Profile() {
                   title={isUnlocked ? `${medal.name} - ${medal.description}` : `解锁条件: ${medal.description}`}
                   aria-label={`${medal.name}，${isUnlocked ? '已解锁' : `未解锁，解锁条件: ${medal.description}`}`}
                 >
-                  <span className={styles.medalIcon}>{medal.icon}</span>
+                  <AchievementIcon iconKey={medal.icon} className={styles.medalIcon} />
                   <div className={styles.medalInfo}>
                     <span className={styles.medalName}>{medal.name}</span>
                     <span className={styles.medalDesc}>{medal.description}</span>
@@ -482,7 +506,7 @@ export function Profile() {
 
           {/* Library */}
           <Link to="/library" className={styles.libraryLink}>
-            <div className={styles.libraryIcon}>📚</div>
+            <AchievementIcon iconKey="book" className={styles.libraryIcon} />
             <div className={styles.libraryInfo}>
               <span className={styles.libraryLabel}>梦境图书馆</span>
               <span className={styles.libraryDesc}>浏览精选故事合集</span>
@@ -535,7 +559,7 @@ export function Profile() {
                   key={achievement.id}
                   className={`${styles.achievementCard} ${isUnlocked ? styles.unlocked : ''} ${!isUnlocked && hintText ? styles.locked : ''}`}
                 >
-                  <span className={styles.achievementIcon}>{achievement.icon}</span>
+                  <AchievementIcon iconKey={achievement.icon} className={styles.achievementIcon} />
                   <div className={styles.achievementInfo}>
                     <span className={styles.achievementTitle}>{achievement.title}</span>
                     <span className={styles.achievementDesc}>{achievement.description}</span>
@@ -688,7 +712,7 @@ export function Profile() {
                     aria-pressed={theme === option.value}
                     title={option.desc}
                   >
-                    <span className={styles.themeIcon}>{option.icon}</span>
+                    <AchievementIcon iconKey={option.iconKey} className={styles.themeIcon} />
                     <span className={styles.themeLabel}>{option.label}</span>
                   </button>
                 ))}
@@ -971,6 +995,13 @@ export function Profile() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
       />
+
+      {showDreamBook && (
+        <MonthlyDreamBook
+          history={history}
+          onClose={() => setShowDreamBook(false)}
+        />
+      )}
     </div>
   )
 }

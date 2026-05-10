@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Achievement } from '../hooks/useDreamStore'
+import { AchievementIcon, type Achievement } from '../hooks/useDreamStore'
 import styles from './AchievementToast.module.css'
 
 interface AchievementToastProps {
@@ -49,7 +49,7 @@ export function AchievementToast({ achievement, onDismiss }: AchievementToastPro
     >
       <div className={styles.content} onClick={handleDismiss}>
         <div className={styles.iconWrapper}>
-          <span className={styles.icon}>{achievement.icon}</span>
+          <AchievementIcon iconKey={achievement.icon} className={styles.icon} />
         </div>
         <div className={styles.textContent}>
           <span className={styles.label}>成就解锁</span>

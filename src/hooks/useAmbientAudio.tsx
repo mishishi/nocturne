@@ -349,8 +349,25 @@ export function useAmbientAudio() {
 }
 
 export const AMBIENT_SOUNDS = [
-  { id: 'none' as AmbientSoundType, label: '关闭', icon: '🔇' },
-  { id: 'dreamPad' as AmbientSoundType, label: '梦境音垫', icon: '🌙' },
-  { id: 'whiteNoise' as AmbientSoundType, label: '白噪音', icon: '🌫️' },
-  { id: 'rain' as AmbientSoundType, label: '雨声', icon: '🌧️' }
+  { id: 'none' as AmbientSoundType, label: '关闭', icon: 'mute' },
+  { id: 'dreamPad' as AmbientSoundType, label: '梦境音垫', icon: 'moon' },
+  { id: 'whiteNoise' as AmbientSoundType, label: '白噪音', icon: 'mist' },
+  { id: 'rain' as AmbientSoundType, label: '雨声', icon: 'rain' }
 ]
+
+export const AMBIENT_ICONS: Record<string, { d: string; viewBox?: string; fill?: string; stroke?: string; strokeWidth?: string }> = {
+  mute: { d: 'M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  moon: { d: 'M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  mist: { d: 'M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M8 17h.01M8 13h.01M12 17h.01', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  rain: { d: 'M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M8 17h.01M12 17h.01M16 17h.01M8 13h.01M12 13h.01', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' }
+}
+
+export function AmbientIcon({ iconKey, className }: { iconKey: string; className?: string }) {
+  const icon = AMBIENT_ICONS[iconKey]
+  if (!icon) return null
+  return (
+    <svg viewBox={icon.viewBox || '0 0 24 24'} fill={icon.fill || 'none'} stroke={icon.stroke || 'currentColor'} strokeWidth={icon.strokeWidth || '1.5'} className={className}>
+      <path d={icon.d} />
+    </svg>
+  )
+}

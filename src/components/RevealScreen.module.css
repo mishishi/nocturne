@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-overlay);
-  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 50%, #16213e 100%);
+  background: linear-gradient(180deg, var(--color-night-deep) 0%, var(--color-night-mid) 50%, var(--color-night-surface) 100%);
   backdrop-filter: blur(24px);
   display: flex;
   align-items: center;
@@ -31,7 +31,7 @@
 
 .weavingStar {
   font-size: 2.5rem;
-  color: #F4D35E;
+  color: var(--color-golden);
   text-shadow: 0 0 30px rgba(244, 211, 94, 0.8);
   animation: starPulse 1.5s ease-in-out infinite;
 }
@@ -51,7 +51,7 @@
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 500;
-  color: #F4D35E;
+  color: var(--color-golden);
   margin: 0 0 12px 0;
   text-shadow: 0 0 20px rgba(244, 211, 94, 0.4);
   animation: fadeInUp 0.8s var(--ease-dream);
@@ -68,7 +68,7 @@
 .brocadeContainer {
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 50%, #16213e 100%);
+  background: linear-gradient(180deg, var(--color-night-deep) 0%, var(--color-night-mid) 50%, var(--color-night-surface) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -87,9 +87,9 @@
   position: absolute;
   width: 4px;
   height: 4px;
-  background: #F4D35E;
+  background: var(--color-golden);
   border-radius: 50%;
-  box-shadow: 0 0 10px #F4D35E, 0 0 20px rgba(244, 211, 94, 0.5);
+  box-shadow: 0 0 10px var(--color-golden), 0 0 20px rgba(244, 211, 94, 0.5);
   animation: fireflyFloat 3s ease-in-out infinite;
   opacity: 0.7;
 }
@@ -113,7 +113,7 @@
   padding: 48px;
   background: rgba(15, 15, 35, 0.8);
   border: 1px solid rgba(244, 211, 94, 0.2);
-  border-radius: 32px;
+  border-radius: var(--radius-3xl);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(16px);
   z-index: 1;
@@ -123,7 +123,7 @@
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 500;
-  color: #F4D35E;
+  color: var(--color-golden);
   margin: 0 0 36px 0;
   text-align: center;
   text-shadow: 0 0 30px rgba(244, 211, 94, 0.6);
@@ -166,7 +166,7 @@
   padding: 32px;
   background: rgba(10, 10, 26, 0.6);
   border: 1px solid rgba(244, 211, 94, 0.15);
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   backdrop-filter: blur(8px);
   animation: frameReveal 0.6s var(--ease-dream) 0.2s backwards;
 }
@@ -177,12 +177,12 @@
 
 .brocadeContent::-webkit-scrollbar-track {
   background: rgba(244, 211, 94, 0.1);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 .brocadeContent::-webkit-scrollbar-thumb {
   background: rgba(244, 211, 94, 0.3);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 .brocadeContent::-webkit-scrollbar-thumb:hover {
@@ -217,6 +217,8 @@
 
 .featherCursor {
   display: inline-block;
+  width: 1rem;
+  height: 1rem;
   animation: featherSway 1s ease-in-out infinite;
   margin-left: 4px;
 }
@@ -271,7 +273,7 @@
 
 .badgeStar {
   font-size: 1.25rem;
-  color: #F4D35E;
+  color: var(--color-golden);
   text-shadow: 0 0 15px rgba(244, 211, 94, 0.8);
   animation: badgePulse 1.5s ease-in-out infinite;
 }
@@ -293,7 +295,7 @@
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 500;
-  color: #F4D35E;
+  color: var(--color-golden);
   margin: 0 0 12px 0;
   text-shadow: 0 0 30px rgba(244, 211, 94, 0.5);
   animation: fadeInUp 0.6s var(--ease-dream);
@@ -344,7 +346,7 @@
   font-family: var(--font-display);
   font-size: clamp(4rem, 15vw, 8rem);
   font-weight: 600;
-  color: #F4D35E;
+  color: var(--color-golden);
   text-shadow: 0 0 60px rgba(244, 211, 94, 0.8);
   animation: countdownPop 1s var(--ease-dream);
 }
@@ -519,13 +521,13 @@
   .brocadeFrame {
     width: 100%;
     padding: 32px 20px;
-    border-radius: 24px;
+    border-radius: var(--radius-3xl);
   }
 
   .brocadeContent {
     max-height: 350px;
     padding: 20px;
-    border-radius: 16px;
+    border-radius: var(--radius-xl);
   }
 
   .brocadeTitle {

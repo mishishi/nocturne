@@ -6,7 +6,7 @@ import styles from './Legal.module.css'
  * Terms of Service page
  */
 export function TermsOfService() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isEnglish = i18n.language === 'en'
 
   return (

@@ -8,65 +8,63 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1'
 
 // ============ Token 自动刷新逻辑 ============
 
-// 标记是否有刷新请求正在进行中
-let isRefreshing = false
+// 正在进行的刷新请求 Promise，如果已有刷新在进行中，后续请求会等待此 Promise
+let refreshPromise: Promise<boolean> | null = null
 
 // 尝试刷新 token (使用原生 fetch，不经过 401 处理层避免递归)
 // 如果已经在刷新中，会等待当前刷新完成后再返回结果
 async function tryRefreshToken(): Promise<boolean> {
-  // 如果已经在刷新中，等待刷新完成
-  if (isRefreshing) {
-    // 轮询等待刷新完成
-    while (isRefreshing) {
-      await new Promise(resolve => setTimeout(resolve, 100))
-    }
-    // 刷新完成后，假设成功（因为如果失败会已经 logout 了）
-    return true
+  // 如果已有刷新在进行中，返回同一个 Promise 让所有请求等待同一个结果
+  if (refreshPromise) {
+    return refreshPromise
   }
 
-  isRefreshing = true
-  try {
-    const refreshToken = getRefreshToken()
-    if (!refreshToken) {
-      return false
-    }
+  refreshPromise = (async () => {
+    try {
+      const refreshToken = getRefreshToken()
+      if (!refreshToken) {
+        return false
+      }
 
-    // 使用原生 fetch，不经过 401 处理层
-    const res = await fetch(`${API_BASE}/auth/refresh-token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ refreshToken })
-    })
+      // 使用原生 fetch，不经过 401 处理层
+      const res = await fetch(`${API_BASE}/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ refreshToken })
+      })
 
-    if (!res.ok) {
-      // 刷新失败，清除本地状态并重定向到登录
+      if (!res.ok) {
+        // 刷新失败，清除本地状态并重定向到登录
+        await useDreamStore.getState().logout()
+        window.location.href = '/login'
+        return false
+      }
+
+      const data = await res.json()
+      if (!data.success) {
+        await useDreamStore.getState().logout()
+        window.location.href = '/login'
+        return false
+      }
+
+      // 更新 localStorage 中的 refresh token
+      if (data.data?.refreshToken) {
+        setRefreshToken(data.data.refreshToken)
+      }
+
+      return true
+    } catch (err) {
+      console.error('[API] Token refresh failed:', err)
       await useDreamStore.getState().logout()
       window.location.href = '/login'
       return false
+    } finally {
+      refreshPromise = null
     }
+  })()
 
-    const data = await res.json()
-    if (!data.success) {
-      await useDreamStore.getState().logout()
-      window.location.href = '/login'
-      return false
-    }
-
-    // 更新 localStorage 中的 refresh token
-    if (data.data?.refreshToken) {
-      setRefreshToken(data.data.refreshToken)
-    }
-
-    return true
-  } catch (err) {
-    console.error('[API] Token refresh failed:', err)
-    await useDreamStore.getState().logout()
-    window.location.href = '/login'
-    return false
-  } finally {
-    isRefreshing = false
-  }
+  return refreshPromise
 }
 
 // ============ 统一响应类型 ============

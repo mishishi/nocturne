@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom'
-import { useDreamStore, showToast } from '../hooks/useDreamStore'
+import { useDreamStore, showToast, AchievementIcon } from '../hooks/useDreamStore'
 import { useIsAuthor } from '../hooks/useAuthorization'
 import { useAchievementSound } from '../hooks/useAchievementSound'
 import { useTextToSpeech } from '../hooks/useTextToSpeech'
@@ -10,6 +10,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { SharePoster } from '../components/SharePoster'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { DreamInterpretationModal, DreamInterpretationLoadingModal } from '../components/DreamInterpretationModal'
+import { DeepInterpretationModal } from '../components/DeepInterpretationModal'
 import { InterpretationCard } from '../components/InterpretationCard'
 import { DreamInterpretationPanel } from '../components/DreamInterpretationPanel'
 import { DreamIllustration } from '../components/DreamIllustration'
@@ -46,6 +47,7 @@ export function Story() {
   const [historyComparison, setHistoryComparison] = useState<string | null>(null)
   const [isFirstInterpretationView, setIsFirstInterpretationView] = useState(true)
   const [isInterpreting, setIsInterpreting] = useState(false)
+  const [showDeepInterpretation, setShowDeepInterpretation] = useState(false)
   const [isGeneratingImage] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [isPublished, setIsPublished] = useState(false)
@@ -816,7 +818,7 @@ export function Story() {
         {/* Interpretation Hint Banner - for subsequent views */}
         {interpretation && !showInterpretation && !isFirstInterpretationView && (
           <ExpandableCard
-            icon="🌙"
+            icon={<AchievementIcon iconKey="moon" />}
             title="梦境解读已生成"
             defaultExpanded={false}
             onExpanded={() => setShowInterpretation(true)}
@@ -1029,7 +1031,7 @@ export function Story() {
                   <div className={styles.menuPanel}>
                     {/* Header */}
                     <div className={styles.menuHeader}>
-                      <div className={styles.menuHeaderIcon}>🌙</div>
+                      <AchievementIcon iconKey="moon" className={styles.menuHeaderIcon} />
                       <div className={styles.menuHeaderText}>
                         <p className={styles.menuHeaderTitle}>AI 梦境助手</p>
                         <p className={styles.menuHeaderSubtitle}>探索梦境的奥秘</p>
@@ -1146,6 +1148,43 @@ export function Story() {
                         )}
                       </div>
                     </button>
+
+                    {/* Deep Interpretation Button */}
+                    <button
+                      className={`${styles.shareMenuItem} ${!user || user.points < 20 || !interpretation ? styles.menuItemDisabled : ''}`}
+                      onClick={() => {
+                        if (!user || user.points < 20 || !interpretation) return
+                        setShowAiMenu(false)
+                        setShowDeepInterpretation(true)
+                      }}
+                      role="menuitem"
+                      tabIndex={0}
+                      title={!user ? '请先登录' : user.points < 20 ? '积分不足' : !interpretation ? '请先获取基础解读' : ''}
+                    >
+                      <div className={styles.menuItemIcon}>
+                        {!user ? (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className={styles.menuItemLabel}>
+                        <span className={styles.menuPrimary}>
+                          {user ? '深度解读' : '登录后使用'}
+                        </span>
+                        {user && user.points < 20 && (
+                          <span className={styles.menuSecondary}>积分不足</span>
+                        )}
+                        {!user?.points && user && (
+                          <span className={styles.menuSecondary}>需20积分</span>
+                        )}
+                      </div>
+                      <span className={styles.menuBadge}>Premium</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -1214,6 +1253,16 @@ export function Story() {
             onClose={() => setShowInterpretation(false)}
           />
         )
+      )}
+
+      {/* Deep Interpretation Modal */}
+      {showDeepInterpretation && (
+        <DeepInterpretationModal
+          sessionId={sessionId}
+          dreamSnippet={dreamText || undefined}
+          story={story || undefined}
+          onClose={() => setShowDeepInterpretation(false)}
+        />
       )}
 
       {/* Share Poster Modal */}

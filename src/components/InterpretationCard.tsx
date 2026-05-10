@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from '../services/api'
 import { ExpandableCard } from './ExpandableCard'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './InterpretationCard.module.css'
 
 interface InterpretationCardProps {
@@ -41,7 +42,7 @@ export function InterpretationCard({
 
   return (
     <ExpandableCard
-      icon="🌙"
+      icon={<AchievementIcon iconKey="moon" className={styles.cardIcon} />}
       title="梦境解读"
       onExpanded={onExpanded}
     >
@@ -115,13 +116,15 @@ export function InterpretationCard({
               className={`${styles.feedbackBtn} ${styles.feedbackBtnGood}`}
               onClick={() => handleFeedback(true)}
             >
-              👍 有帮助
+              <AchievementIcon iconKey="heart" className={styles.feedbackIcon} />
+              有帮助
             </button>
             <button
               className={`${styles.feedbackBtn} ${styles.feedbackBtnBad}`}
               onClick={() => handleFeedback(false)}
             >
-              👎 不太准
+              <AchievementIcon iconKey="wind" className={styles.feedbackIcon} />
+              不太准
             </button>
           </div>
         )}
@@ -135,7 +138,7 @@ export function InterpretationCard({
 
         {feedbackState === 'submitted' && (
           <div className={styles.feedbackSubmitted}>
-            {selectedRating ? '感谢反馈！🙏' : '感谢反馈，我们会继续改进'}
+            {selectedRating ? '感谢反馈！' : '感谢反馈，我们会继续改进'}
           </div>
         )}
       </div>

@@ -65,7 +65,7 @@
   text-align: center;
   color: var(--color-night-deep);
   background: var(--color-golden);
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   transform: translate(30%, -30%);
 }
 

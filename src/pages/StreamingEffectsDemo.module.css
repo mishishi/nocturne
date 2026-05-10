@@ -2,7 +2,7 @@
 
 .page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+  background: linear-gradient(135deg, var(--color-night-deep) 0%, var(--color-night-mid) 50%, var(--color-night-deep) 100%);
   padding: 40px 20px;
 }
 
@@ -15,7 +15,7 @@
   font-family: var(--font-display);
   font-size: 2.5rem;
   font-weight: 600;
-  color: #F4D35E;
+  color: var(--color-golden);
   margin: 0 0 12px 0;
   text-shadow: 0 0 30px rgba(244, 211, 94, 0.3);
 }
@@ -38,7 +38,7 @@
 .effectCard {
   background: rgba(30, 30, 50, 0.6);
   border: 1px solid rgba(139, 157, 195, 0.15);
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   padding: 28px;
   backdrop-filter: blur(12px);
 }
@@ -47,7 +47,7 @@
   font-family: var(--font-display);
   font-size: 1.35rem;
   font-weight: 500;
-  color: #F4D35E;
+  color: var(--color-golden);
   margin: 0 0 6px 0;
 }
 
@@ -67,7 +67,7 @@
 
 .startBtn, .resetBtn {
   padding: 10px 28px;
-  border-radius: 25px;
+  border-radius: var(--radius-pill);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -76,8 +76,8 @@
 }
 
 .startBtn {
-  background: linear-gradient(135deg, #F4D35E, #E8C547);
-  color: #1a1a2e;
+  background: linear-gradient(135deg, var(--color-golden), var(--color-golden-bright));
+  color: var(--color-night-deep);
 }
 
 .startBtn:hover:not(:disabled) {
@@ -98,7 +98,7 @@
 
 .resetBtn:hover:not(:disabled) {
   border-color: rgba(139, 157, 195, 0.6);
-  color: #fff;
+  color: var(--color-moonlight);
 }
 
 .resetBtn:disabled {
@@ -119,8 +119,8 @@
   position: relative;
   width: 100%;
   max-width: 280px;
-  background: linear-gradient(180deg, #f5e6d3 0%, #efe0c8 50%, #e8d5b5 100%);
-  border-radius: 8px;
+  background: linear-gradient(180deg, var(--color-parchment-light, #f5e6d3) 0%, var(--color-parchment, #efe0c8) 50%, var(--color-parchment-dark, #e8d5b5) 100%);
+  border-radius: var(--radius-md);
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.3),
     inset 0 0 30px rgba(139, 90, 43, 0.1);
@@ -131,8 +131,8 @@
   left: -8px;
   right: -8px;
   height: 20px;
-  background: linear-gradient(90deg, #c9a86c, #d4b87a, #c9a86c);
-  border-radius: 10px;
+  background: linear-gradient(90deg, var(--color-parchment-dark, #c9a86c), var(--color-parchment-light, #d4b87a), var(--color-parchment-dark, #c9a86c));
+  border-radius: var(--radius-md);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -151,7 +151,7 @@
 .scrollTitle {
   font-family: 'STKaiti', 'KaiTi', serif;
   font-size: 1.2rem;
-  color: #8B5A2B;
+  color: var(--color-scroll-title, #8B5A2B);
   margin: 0 0 12px 0;
   text-align: center;
   text-shadow: 1px 1px 2px rgba(139, 90, 43, 0.2);
@@ -161,7 +161,7 @@
   font-family: 'STKaiti', 'KaiTi', serif;
   font-size: 0.95rem;
   line-height: 2;
-  color: #3d2914;
+  color: var(--color-scroll-text, #3d2914);
   text-align: justify;
   min-height: 120px;
   position: relative;
@@ -171,7 +171,7 @@
   display: inline-block;
   width: 8px;
   height: 8px;
-  background: radial-gradient(circle, #3d2914 30%, transparent 70%);
+  background: radial-gradient(circle, var(--color-scroll-text, #3d2914) 30%, transparent 70%);
   border-radius: 50%;
   margin-left: 2px;
   vertical-align: middle;
@@ -203,9 +203,9 @@
 .brocadeContainer {
   position: relative;
   min-height: 260px;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3a 100%);
+  background: linear-gradient(180deg, var(--color-night-deep) 0%, var(--color-night-mid) 100%);
 }
 
 .starryBackground {
@@ -218,9 +218,9 @@
   position: absolute;
   width: 4px;
   height: 4px;
-  background: #F4D35E;
+  background: var(--color-golden);
   border-radius: 50%;
-  box-shadow: 0 0 10px #F4D35E, 0 0 20px rgba(244, 211, 94, 0.5);
+  box-shadow: 0 0 10px var(--color-golden), 0 0 20px rgba(244, 211, 94, 0.5);
   animation: fireflyFloat 3s ease-in-out infinite;
   opacity: 0.7;
 }
@@ -239,7 +239,7 @@
 .brocadeTitle {
   font-family: var(--font-display);
   font-size: 1.2rem;
-  color: #F4D35E;
+  color: var(--color-golden);
   margin: 0 0 16px 0;
   text-align: center;
   text-shadow: 0 0 20px rgba(244, 211, 94, 0.5);
@@ -291,6 +291,8 @@
 
 .featherCursor {
   display: inline-block;
+  width: 1rem;
+  height: 1rem;
   animation: featherSway 1s ease-in-out infinite;
   margin-left: 4px;
 }
@@ -304,7 +306,7 @@
 .rippleContainer {
   position: relative;
   min-height: 260px;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
@@ -313,8 +315,8 @@
   width: 100%;
   height: 100%;
   min-height: 260px;
-  background: linear-gradient(180deg, #1a1a3a 0%, #16213e 30%, #1a3a5c 70%, #0f2a42 100%);
-  border-radius: 16px;
+  background: linear-gradient(180deg, var(--color-night-mid) 0%, var(--color-night-deep) 30%, var(--color-night-mid) 70%, var(--color-night-deep) 100%);
+  border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
@@ -414,6 +416,36 @@
 }
 
 /* ============ Responsive ============ */
+@media (prefers-reduced-motion: reduce) {
+  .inkEffect {
+    animation: none;
+  }
+  .splashEffect {
+    animation: none;
+  }
+  .firefly {
+    animation: none;
+  }
+  .brocadeStar {
+    animation: none;
+  }
+  .goldenThread {
+    animation: none;
+  }
+  .feather {
+    animation: none;
+  }
+  .ripple {
+    animation: none;
+  }
+  .lotus {
+    animation: none;
+  }
+  .dot {
+    animation: none;
+  }
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 24px 16px;

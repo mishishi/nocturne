@@ -112,7 +112,7 @@ function App() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   const handleToastClose = useCallback(() => setToastVisible(false), [])
-  const [cookieConsent, setCookieConsent] = useState<{
+  const [cookieConsent] = useState<{
     necessary: boolean
     analytics: boolean
     客服: boolean
@@ -136,18 +136,6 @@ function App() {
         })
     }
   }, [])
-
-  // Handle cookie consent changes
-  const handleCookieConsentChange = (prefs: typeof cookieConsent) => {
-    if (prefs?.analytics) {
-      const endpoint = import.meta.env.VITE_UMAMI_ENDPOINT
-      const websiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID
-      if (endpoint && websiteId) {
-        analyticsService.configure({ endpoint, websiteId })
-      }
-    }
-    setCookieConsent(prefs)
-  }
 
   // Track hydration state - update when Zustand persist rehydration completes
   useEffect(() => {

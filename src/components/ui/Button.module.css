@@ -142,14 +142,14 @@
 /* Danger variant */
 .danger {
   background: rgba(229, 62, 62, 0.15);
-  color: #fc8181;
+  color: var(--color-error);
   border: 1px solid rgba(229, 62, 62, 0.3);
 }
 
 .danger:hover:not(:disabled) {
   background: rgba(229, 62, 62, 0.25);
   border-color: rgba(229, 62, 62, 0.5);
-  color: #feb2b2;
+  color: var(--color-error);
 }
 
 /* Sizes */

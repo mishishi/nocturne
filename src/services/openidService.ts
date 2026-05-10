@@ -39,7 +39,7 @@ export const openidService = {
   getOrCreate(): string {
     const existing = this.get()
     if (existing) return existing
-    const newOpenid = `web_${Date.now()}`
+    const newOpenid = `web_${crypto.randomUUID()}`
     this.set(newOpenid)
     return newOpenid
   }

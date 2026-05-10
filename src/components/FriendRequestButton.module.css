@@ -36,13 +36,13 @@
 }
 
 .error {
-  color: var(--color-coral);
-  border-color: var(--color-coral);
+  color: var(--color-coral, #FF6B6B);
+  border-color: var(--color-coral, #FF6B6B);
 }
 
 .error:hover:not(:disabled) {
-  background: rgba(255, 107, 107, 0.1);
-  border-color: var(--color-coral);
+  background: var(--color-coral-bg, rgba(255, 107, 107, 0.1));
+  border-color: var(--color-coral, #FF6B6B);
   box-shadow: 0 0 16px rgba(255, 107, 107, 0.1);
 }
 
@@ -77,9 +77,9 @@
   font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-mint);
-  background: rgba(129, 199, 132, 0.1);
-  border: 1px solid var(--color-mint);
+  color: var(--color-mint, #81C784);
+  background: var(--color-mint-bg, rgba(129, 199, 132, 0.1));
+  border: 1px solid var(--color-mint-border, rgba(129, 199, 132, 0.3));
   border-radius: var(--radius-lg);
 }
 
@@ -98,5 +98,11 @@
   .sentLabel {
     padding: var(--space-1) var(--space-3);
     font-size: 0.8125rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner svg {
+    animation: none;
   }
 }

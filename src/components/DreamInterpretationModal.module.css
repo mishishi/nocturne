@@ -19,7 +19,7 @@
     rgba(10, 15, 35, 0.98) 50%,
     rgba(8, 12, 28, 0.99) 100%
   );
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   width: 100%;
   max-width: 560px;
   max-height: 85vh;
@@ -106,7 +106,7 @@
 }
 
 .titleIcon {
-  font-size: 24px;
+  font-size: var(--text-xl);
 }
 
 .closeBtn {
@@ -149,12 +149,12 @@
 
 .content::-webkit-scrollbar-track {
   background: transparent;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 .content::-webkit-scrollbar-thumb {
   background: rgba(244, 211, 94, 0.3);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   transition: background 0.2s ease;
 }
 
@@ -372,7 +372,7 @@
 }
 
 .feedbackEmoji {
-  font-size: 18px;
+  font-size: var(--text-lg);
 }
 
 .feedbackLoading {

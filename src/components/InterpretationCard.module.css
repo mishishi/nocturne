@@ -1,3 +1,14 @@
+/* Icon Sizing */
+.cardIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.feedbackIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
 /* Personality Tag */
 .personalityTag {
   display: flex;

@@ -42,7 +42,7 @@
 
 .logoText {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: var(--text-xl);
   font-weight: 600;
   letter-spacing: 0.1em;
 }
@@ -54,7 +54,7 @@
 }
 
 .link {
-  font-size: 0.9375rem;
+  font-size: var(--text-base);
   color: var(--color-moonlight);
   text-decoration: none;
   opacity: 0.7;
@@ -90,7 +90,7 @@
   right: 0;
   height: 2px;
   background: var(--color-golden);
-  border-radius: 1px;
+  border-radius: var(--radius-xs);
 }
 
 .badge {
@@ -101,11 +101,11 @@
   height: 18px;
   padding: 0 5px;
   margin-left: 6px;
-  font-size: 11px;
+  font-size: var(--text-3xs);
   font-weight: 600;
   color: white;
-  background: #e74c3c;
-  border-radius: 9px;
+  background: var(--color-error);
+  border-radius: var(--radius-md);
   line-height: 1;
 }
 
@@ -144,11 +144,11 @@
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: white;
-  background: #e74c3c;
-  border-radius: 8px;
+  background: var(--color-error);
+  border-radius: var(--radius-md);
   line-height: 16px;
   text-align: center;
 }
@@ -183,11 +183,11 @@
   }
 
   .logoText {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
   }
 
   .link {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 }
 
@@ -198,7 +198,7 @@
   }
 
   .logoText {
-    font-size: 1.125rem;
+    font-size: var(--text-md);
   }
 
   .links {
@@ -206,6 +206,6 @@
   }
 
   .link {
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
   }
 }

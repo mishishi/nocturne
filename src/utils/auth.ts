@@ -8,12 +8,47 @@ import { storage } from '../services/storageService'
 const TOKEN_COOKIE_NAME = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1'
+
 /**
- * Check if a valid authentication token exists in Cookie
- * Returns true only if token is present (not expired - browser handles expiry via max-age)
+ * Verify token validity by calling backend API
+ * Returns true if token is valid, false otherwise
+ * Uses httpOnly cookie for auth, so credentials: 'include' is needed
+ */
+export async function verifyToken(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Check if a valid authentication token exists
+ * Uses localStorage flag as a quick check, but actual validation is done by verifyToken()
+ * This is kept for backward compatibility where async can't be used.
+ * For accurate results, use verifyToken() instead.
  */
 export function hasValidToken(): boolean {
-  return document.cookie.split(';').some(c => c.trim().startsWith(`${TOKEN_COOKIE_NAME}=`))
+  return localStorage.getItem('yeelin_login_state') === '1'
+}
+
+/**
+ * Mark user as logged in (called after successful login)
+ */
+export function markLogin(): void {
+  localStorage.setItem('yeelin_login_state', '1')
+}
+
+/**
+ * Mark user as logged out (called on logout)
+ */
+export function markLogout(): void {
+  localStorage.removeItem('yeelin_login_state')
 }
 
 /**

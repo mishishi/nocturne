@@ -130,9 +130,9 @@ export function Stats() {
   }
 
   const weeklyData = [
-    { name: '本周发帖', value: stats?.trends?.postsLast7Days ?? 0, color: '#f4d35e' },
-    { name: '本周通过', value: stats?.trends?.approvedLast7Days ?? 0, color: '#48c78e' },
-    { name: '本周拒绝', value: stats?.trends?.rejectedLast7Days ?? 0, color: '#ed6464' },
+    { name: '本周发帖', value: stats?.trends?.postsLast7Days ?? 0, color: 'var(--color-golden)' },
+    { name: '本周通过', value: stats?.trends?.approvedLast7Days ?? 0, color: 'var(--color-success)' },
+    { name: '本周拒绝', value: stats?.trends?.rejectedLast7Days ?? 0, color: 'var(--color-error)' },
   ]
 
   return (
@@ -236,14 +236,14 @@ export function Stats() {
                     background: 'rgba(20, 20, 30, 0.95)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '12px',
-                    color: '#fff'
+                    color: 'var(--color-moonlight)'
                   }}
                   labelStyle={{ color: 'rgba(255,255,255,0.7)' }}
                 />
                 <Area
                   type="monotone"
                   dataKey="posts"
-                  stroke="#f4d35e"
+                  stroke="var(--color-golden)"
                   strokeWidth={2}
                   fill="url(#postsGradient)"
                   name="发帖数"
@@ -278,13 +278,13 @@ export function Stats() {
                     background: 'rgba(20, 20, 30, 0.95)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '12px',
-                    color: '#fff'
+                    color: 'var(--color-moonlight)'
                   }}
                   labelStyle={{ color: 'rgba(255,255,255,0.7)' }}
                 />
                 <Bar
                   dataKey="value"
-                  fill="#f4d35e"
+                  fill="var(--color-golden)"
                   radius={[0, 6, 6, 0]}
                   maxBarSize={32}
                 />
@@ -322,20 +322,20 @@ export function Stats() {
                   background: 'rgba(20, 20, 30, 0.95)',
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '12px',
-                  color: '#fff'
+                  color: 'var(--color-moonlight)'
                 }}
                 labelStyle={{ color: 'rgba(255,255,255,0.7)' }}
               />
-              <Bar dataKey="posts" stackId="a" fill="#f4d35e" radius={[0, 0, 0, 0]} name="发帖" />
-              <Bar dataKey="approved" stackId="a" fill="#48c78e" radius={[0, 0, 0, 0]} name="通过" />
-              <Bar dataKey="rejected" stackId="a" fill="#ed6464" radius={[4, 4, 0, 0]} name="拒绝" />
+              <Bar dataKey="posts" stackId="a" fill="var(--color-golden)" radius={[0, 0, 0, 0]} name="发帖" />
+              <Bar dataKey="approved" stackId="a" fill="var(--color-success)" radius={[0, 0, 0, 0]} name="通过" />
+              <Bar dataKey="rejected" stackId="a" fill="var(--color-error)" radius={[4, 4, 0, 0]} name="拒绝" />
             </BarChart>
           </ResponsiveContainer>
         </div>
         <div className={styles.chartLegend}>
-          <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: '#f4d35e' }} />发帖</span>
-          <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: '#48c78e' }} />通过</span>
-          <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: '#ed6464' }} />拒绝</span>
+          <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: 'var(--color-golden)' }} />发帖</span>
+          <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: 'var(--color-success)' }} />通过</span>
+          <span className={styles.legendItem}><span className={styles.legendDot} style={{ background: 'var(--color-error)' }} />拒绝</span>
         </div>
       </div>
 
@@ -423,7 +423,7 @@ export function Stats() {
                     background: 'rgba(20, 20, 30, 0.95)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '12px',
-                    color: '#fff'
+                    color: 'var(--color-moonlight)'
                   }}
                   labelStyle={{ color: 'rgba(255,255,255,0.7)' }}
                   formatter={(value) => [`${Math.round(Number(value))}ms`, '平均耗时']}
@@ -431,7 +431,7 @@ export function Stats() {
                 <Area
                   type="monotone"
                   dataKey="avgDuration"
-                  stroke="#58a6ff"
+                  stroke="var(--color-moonlight)"
                   strokeWidth={2}
                   fill="url(#durationGradient)"
                   name="平均耗时"

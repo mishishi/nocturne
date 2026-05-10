@@ -6,7 +6,7 @@ import { OnboardingOverlay } from '../components/ui/OnboardingOverlay'
 import { LiveNotification } from '../components/ui/LiveNotification'
 import { AchievementCenter } from '../components/AchievementCenter'
 import { DailyHighlights } from '../components/DailyHighlights'
-import { useDreamStore, ACHIEVEMENTS, showToast, type DreamSession } from '../hooks/useDreamStore'
+import { useDreamStore, ACHIEVEMENTS, showToast, AchievementIcon, type DreamSession } from '../hooks/useDreamStore'
 import { checkInApi } from '../services/api'
 import { hasValidToken, verifyToken } from '../utils/auth'
 import styles from './Home.module.css'
@@ -268,7 +268,7 @@ export function Home() {
           <div className={styles.checkInCard}>
             <div className={styles.checkInLeft}>
               <div className={styles.checkInStreak}>
-                <span className={styles.streakIcon}>{checkedInToday ? '✅' : '🔥'}</span>
+                <span className={styles.streakIcon}><AchievementIcon iconKey={checkedInToday ? 'heart' : 'bolt'} /></span>
                 <span className={styles.streakCount}>{consecutiveDays}</span>
                 <span className={styles.streakLabel}>天</span>
               </div>
@@ -282,7 +282,7 @@ export function Home() {
             <div className={styles.checkInRight}>
               {checkedInToday ? (
                 <div className={styles.checkInDone}>
-                  <span className={styles.checkInDoneIcon}>✨</span>
+                  <AchievementIcon iconKey="sparkle" className={styles.checkInDoneIcon} />
                   <span>继续保持</span>
                 </div>
               ) : (
@@ -301,7 +301,7 @@ export function Home() {
         <section className={styles.checkInSection}>
           <Link to="/login" className={styles.checkInGuestCard}>
             <div className={styles.checkInGuestLeft}>
-              <span className={styles.checkInGuestIcon}>🔓</span>
+              <AchievementIcon iconKey="lock" className={styles.checkInGuestIcon} />
               <div className={styles.checkInGuestText}>
                 <span className={styles.checkInGuestTitle}>开启连续签到</span>
                 <span className={styles.checkInGuestDesc}>登录后记录梦境，养成签到习惯</span>

@@ -23,9 +23,31 @@
   --color-error: #ef4444;
   --color-error-bg: rgba(239, 68, 68, 0.1);
   --color-error-border: rgba(239, 68, 68, 0.3);
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(245, 158, 11, 0.3);
   --color-success: #22c55e;
   --color-success-bg: rgba(34, 197, 94, 0.1);
   --color-focus-ring: rgba(244, 211, 94, 0.5);
+  --color-notification: #e74c3c;
+  --color-heart: #FF6B6B;
+  --color-heart-light: rgba(255, 107, 107, 0.15);
+  --color-coral: #FF6B6B;
+  --color-coral-bg: rgba(255, 107, 107, 0.1);
+  --color-coral-border: rgba(255, 107, 107, 0.3);
+  --color-mint: #81C784;
+  --color-mint-bg: rgba(129, 199, 132, 0.1);
+  --color-mint-border: rgba(129, 199, 132, 0.3);
+
+  /* Colors - Notification Types */
+  --color-notify-like: #f472b6;
+  --color-notify-comment: #60a5fa;
+  --color-notify-friend: #4ade80;
+  --color-notify-friend-accepted: #a78bfa;
+
+  /* Colors - Extended */
+  --color-obsidian: #0a0a0f;
+  --color-card: rgba(20, 20, 30, 0.95);
 
   /* Colors - Surface & Border */
   --color-border: rgba(139, 157, 195, 0.15);
@@ -44,16 +66,21 @@
   --font-body: 'Noto Sans SC', 'DM Sans', -apple-system, sans-serif;
 
   /* Font Sizes - Base (Medium) */
-  --text-xs: 0.6875rem;   /* 11px */
-  --text-sm: 0.75rem;     /* 12px */
-  --text-base: 0.875rem;  /* 14px */
-  --text-md: 0.9375rem;   /* 15px */
-  --text-lg: 1rem;        /* 16px */
-  --text-xl: 1.125rem;    /* 18px */
-  --text-2xl: 1.25rem;    /* 20px */
-  --text-3xl: 1.5rem;     /* 24px */
-  --text-4xl: 1.875rem;   /* 30px */
-  --text-5xl: 2.25rem;    /* 36px */
+  --text-2xs: 0.625rem;   /* 10px - extra small */
+  --text-3xs: 0.6875rem;  /* 11px */
+  --text-xs: 0.75rem;      /* 12px - accessibility minimum */
+  --text-sm: 0.8125rem;    /* 13px */
+  --text-base: 0.9375rem;  /* 15px */
+  --text-md: 1rem;         /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-28: 1.75rem;      /* 28px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-32: 2rem;         /* 32px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+  --text-64: 4rem;         /* 64px */
 
   /* Font Size Scale (user preference) */
   --font-scale: 1;
@@ -79,10 +106,15 @@
   --space-24: 6rem;
 
   /* Border Radius */
+  --radius-xs: 2px;
   --radius-sm: 4px;
+  --radius-sq: 6px;
   --radius-md: 8px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-pill: 50px;
   --radius-full: 9999px;
 
   /* Transitions */
@@ -216,8 +248,8 @@ html {
 
 body {
   font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: var(--text-md);
+  line-height: 1.85;
   color: var(--color-moonlight);
   background: var(--color-night-deep);
   min-height: 100vh;

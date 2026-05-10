@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { storage } from '../services/storageService'
 
 // Zustand persist 存储适配器 - 使用 storageService 实现内存缓存+防抖写入
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const storageAdapter = {
   getItem: (name: string): string | null => {
     return storage.get(name) ?? null
@@ -13,7 +14,7 @@ const storageAdapter = {
   removeItem: (name: string): void => {
     storage.remove(name)
   }
-}
+} as any
 
 export interface Friend {
   id: string

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { DreamSession } from '../hooks/useDreamStore'
+import { DreamSession, AchievementIcon } from '../hooks/useDreamStore'
 import styles from './Statistics.module.css'
 
 interface StatisticsProps {
@@ -196,17 +196,17 @@ export function Statistics({ history }: StatisticsProps) {
       {/* Quick Stats */}
       <div className={styles.quickStats}>
         <div className={styles.quickStat}>
-          <span className={styles.quickStatIcon}>🔥</span>
+          <span className={styles.quickStatIcon}><AchievementIcon iconKey="bolt" /></span>
           <span className={styles.quickStatLabel}>当前连续</span>
           <span className={styles.quickStatValue}>{stats.currentStreak} 天</span>
         </div>
         <div className={styles.quickStat}>
-          <span className={styles.quickStatIcon}>⏰</span>
+          <span className={styles.quickStatIcon}><AchievementIcon iconKey="sun" /></span>
           <span className={styles.quickStatLabel}>活跃时段</span>
           <span className={styles.quickStatValue}>{stats.peakHour}</span>
         </div>
         <div className={styles.quickStat}>
-          <span className={styles.quickStatIcon}>📝</span>
+          <span className={styles.quickStatIcon}><AchievementIcon iconKey="book" /></span>
           <span className={styles.quickStatLabel}>累计文字</span>
           <span className={styles.quickStatValue}>{stats.totalWords.toLocaleString()}</span>
         </div>

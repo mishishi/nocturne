@@ -20,7 +20,7 @@
 
 .dot.current {
   width: 28px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   background: var(--color-golden);
   box-shadow: 0 0 14px rgba(244, 211, 94, 0.6);
 }

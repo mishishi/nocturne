@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useDreamStore, DREAM_TAGS, EMOTION_ICONS } from '../hooks/useDreamStore'
+import { useDreamStore, DREAM_TAGS, EMOTION_ICONS, AchievementIcon } from '../hooks/useDreamStore'
 import { useVoiceWaveform } from '../hooks/useVoiceWaveform'
 import { api } from '../services/api'
 import { openidService } from '../services/openidService'
@@ -63,19 +63,34 @@ interface DreamDraft {
 }
 
 // Dream elements for quick selection
+const ELEMENT_ICONS: Record<string, string> = {
+  person: 'user',
+  animal: 'bird',
+  food: 'gem',
+  water: 'water',
+  sky: 'cloud',
+  building: 'gem',
+  flying: 'rocket',
+  falling: 'bolt',
+  chase: 'bolt',
+  vehicle: 'rocket',
+  forest: 'tree',
+  beach: 'sun',
+}
+
 const DREAM_ELEMENTS = [
-  { id: 'person', icon: '👤', label: '人物' },
-  { id: 'animal', icon: '🐾', label: '动物' },
-  { id: 'food', icon: '🍜', label: '食物' },
-  { id: 'water', icon: '🌊', label: '水' },
-  { id: 'sky', icon: '☁️', label: '天空' },
-  { id: 'building', icon: '🏛️', label: '建筑' },
-  { id: 'flying', icon: '✈️', label: '飞行' },
-  { id: 'falling', icon: '⬇️', label: '坠落' },
-  { id: 'chase', icon: '🏃', label: '追逐' },
-  { id: 'vehicle', icon: '🚗', label: '车辆' },
-  { id: 'forest', icon: '🌲', label: '森林' },
-  { id: 'beach', icon: '🏖️', label: '海滩' }
+  { id: 'person', label: '人物' },
+  { id: 'animal', label: '动物' },
+  { id: 'food', label: '食物' },
+  { id: 'water', label: '水' },
+  { id: 'sky', label: '天空' },
+  { id: 'building', label: '建筑' },
+  { id: 'flying', label: '飞行' },
+  { id: 'falling', label: '坠落' },
+  { id: 'chase', label: '追逐' },
+  { id: 'vehicle', label: '车辆' },
+  { id: 'forest', label: '森林' },
+  { id: 'beach', label: '海滩' }
 ]
 
 type DreamStep = 'emotion' | 'emotionTransition' | 'describe' | 'elements' | 'submitting'
@@ -481,7 +496,7 @@ export function Dream() {
             <div className={styles.stepHeader}>
               <h1 className={styles.title}>昨晚的梦，你感觉如何？</h1>
               <p className={styles.subtitle}>选择最接近的情绪标签</p>
-              <p className={styles.privacyNotice}>🔒 默认私密，仅你可见</p>
+              <p className={styles.privacyNotice}><AchievementIcon iconKey="lock" /> 默认私密，仅你可见</p>
             </div>
 
             <div
@@ -552,7 +567,7 @@ export function Dream() {
             <div className={styles.stepHeader}>
               <h1 className={styles.title}>描述你记得的画面</h1>
               <p className={styles.subtitle}>场景、人物、颜色、声音，任何细节都好</p>
-              <p className={styles.privacyNotice}>🔒 默认私密，仅你可见</p>
+              <p className={styles.privacyNotice}><AchievementIcon iconKey="lock" /> 默认私密，仅你可见</p>
             </div>
 
             {/* Voice Input */}
@@ -630,7 +645,6 @@ export function Dream() {
                 showCount
                 maxLength={2000}
                 className={styles.textarea}
-                aria-label="梦境描述"
               />
               {isNetworkError && error && (
                 <div className={styles.errorBanner}>
@@ -664,7 +678,7 @@ export function Dream() {
             <div className={styles.stepHeader}>
               <h1 className={styles.title}>梦里有这些吗？</h1>
               <p className={styles.subtitle}>快速勾选，帮助 AI 更好地理解</p>
-              <p className={styles.privacyNotice}>🔒 默认私密，仅你可见</p>
+              <p className={styles.privacyNotice}><AchievementIcon iconKey="lock" /> 默认私密，仅你可见</p>
             </div>
 
             <div className={styles.elementsGrid}>
@@ -677,7 +691,7 @@ export function Dream() {
                   aria-label={`${element.label}${dreamElements.includes(element.id) ? '，已选中' : ''}`}
                   aria-pressed={dreamElements.includes(element.id)}
                 >
-                  <span className={styles.elementIcon}>{element.icon}</span>
+                  <AchievementIcon iconKey={ELEMENT_ICONS[element.id]} className={styles.elementIcon} />
                   <span className={styles.elementLabel}>{element.label}</span>
                 </button>
               ))}

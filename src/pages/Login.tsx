@@ -240,7 +240,7 @@ export function Login() {
             <circle cx="50" cy="50" r="45" fill="url(#portalGlow)" />
             <path
               d="M50 15 L55 35 L75 35 L60 48 L67 70 L50 55 L33 70 L40 48 L25 35 L45 35 Z"
-              fill="#F4D35E"
+              fill="var(--color-golden)"
               opacity="0.9"
             />
           </svg>
@@ -403,6 +403,7 @@ export function Login() {
                       onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
                       className={`${styles.input} ${getFieldError('email') ? styles.inputError : ''}`}
                       autoComplete="email"
+                      aria-label="邮箱"
                       aria-describedby={getFieldError('email') ? 'email-error' : undefined}
                       aria-invalid={getFieldError('email') ? 'true' : undefined}
                     />
@@ -424,6 +425,7 @@ export function Login() {
                       onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
                       className={`${styles.input} ${getFieldError('password') ? styles.inputError : ''}`}
                       autoComplete="current-password"
+                      aria-label="密码"
                       aria-describedby={getFieldError('password') ? 'password-error' : undefined}
                       aria-invalid={getFieldError('password') ? 'true' : undefined}
                     />
@@ -534,6 +536,7 @@ export function Login() {
                       onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
                       className={`${styles.input} ${getFieldError('phone') ? styles.inputError : ''}`}
                       autoComplete="tel"
+                      aria-label="手机号"
                       aria-describedby={getFieldError('phone') ? 'phone-error' : undefined}
                       aria-invalid={getFieldError('phone') ? 'true' : undefined}
                     />
@@ -555,6 +558,7 @@ export function Login() {
                       onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
                       className={`${styles.input} ${getFieldError('password') ? styles.inputError : ''}`}
                       autoComplete="current-password"
+                      aria-label="密码"
                       aria-describedby={getFieldError('password') ? 'password-error' : undefined}
                       aria-invalid={getFieldError('password') ? 'true' : undefined}
                     />

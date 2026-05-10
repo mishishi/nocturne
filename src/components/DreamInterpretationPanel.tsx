@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from '../services/api'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './DreamInterpretationPanel.module.css'
 
 interface RecurringSymbol {
@@ -49,10 +50,10 @@ export function DreamInterpretationPanel({
     size: 1 + Math.random() * 1.5
   }))
 
-  // Get emoji for personality - use symbol if it's short (likely emoji), skip if it's Chinese text
+  // Get icon key for personality - use symbol if it matches an existing icon, skip if Chinese text
   const firstSymbol = recurringSymbols[0]?.symbol || ''
   const isChineseText = /[\u4e00-\u9fa5]/.test(firstSymbol) // contains Chinese characters
-  const personalityEmoji = !isChineseText && firstSymbol.length <= 4 ? firstSymbol : '✨'
+  const personalityIconKey = !isChineseText && firstSymbol.length <= 4 ? firstSymbol : 'sparkle'
 
   const handleFeedback = async (isAccurate: boolean) => {
     if (feedbackState === 'submitted') return
@@ -99,7 +100,7 @@ export function DreamInterpretationPanel({
         {/* Header */}
         <header className={styles.header}>
           <h2 className={styles.headerTitle}>
-            <span className={styles.headerEmoji}>✨</span>
+            <AchievementIcon iconKey="sparkle" className={styles.headerEmoji} />
             你的梦境人格
           </h2>
         </header>
@@ -107,7 +108,7 @@ export function DreamInterpretationPanel({
         {/* Personality Card */}
         <section className={styles.personalityCard}>
           <div className={styles.personalityHeader}>
-            <span className={styles.personalityEmoji}>{personalityEmoji}</span>
+            <AchievementIcon iconKey={personalityIconKey} className={styles.personalityEmoji} />
             <h3 className={styles.personalityName}>{dreamerPersonality}</h3>
           </div>
           <p className={styles.personalityDesc}>{dreamerPersonalityDesc}</p>
@@ -133,7 +134,7 @@ export function DreamInterpretationPanel({
         {/* Stats Section */}
         <section className={styles.statsSection}>
           <h4 className={styles.sectionTitle}>
-            <span className={styles.sectionEmoji}>📊</span>
+            <AchievementIcon iconKey="chart" className={styles.sectionEmoji} />
             本周梦境数据
           </h4>
           <div className={styles.statsList}>
@@ -159,7 +160,7 @@ export function DreamInterpretationPanel({
         {tips.length > 0 && (
           <section className={styles.tipsSection}>
             <h4 className={styles.sectionTitle}>
-              <span className={styles.sectionEmoji}>💡</span>
+              <AchievementIcon iconKey="lightbulb" className={styles.sectionEmoji} />
               小建议
             </h4>
             <div className={styles.tipsList}>
@@ -196,14 +197,14 @@ export function DreamInterpretationPanel({
                   className={`${styles.feedbackBtn} ${styles.feedbackBtnGood}`}
                   onClick={() => handleFeedback(true)}
                 >
-                  <span>👍</span>
+                  <AchievementIcon iconKey="heart" />
                   <span>有帮助</span>
                 </button>
                 <button
                   className={`${styles.feedbackBtn} ${styles.feedbackBtnBad}`}
                   onClick={() => handleFeedback(false)}
                 >
-                  <span>👎</span>
+                  <AchievementIcon iconKey="wind" />
                   <span>不太准</span>
                 </button>
               </div>
@@ -219,7 +220,7 @@ export function DreamInterpretationPanel({
 
           {feedbackState === 'submitted' && (
             <div className={styles.feedbackThanks}>
-              {selectedRating ? '感谢你的反馈！🙏' : '感谢你的反馈，我们会继续改进'}
+              {selectedRating ? '感谢你的反馈！' : '感谢你的反馈，我们会继续改进'}
             </div>
           )}
         </section>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './StreamingLayoutDemo.module.css'
 
 const DEMO_CONTENT = `月光洒落在古老的石板路上，泛起微微的银色涟漪。远处传来风铃的声响，似乎在诉说着一个久远的梦境。故事从一个宁静的夜晚开始，月光如水般倾泻在小镇的青石板路上，照亮了每一个沉睡的角落。`
@@ -42,7 +43,7 @@ function ImmersiveWide() {
         <div className={styles.immersiveContent}>
           <p className={styles.immersiveText}>
             {displayed}
-            {cursorPos < DEMO_CONTENT.length && <span className={styles.featherCursor}>🪶</span>}
+            {cursorPos < DEMO_CONTENT.length && <span className={styles.featherCursor}><AchievementIcon iconKey="pen" /></span>}
           </p>
         </div>
         <div className={styles.immersiveCharCount}>
@@ -101,7 +102,7 @@ function FloatingCard() {
         <div className={styles.floatingCardContent}>
           <p className={styles.floatingCardText}>
             {displayed}
-            {cursorPos < DEMO_CONTENT.length && <span className={styles.featherCursor}>🪶</span>}
+            {cursorPos < DEMO_CONTENT.length && <span className={styles.featherCursor}><AchievementIcon iconKey="pen" /></span>}
           </p>
         </div>
         <div className={styles.floatingCardCharCount}>
@@ -159,7 +160,7 @@ function FullscreenSpread() {
         <div className={styles.fullscreenContent}>
           <p className={styles.fullscreenText}>
             {displayed}
-            {cursorPos < DEMO_CONTENT.length && <span className={styles.featherCursor}>🪶</span>}
+            {cursorPos < DEMO_CONTENT.length && <span className={styles.featherCursor}><AchievementIcon iconKey="pen" /></span>}
           </p>
         </div>
         <div className={styles.fullscreenCharCount}>
@@ -235,7 +236,7 @@ function GoldenRatio() {
           <div className={styles.goldenTextWrapper}>
             <p className={styles.goldenText}>
               {displayed}
-              {cursorPos < DEMO_CONTENT.length && <span className={styles.featherCursor}>🪶</span>}
+              {cursorPos < DEMO_CONTENT.length && <span className={styles.featherCursor}><AchievementIcon iconKey="pen" /></span>}
             </p>
           </div>
           <div className={styles.goldenCharCount}>

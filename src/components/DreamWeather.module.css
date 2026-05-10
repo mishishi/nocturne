@@ -201,3 +201,12 @@
     font-size: 1rem;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .weatherIcon {
+    animation: none;
+  }
+  .weatherDetails {
+    animation: none;
+  }
+}

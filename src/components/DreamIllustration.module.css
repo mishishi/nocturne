@@ -14,7 +14,7 @@
     135deg,
     var(--color-night-deep) 0%,
     var(--color-night-mid) 40%,
-    #1A3A5C 70%,
+    var(--color-night-mid) 70%,
     var(--color-night-deep) 100%
   );
 }
@@ -155,7 +155,7 @@
 }
 
 .tagIcon {
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .watermark {
@@ -241,5 +241,13 @@
     height: 54px;
     top: -6px;
     left: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moonGlow,
+  .star,
+  .cloud {
+    animation: none;
   }
 }

@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import { User } from '../hooks/useDreamStore'
+import { User, AchievementIcon } from '../hooks/useDreamStore'
 import styles from './AiAssistantMenu.module.css'
 
 interface AiAssistantMenuProps {
@@ -62,7 +62,7 @@ export function AiAssistantMenu({
       <div className={styles.panel}>
         {/* Header */}
         <div className={styles.header}>
-          <div className={styles.headerIcon}>🌙</div>
+          <AchievementIcon iconKey="moon" className={styles.headerIcon} />
           <div className={styles.headerText}>
             <p className={styles.headerTitle}>AI 梦境助手</p>
             <p className={styles.headerSubtitle}>探索梦境的奥秘</p>

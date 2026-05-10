@@ -33,10 +33,18 @@
   transition: all 0.2s var(--ease-dream);
   position: relative;
   border-radius: var(--radius-md);
+  cursor: pointer;
 }
 
 .tab:hover {
   opacity: 0.9;
+}
+
+.tab:focus-visible {
+  outline: none;
+  background: rgba(244, 211, 94, 0.08);
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
 }
 
 .tab:active {
@@ -63,7 +71,7 @@
   width: 24px;
   height: 3px;
   background: var(--color-golden);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   box-shadow: 0 0 8px rgba(244, 211, 94, 0.5);
 }
 
@@ -99,7 +107,7 @@
   color: var(--color-bg);
   font-size: 0.625rem;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,5 +273,14 @@
 @media (max-width: 768px) {
   .nav {
     padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulsingStar {
+    animation: none;
+  }
+  .sparkleDot {
+    animation: none;
   }
 }

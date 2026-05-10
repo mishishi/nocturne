@@ -11,9 +11,13 @@ export interface StoryStreamCallbacks {
 
 export function createStoryStream(
   sessionId: string,
-  callbacks: StoryStreamCallbacks
+  callbacks: StoryStreamCallbacks,
+  guestOpenid?: string
 ): () => void {
-  const url = `${API_BASE}/sessions/${sessionId}/story/stream`
+  // Append guest openid as query param if provided (for guest users)
+  const url = guestOpenid
+    ? `${API_BASE}/sessions/${sessionId}/story/stream?guest_openid=${encodeURIComponent(guestOpenid)}`
+    : `${API_BASE}/sessions/${sessionId}/story/stream`
   console.log('[SSE Client] Connecting to:', url)
 
   let aborted = false

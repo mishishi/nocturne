@@ -1,0 +1,217 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background: var(--color-surface, #0D1B2A);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+}
+
+.title {
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--color-moonlight, #F4D35E);
+  margin: 0;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-silver, #A8B5C9);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-moonlight, #F4D35E);
+}
+
+.closeBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Month Selector */
+.monthSelector {
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+}
+
+.monthSelectorLabel {
+  font-size: 0.8125rem;
+  color: var(--color-silver, #A8B5C9);
+  margin-bottom: var(--space-2);
+  display: block;
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.monthCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-3) var(--space-2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.monthCard:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(244, 211, 94, 0.3);
+}
+
+.monthCard.selected {
+  background: rgba(244, 211, 94, 0.1);
+  border-color: var(--color-golden, #F4D35E);
+}
+
+.monthName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-moonlight, #F4D35E);
+}
+
+.monthYear {
+  font-size: 0.6875rem;
+  color: var(--color-silver, #A8B5C9);
+}
+
+.monthCard.selected .monthYear {
+  color: var(--color-moonlight, #F4D35E);
+}
+
+/* Preview */
+.preview {
+  padding: var(--space-6);
+  display: flex;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.canvas {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  max-width: 100%;
+  height: auto;
+}
+
+/* Actions */
+.actions {
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+}
+
+.actionBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.downloadBtn {
+  background: linear-gradient(135deg, var(--color-golden, #F4D35E), #E8C547);
+  color: #0D1B2A;
+}
+
+.downloadBtn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(244, 211, 94, 0.3);
+}
+
+.shareBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-moonlight, #F4D35E);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
+}
+
+.shareBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.actionBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Empty state */
+.emptyState {
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-4);
+  color: var(--color-silver, #A8B5C9);
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: 0.9375rem;
+  color: var(--color-silver, #A8B5C9);
+  margin: 0;
+}

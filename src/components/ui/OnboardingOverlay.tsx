@@ -1,20 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from './Button'
-import { ConfirmModal } from './ConfirmModal'
+import { DREAM_TAGS, EMOTION_ICONS } from '../../hooks/useDreamStore'
 import styles from './OnboardingOverlay.module.css'
 
 const ONBOARDING_KEY = 'yeelin_onboarding_shown'
-
-// Emotion tags preview for onboarding
-const EMOTION_TAGS = [
-  { icon: '😌', label: '平静', color: '#64D8CB' },
-  { icon: '⚔️', label: '冒险', color: '#F4A261' },
-  { icon: '🔮', label: '神秘', color: '#9B7EBD' },
-  { icon: '😱', label: '噩梦', color: '#E76F51' },
-  { icon: '😊', label: '欢乐', color: '#F4D35E' },
-  { icon: '✨', label: '奇幻', color: '#A8DADC' }
-]
 
 type OnboardingPhase = 'intro' | 'cta'
 
@@ -28,10 +18,6 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   const [showContent, setShowContent] = useState(false)
   const [moonPhase, setMoonPhase] = useState<' exhale' | 'inhale'>(' exhale')
   const [isVisible, setIsVisible] = useState(false)
-  const [confirmModal, setConfirmModal] = useState<{
-    open: boolean
-    onConfirm: () => void
-  }>({ open: false, onConfirm: () => {} })
   const isTransitioningRef = useRef(false)
 
   // Breathing moon animation
@@ -152,16 +138,8 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
             开始探索
           </Button>
 
-          {/* Skip hint */}
-          <button className={styles.skipHint} onClick={() => {
-            setConfirmModal({
-              open: true,
-              onConfirm: () => {
-                handleDismiss()
-                setConfirmModal(prev => ({ ...prev, open: false }))
-              }
-            })
-          }}>
+          {/* Skip button */}
+          <button className={styles.skipHint} onClick={handleDismiss}>
             跳过
           </button>
         </div>
@@ -185,16 +163,19 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
           {/* Emotion preview */}
           <div className={styles.emotionPreview}>
-            {EMOTION_TAGS.map((tag, i) => (
+            {DREAM_TAGS.map((tag, i) => (
               <span
-                key={tag.label}
+                key={tag.id}
                 className={styles.emotionTag}
                 style={{
-                  animationDelay: `${0.1 + i * 0.06}s`,
+                  animationDelay: `${0.1 + i * 0.05}s`,
                   '--tag-color': tag.color
                 } as React.CSSProperties}
               >
-                {tag.icon}
+                <span className={styles.emotionTagIcon}>
+                  {EMOTION_ICONS[tag.icon]}
+                </span>
+                <span className={styles.emotionTagLabel}>{tag.label}</span>
               </span>
             ))}
           </div>
@@ -209,16 +190,6 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
         </div>
       )}
 
-      <ConfirmModal
-        isOpen={confirmModal.open}
-        title="跳过介绍"
-        message="确定要跳过介绍吗？"
-        confirmText="跳过"
-        cancelText="继续"
-        onConfirm={confirmModal.onConfirm}
-        onCancel={() => setConfirmModal(prev => ({ ...prev, open: false }))}
-        danger
-      />
     </div>
   )
 }

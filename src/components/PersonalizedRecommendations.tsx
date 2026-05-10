@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { storyFeedbackApi } from '../services/api'
 import { openidService } from '../services/openidService'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './PersonalizedRecommendations.module.css'
 
 interface Recommendation {
@@ -69,7 +70,7 @@ export function PersonalizedRecommendations() {
             <p className={styles.itemSnippet}>{rec.storySnippet.slice(0, 60)}...</p>
             <div className={styles.itemMeta}>
               <span>{rec.nickname}</span>
-              <span>👍 {rec.likeCount}</span>
+              <span><AchievementIcon iconKey="heart" className={styles.likeIcon} /> {rec.likeCount}</span>
             </div>
           </div>
         ))}

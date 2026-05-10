@@ -124,7 +124,7 @@
   background: var(--color-golden);
   border-radius: var(--radius-full);
   color: var(--color-night-deep);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 
@@ -270,7 +270,7 @@
   background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
   border-radius: var(--radius-sm);
   color: var(--color-night-deep);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 
@@ -559,4 +559,23 @@
 .addButton svg {
   width: 14px;
   height: 14px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .loadingSpinner {
+    animation: none;
+  }
+  .skeletonItem {
+    animation: none;
+  }
+  .pulseButton {
+    animation: none;
+  }
+  .friendCard {
+    animation: none;
+  }
+  .fadeIn {
+    animation: none;
+  }
 }

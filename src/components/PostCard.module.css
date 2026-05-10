@@ -7,7 +7,7 @@
     rgba(10, 15, 30, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(0, 212, 255, 0.1);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: 20px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -53,17 +53,17 @@
   gap: 4px;
   padding: 4px 10px;
   background: linear-gradient(135deg, var(--color-golden-bright), var(--color-golden));
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--color-dark, #1a1a2e);
+  color: var(--color-night-deep);
   box-shadow: 0 2px 8px rgba(244, 211, 94, 0.4);
 }
 
 .featuredBadge svg {
   width: 12px;
   height: 12px;
-  fill: var(--color-dark, #1a1a2e);
+  fill: var(--color-night-deep);
 }
 
 .postAuthor {
@@ -104,20 +104,20 @@
 }
 
 .authorName {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .postDate {
-  font-size: 11px;
+  font-size: var(--text-3xs);
   color: rgba(255, 255, 255, 0.4);
 }
 
 .postTitle {
-  font-size: 17px;
+  font-size: var(--text-md);
   font-weight: 600;
-  color: #ffffff;
+  color: var(--color-moonlight);
   margin: 0 0 8px 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -127,7 +127,7 @@
 }
 
 .postSnippet {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.6);
   line-height: 1.6;
   margin: 0 0 12px 0;
@@ -142,9 +142,9 @@
 }
 
 .engagementScore {
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-golden, #F4D35E);
+  color: var(--color-golden);
 }
 
 .postActions {
@@ -163,9 +163,9 @@
   min-width: 44px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: rgba(244, 211, 94, 0.45);
-  font-size: 13px;
+  font-size: var(--text-sm);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -182,7 +182,7 @@
 }
 
 .actionBtn.liked {
-  color: var(--color-heart, #FF6B6B);
+  color: var(--color-heart);
 }
 
 .actionBtn.favorited {
@@ -190,8 +190,8 @@
 }
 
 .actionBtn.deleteBtn:hover {
-  background: var(--color-heart-light, rgba(255, 107, 107, 0.15));
-  color: var(--color-heart, #FF6B6B);
+  background: var(--color-heart-light);
+  color: var(--color-heart);
 }
 
 .actionBtn:disabled {
@@ -206,7 +206,7 @@
 
   .actionBtn {
     padding: 5px 8px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .actionBtn svg {
@@ -222,11 +222,17 @@
 
   .actionBtn {
     padding: 4px 6px;
-    font-size: 11px;
+    font-size: var(--text-3xs);
   }
 
   .actionBtn svg {
     width: 12px;
     height: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .postCard {
+    animation: none;
   }
 }

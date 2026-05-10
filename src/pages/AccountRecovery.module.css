@@ -437,3 +437,19 @@
     width: 100%;
   }
 }
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn {
+    animation: none;
+  }
+  .fadeInUp {
+    animation: none;
+  }
+  .pulse {
+    animation: none;
+  }
+  .floatAnimation {
+    animation: none;
+  }
+}

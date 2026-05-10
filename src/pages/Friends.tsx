@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { friendApi, FriendListItem, FriendRequestItem } from '../services/api'
 import { useDreamStore } from '../hooks/useDreamStore'
 import { showToast } from '../hooks/useDreamStore'
+import { openidService } from '../services/openidService'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { FriendsSkeleton } from '../components/ui/Skeleton'
@@ -12,6 +13,7 @@ import styles from './Friends.module.css'
 export function Friends() {
   const navigate = useNavigate()
   const { user } = useDreamStore()
+  const openid = openidService.get() || user?.openid
   const [activeTab, setActiveTab] = useState<'list' | 'requests' | 'sent' | 'search'>('list')
   const [friends, setFriends] = useState<FriendListItem[]>([])
   const [requests, setRequests] = useState<FriendRequestItem[]>([])
@@ -78,7 +80,7 @@ export function Friends() {
 
   // Load data on mount
   useEffect(() => {
-    if (!user?.openid) {
+    if (!openid) {
       navigate('/login')
       return
     }
@@ -91,7 +93,7 @@ export function Friends() {
     return () => {
       cancelled = true
     }
-  }, [user, navigate])
+  }, [openid, navigate])
 
   const handleAcceptRequest = async (requestId: string) => {
     if (isAccepting) return
@@ -202,7 +204,7 @@ export function Friends() {
     saveLastSearchQuery(searchQuery.trim())
     setIsSearching(true)
     try {
-      const result = await friendApi.searchUsers(searchQuery.trim(), user?.openid)
+      const result = await friendApi.searchUsers(searchQuery.trim(), openid)
       if (result.success) {
         setSearchResults(result.data?.users ?? [])
       } else {
@@ -225,7 +227,7 @@ export function Friends() {
       const restoreSearch = async () => {
         setIsSearching(true)
         try {
-          const result = await friendApi.searchUsers(lastSearchQuery, user?.openid)
+          const result = await friendApi.searchUsers(lastSearchQuery, openid)
           if (result.success) {
             setSearchResults(result.data?.users ?? [])
           }
@@ -237,7 +239,7 @@ export function Friends() {
       }
       restoreSearch()
     }
-  }, [activeTab, lastSearchQuery, searchResults.length, searchQuery, user?.openid])
+  }, [activeTab, lastSearchQuery, searchResults.length, searchQuery, openid])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

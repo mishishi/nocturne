@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom'
 import { useState, useEffect, useRef } from 'react'
 import { api } from '../services/api'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './DreamInterpretationModal.module.css'
 
 interface DreamInterpretationModalProps {
@@ -79,7 +80,7 @@ export function DreamInterpretationModal({ interpretation, sessionId, personalit
       >
         <div className={styles.header}>
           <h3 className={styles.title} id="interpretation-title">
-            <span className={styles.titleIcon}>🌙</span>
+            <AchievementIcon iconKey="moon" className={styles.titleIcon} />
             梦境解读
           </h3>
           <button ref={closeButtonRef} className={styles.closeBtn} onClick={onClose} aria-label="关闭">
@@ -168,7 +169,7 @@ export function DreamInterpretationModal({ interpretation, sessionId, personalit
                     onClick={() => handleFeedback(true)}
                     aria-label="有帮助"
                   >
-                    <span className={styles.feedbackEmoji}>👍</span>
+                    <AchievementIcon iconKey="heart" className={styles.feedbackEmoji} />
                     <span>有帮助</span>
                   </button>
                   <button
@@ -176,7 +177,7 @@ export function DreamInterpretationModal({ interpretation, sessionId, personalit
                     onClick={() => handleFeedback(false)}
                     aria-label="不太准确"
                   >
-                    <span className={styles.feedbackEmoji}>👎</span>
+                    <AchievementIcon iconKey="wind" className={styles.feedbackEmoji} />
                     <span>不太准确</span>
                   </button>
                 </div>
@@ -194,7 +195,6 @@ export function DreamInterpretationModal({ interpretation, sessionId, personalit
               <div className={styles.feedbackSubmitted}>
                 <div className={styles.feedbackThanks}>
                   {selectedRating ? '感谢你的反馈！' : '感谢你的反馈，我们会继续改进'}
-                  {selectedRating && ' 🙏'}
                 </div>
 
                 {/* Optional comment update */}
@@ -248,7 +248,7 @@ export function DreamInterpretationLoadingModal() {
       <div className={styles.modal}>
         <div className={styles.header}>
           <h3 className={styles.title}>
-            <span className={styles.titleIcon}>🌙</span>
+            <AchievementIcon iconKey="moon" className={styles.titleIcon} />
             梦境解读
           </h3>
         </div>

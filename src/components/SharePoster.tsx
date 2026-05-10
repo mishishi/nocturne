@@ -1,6 +1,7 @@
 import { useRef, useCallback, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from './ui/Button'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './SharePoster.module.css'
 
 type TemplateType = 'nightSky' | 'moonlight' | 'starTrail'
@@ -13,10 +14,10 @@ interface SharePosterProps {
   onShare?: (type: 'poster') => void
 }
 
-const TEMPLATES: { id: TemplateType; name: string; icon: string; desc: string }[] = [
-  { id: 'nightSky', name: '夜空', icon: '🌌', desc: '深邃星空' },
-  { id: 'moonlight', name: '月光', icon: '🌙', desc: '柔和月华' },
-  { id: 'starTrail', name: '星迹', icon: '✨', desc: '流光轨迹' },
+const TEMPLATES: { id: TemplateType; name: string; iconKey: string; desc: string }[] = [
+  { id: 'nightSky', name: '夜空', iconKey: 'galaxy', desc: '深邃星空' },
+  { id: 'moonlight', name: '月光', iconKey: 'moon', desc: '柔和月华' },
+  { id: 'starTrail', name: '星迹', iconKey: 'sparkle', desc: '流光轨迹' },
 ]
 
 // Memoized star trail positions for consistency
@@ -343,7 +344,7 @@ export function SharePoster({ storyTitle, story, date, onClose, onShare }: Share
                 aria-label={`${tpl.name}风格: ${tpl.desc}`}
                 aria-pressed={selectedTemplate === tpl.id}
               >
-                <span className={styles.templateIcon}>{tpl.icon}</span>
+                <AchievementIcon iconKey={tpl.iconKey} className={styles.templateIcon} />
                 <span className={styles.templateName}>{tpl.name}</span>
                 <span className={styles.templateDesc}>{tpl.desc}</span>
               </button>

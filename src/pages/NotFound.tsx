@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './NotFound.module.css'
 
 export function NotFound() {
@@ -65,10 +66,18 @@ export function NotFound() {
 
         {/* Floating elements */}
         <div className={styles.floatingElements}>
-          <span className={styles.floatingIcon} style={{ left: '10%', top: '20%' }}>✨</span>
-          <span className={styles.floatingIcon} style={{ left: '85%', top: '15%' }}>🌙</span>
-          <span className={styles.floatingIcon} style={{ left: '75%', top: '70%' }}>⭐</span>
-          <span className={styles.floatingIcon} style={{ left: '15%', top: '65%' }}>✨</span>
+          <span className={styles.floatingIcon} style={{ left: '10%', top: '20%' }}>
+            <AchievementIcon iconKey="sparkle" />
+          </span>
+          <span className={styles.floatingIcon} style={{ left: '85%', top: '15%' }}>
+            <AchievementIcon iconKey="moon" />
+          </span>
+          <span className={styles.floatingIcon} style={{ left: '75%', top: '70%' }}>
+            <AchievementIcon iconKey="star" />
+          </span>
+          <span className={styles.floatingIcon} style={{ left: '15%', top: '65%' }}>
+            <AchievementIcon iconKey="sparkle" />
+          </span>
         </div>
       </div>
     </div>

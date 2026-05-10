@@ -118,9 +118,9 @@
 }
 
 .tagFilterChip.tagFilterActive {
-  background: rgba(var(--tag-color-rgb, 244, 211, 94), 0.15);
+  background: rgba(var(--tag-color-rgb, 244, 211, 94), 0.2);
   border-color: var(--tag-color, var(--color-golden));
-  color: var(--tag-color, var(--color-golden));
+  color: var(--color-moonlight);
 }
 
 .tagFilterIcon {
@@ -421,7 +421,7 @@
   border: 1px solid var(--tag-color, var(--color-border));
   border-radius: var(--radius-full);
   font-size: 0.6875rem;
-  color: var(--tag-color, var(--color-silver));
+  color: var(--color-moonlight);
   opacity: 0.85;
 }
 
@@ -671,7 +671,7 @@
 .tagEditChip.tagEditChipActive {
   background: rgba(26, 58, 92, 0.6);
   border-color: var(--tag-color, var(--color-golden));
-  color: var(--tag-color, var(--color-golden));
+  color: var(--color-moonlight);
 }
 
 .tagSaveBtn {
@@ -707,7 +707,7 @@
   border: 1px solid var(--tag-color, var(--color-border));
   border-radius: var(--radius-full);
   font-size: 0.8125rem;
-  color: var(--tag-color, var(--color-silver));
+  color: var(--color-moonlight);
 }
 
 .noTags {

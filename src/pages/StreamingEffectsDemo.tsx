@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './StreamingEffectsDemo.module.css'
 
 const DEMO_CONTENT = `月光洒落在古老的石板路上，泛起微微的银色涟漪。远处传来风铃的声响，似乎在诉说着一个久远的梦境。`
@@ -139,7 +140,7 @@ function StarryBrocade() {
             ))}
             <span className={styles.brocadeContent}>{displayed}</span>
             {cursorPos < DEMO_CONTENT.length && (
-              <span className={styles.featherCursor}>🪶</span>
+              <span className={styles.featherCursor}><AchievementIcon iconKey="pen" /></span>
             )}
           </div>
         </div>
@@ -211,8 +212,8 @@ function DreamRipple() {
           ))}
 
           {/* Lotus leaves */}
-          <span className={styles.lotus} style={{ left: '10%', bottom: '15%' }}>🪷</span>
-          <span className={styles.lotus} style={{ right: '15%', bottom: '20%' }}>🍃</span>
+          <span className={styles.lotus} style={{ left: '10%', bottom: '15%' }}><AchievementIcon iconKey="sparkle" /></span>
+          <span className={styles.lotus} style={{ right: '15%', bottom: '20%' }}><AchievementIcon iconKey="seedling" /></span>
 
           <div className={styles.lakeContent}>
             <h4 className={styles.lakeTitle}>《月光》</h4>

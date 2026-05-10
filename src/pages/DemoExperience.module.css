@@ -523,3 +523,25 @@
     padding-top: var(--space-10);
   }
 }
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn {
+    animation: none;
+  }
+  .fadeInUp {
+    animation: none;
+  }
+  .pulse {
+    animation: none;
+  }
+  .floatAnimation {
+    animation: none;
+  }
+  .submittingMoon {
+    animation: none;
+  }
+  .moonGlow {
+    animation: none;
+  }
+}

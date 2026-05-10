@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { wallApi } from '../services/api'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './DailyHighlights.module.css'
 
 interface Highlight {
@@ -40,7 +41,7 @@ export function DailyHighlights() {
     return (
       <section className={styles.section}>
         <div className={styles.header}>
-          <span className={styles.headerIcon}>✨</span>
+          <AchievementIcon iconKey="sparkle" className={styles.headerIcon} />
           <h2 className={styles.headerTitle}>今日精选</h2>
         </div>
         <div className={styles.skeleton}>
@@ -59,7 +60,7 @@ export function DailyHighlights() {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <span className={styles.headerIcon}>✨</span>
+        <AchievementIcon iconKey="sparkle" className={styles.headerIcon} />
         <h2 className={styles.headerTitle}>今日精选</h2>
         <span className={styles.badge}>每日更新</span>
       </div>

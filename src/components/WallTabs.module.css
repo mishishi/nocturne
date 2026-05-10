@@ -3,7 +3,7 @@
   gap: 8px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.06);
   margin-bottom: var(--space-lg, 24px);
 }
@@ -17,7 +17,7 @@
   padding: 10px 16px;
   background: transparent;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: rgba(255, 255, 255, 0.5);
   font-size: 0.9rem;
   font-weight: 500;
@@ -26,19 +26,24 @@
   white-space: nowrap;
 }
 
+.tab:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
 .tab:hover {
   background: rgba(255, 255, 255, 0.5);
-  color: #E8E8E8;
+  color: var(--color-moonlight);
 }
 
 .tab.active {
-  background: #F4D35E;
-  color: #1a1a2e;
+  background: var(--color-golden);
+  color: var(--color-night-deep);
   box-shadow: 0 2px 8px rgba(244, 211, 94, 0.4);
 }
 
 .tab.active svg {
-  stroke: #1a1a2e;
+  stroke: var(--color-night-deep);
 }
 
 .tab svg {

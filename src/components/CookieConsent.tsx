@@ -91,7 +91,11 @@ export function CookieConsent({ onConsentChange }: CookieConsentProps) {
       }
       return
     }
-    setIsVisible(true)
+    // 延迟 1.5s 显示，让用户先看到主 CTA
+    const timer = setTimeout(() => {
+      setIsVisible(true)
+    }, 1500)
+    return () => clearTimeout(timer)
   }, []) // Empty deps - only run once on mount
 
   const handleAcceptAll = () => {

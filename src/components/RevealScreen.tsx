@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { TypewriterText } from './ui/TypewriterText'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './RevealScreen.module.css'
 
 interface RevealScreenProps {
@@ -131,7 +132,7 @@ export function RevealScreen({ storyTitle, streamedContent, storyReady, onReveal
             <div className={styles.brocadeContent} ref={contentRef}>
               <p className={styles.brocadeText}>
                 {streamedContent}
-                <span className={styles.featherCursor}>🪶</span>
+                <span className={styles.featherCursor}><AchievementIcon iconKey="pen" /></span>
               </p>
             </div>
             <div className={styles.charCount}>

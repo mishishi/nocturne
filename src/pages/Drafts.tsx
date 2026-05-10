@@ -7,6 +7,21 @@ import { Breadcrumb } from '../components/Breadcrumb'
 import { EmptyState } from '../components/ui/EmptyState'
 import styles from './Drafts.module.css'
 
+const DRAFT_ICONS: Record<string, { d: string; viewBox?: string; fill?: string; stroke?: string; strokeWidth?: string }> = {
+  pen: { d: 'M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  book: { d: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' }
+}
+
+function DraftIcon({ iconKey, className }: { iconKey: string; className?: string }) {
+  const icon = DRAFT_ICONS[iconKey]
+  if (!icon) return null
+  return (
+    <svg viewBox={icon.viewBox || '0 0 24 24'} fill={icon.fill || 'none'} stroke={icon.stroke || 'currentColor'} strokeWidth={icon.strokeWidth || '1.5'} className={className}>
+      <path d={icon.d} />
+    </svg>
+  )
+}
+
 // Status labels
 const STATUS_LABELS: Record<string, { text: string; desc: string }> = {
   idle: { text: '无草稿', desc: '暂无保存的草稿' },
@@ -157,7 +172,7 @@ export function Drafts() {
             className={styles.actionCard}
             onClick={() => navigate('/dream')}
           >
-            <div className={styles.actionIcon}>✍️</div>
+            <DraftIcon iconKey="pen" className={styles.actionIcon} />
             <div className={styles.actionInfo}>
               <span className={styles.actionTitle}>记录梦境</span>
               <span className={styles.actionDesc}>开始一段新的梦境记录</span>
@@ -171,7 +186,7 @@ export function Drafts() {
             className={styles.actionCard}
             onClick={() => navigate('/history')}
           >
-            <div className={styles.actionIcon}>📚</div>
+            <DraftIcon iconKey="book" className={styles.actionIcon} />
             <div className={styles.actionInfo}>
               <span className={styles.actionTitle}>历史记录</span>
               <span className={styles.actionDesc}>查看已完成的梦境故事</span>

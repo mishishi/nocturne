@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDreamStore, DreamSession, DREAM_TAGS, showToast } from '../hooks/useDreamStore'
+import { useDreamStore, DreamSession, DREAM_TAGS, showToast, AchievementIcon } from '../hooks/useDreamStore'
 import { Button } from '../components/ui/Button'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { Toast } from '../components/ui/Toast'
@@ -493,7 +493,7 @@ export function History() {
               </defs>
             </svg>
           </div>
-          {isSyncing && <span className={styles.syncIndicator} aria-label="正在同步">🔄</span>}
+          {isSyncing && <span className={styles.syncIndicator} aria-label="正在同步"><AchievementIcon iconKey="sparkle" /></span>}
           <h1 className={styles.title}>你的故事集</h1>
           <p className={styles.subtitle}>
             {history.length > 0

@@ -2,17 +2,30 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 import { openidService } from '../services/openidService'
+import { AchievementIcon } from '../hooks/useDreamStore'
 import styles from './QuickRecord.module.css'
 
+// Emotion to iconKey mapping
+const EMOTION_ICONS: Record<string, string> = {
+  peaceful: 'sun',
+  excited: 'bolt',
+  anxious: 'wind',
+  scared: 'moon',
+  sad: 'cloud',
+  joyful: 'sparkle',
+  confused: 'wind',
+  nostalgic: 'heart',
+}
+
 const EMOTIONS = [
-  { id: 'peaceful', label: '平静', icon: '😌' },
-  { id: 'excited', label: '兴奋', icon: '🤩' },
-  { id: 'anxious', label: '焦虑', icon: '😰' },
-  { id: 'scared', label: '恐惧', icon: '😨' },
-  { id: 'sad', label: '悲伤', icon: '😢' },
-  { id: 'joyful', label: '喜悦', icon: '😊' },
-  { id: 'confused', label: '困惑', icon: '😕' },
-  { id: 'nostalgic', label: '怀念', icon: '🥹' },
+  { id: 'peaceful', label: '平静' },
+  { id: 'excited', label: '兴奋' },
+  { id: 'anxious', label: '焦虑' },
+  { id: 'scared', label: '恐惧' },
+  { id: 'sad', label: '悲伤' },
+  { id: 'joyful', label: '喜悦' },
+  { id: 'confused', label: '困惑' },
+  { id: 'nostalgic', label: '怀念' },
 ]
 
 export function QuickRecord() {
@@ -82,7 +95,7 @@ export function QuickRecord() {
     <div className={styles.page}>
       <div className={styles.container}>
         <header className={styles.header}>
-          <span className={styles.crownIcon}>✨</span>
+          <AchievementIcon iconKey="sparkle" className={styles.crownIcon} />
           <h1 className={styles.title}>快速记录</h1>
           <p className={styles.subtitle}>描述你记得的梦境片段，AI 将为你解梦</p>
         </header>
@@ -112,7 +125,7 @@ export function QuickRecord() {
                 className={`${styles.emotionBtn} ${selectedEmotion === emotion.id ? styles.selected : ''}`}
                 onClick={() => setSelectedEmotion(prev => prev === emotion.id ? '' : emotion.id)}
               >
-                <span className={styles.emotionIcon}>{emotion.icon}</span>
+                <AchievementIcon iconKey={EMOTION_ICONS[emotion.id]} className={styles.emotionIcon} />
                 <span>{emotion.label}</span>
               </button>
             ))}

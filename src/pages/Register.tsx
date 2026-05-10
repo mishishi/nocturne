@@ -190,6 +190,9 @@ export function Register() {
                 <span className={styles.link}>《隐私政策》</span>
               </span>
             </label>
+            <p className={styles.cookieNotice}>
+              我们使用 Cookie 来记录您的主题偏好，以提升您的浏览体验。
+            </p>
 
             <button type="submit" className={styles.submitButton} disabled={isLoading || !agreedToTerms}>
               {isLoading ? (

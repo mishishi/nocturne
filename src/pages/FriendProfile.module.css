@@ -149,7 +149,7 @@
   background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
   border-radius: var(--radius-sm);
   color: var(--color-night-deep);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 
@@ -274,7 +274,7 @@
   background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
   border-radius: var(--radius-sm);
   color: var(--color-night-deep);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   margin-bottom: var(--space-3);
 }
@@ -404,4 +404,17 @@
   color: var(--color-silver-dim);
   padding: var(--space-4);
   margin: 0;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .actionCard {
+    animation: none;
+  }
+  .content {
+    animation: none;
+  }
+  .typingDot {
+    animation: none;
+  }
 }

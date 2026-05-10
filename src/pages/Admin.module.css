@@ -91,6 +91,11 @@
   gap: var(--space-2);
 }
 
+.tab:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
 .tab.active {
   background: rgba(26, 58, 92, 0.6);
   color: var(--color-golden);
@@ -101,7 +106,7 @@
   color: white;
   font-size: var(--text-xs);
   padding: 2px 6px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   min-width: 18px;
   text-align: center;
 }
@@ -215,7 +220,7 @@
   background: rgba(72, 199, 142, 0.2);
   border: 1px solid rgba(72, 199, 142, 0.5);
   border-radius: var(--radius-md);
-  color: #48c78e;
+  color: var(--color-success);
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
@@ -224,7 +229,7 @@
 
 .approveBtn:hover {
   background: rgba(72, 199, 142, 0.3);
-  border-color: #48c78e;
+  border-color: var(--color-success);
 }
 
 .rejectBtn {
@@ -232,7 +237,7 @@
   background: rgba(237, 100, 100, 0.2);
   border: 1px solid rgba(237, 100, 100, 0.5);
   border-radius: var(--radius-md);
-  color: #ed6464;
+  color: var(--color-error);
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
@@ -241,7 +246,7 @@
 
 .rejectBtn:hover {
   background: rgba(237, 100, 100, 0.3);
-  border-color: #ed6464;
+  border-color: var(--color-error);
 }
 
 .deleteBtn {
@@ -249,7 +254,7 @@
   background: rgba(237, 100, 100, 0.2);
   border: 1px solid rgba(237, 100, 100, 0.5);
   border-radius: var(--radius-md);
-  color: #ed6464;
+  color: var(--color-error);
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
@@ -258,7 +263,7 @@
 
 .deleteBtn:hover {
   background: rgba(237, 100, 100, 0.3);
-  border-color: #ed6464;
+  border-color: var(--color-error);
 }
 
 /* Batch Action Bar */
@@ -304,7 +309,7 @@
   background: rgba(72, 199, 142, 0.2);
   border: 1px solid rgba(72, 199, 142, 0.5);
   border-radius: var(--radius-md);
-  color: #48c78e;
+  color: var(--color-success);
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
@@ -313,7 +318,7 @@
 
 .batchApproveBtn:hover:not(:disabled) {
   background: rgba(72, 199, 142, 0.3);
-  border-color: #48c78e;
+  border-color: var(--color-success);
 }
 
 .batchApproveBtn:disabled {
@@ -326,7 +331,7 @@
   background: rgba(237, 100, 100, 0.2);
   border: 1px solid rgba(237, 100, 100, 0.5);
   border-radius: var(--radius-md);
-  color: #ed6464;
+  color: var(--color-error);
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
@@ -335,7 +340,7 @@
 
 .batchRejectBtn:hover:not(:disabled) {
   background: rgba(237, 100, 100, 0.3);
-  border-color: #ed6464;
+  border-color: var(--color-error);
 }
 
 .batchRejectBtn:disabled {
@@ -364,11 +369,11 @@
 
 /* Trend indicators */
 .positive {
-  color: #48c78e !important;
+  color: var(--color-success) !important;
 }
 
 .negative {
-  color: #ed6464 !important;
+  color: var(--color-error) !important;
 }
 
 /* Empty State */
@@ -547,7 +552,7 @@
   background: rgba(237, 100, 100, 0.2);
   border: 1px solid rgba(237, 100, 100, 0.5);
   border-radius: var(--radius-md);
-  color: #ed6464;
+  color: var(--color-error);
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
@@ -556,7 +561,7 @@
 
 .confirmRejectBtn:hover {
   background: rgba(237, 100, 100, 0.3);
-  border-color: #ed6464;
+  border-color: var(--color-error);
 }
 
 /* Highlights/Candidates Section */
@@ -667,4 +672,14 @@
 
 .candidateStats svg {
   opacity: 0.7;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .fadeInUp {
+    animation: none;
+  }
+  .spin {
+    animation: none;
+  }
 }

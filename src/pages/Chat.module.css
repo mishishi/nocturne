@@ -239,7 +239,7 @@
 }
 
 .lastMessageTime {
-  font-size: 11px;
+  font-size: var(--text-3xs);
   color: var(--color-silver-dim);
 }
 
@@ -253,7 +253,7 @@
   background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
   border-radius: var(--radius-full);
   color: var(--color-night-deep);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
@@ -517,7 +517,7 @@
 
   .mobileBackBtn:hover {
     background: rgba(139, 157, 195, 0.2);
-    color: #e8f4ff;
+    color: var(--color-moonlight);
   }
 
   .mobileBackBtn svg {
@@ -549,5 +549,24 @@
     bottom: 0;
     z-index: 200;
     background: var(--color-night-deep);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .auroraGradient {
+    animation: none;
+  }
+  .fadeIn {
+    animation: none;
+  }
+  .floatAnimation {
+    animation: none;
+  }
+  .pulse {
+    animation: none;
+  }
+  .fadeInUp {
+    animation: none;
   }
 }

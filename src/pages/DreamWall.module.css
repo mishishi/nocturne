@@ -5,7 +5,7 @@
   padding-right: var(--space-md, 16px);
   padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
   position: relative;
-  background: linear-gradient(180deg, #0d0520 0%, #1a0a3e 40%, #0d1a2e 100%);
+  background: linear-gradient(180deg, var(--color-night-deep) 0%, var(--color-night-mid) 40%, var(--color-night-deep) 100%);
 }
 
 /* Golden aurora effect */
@@ -86,7 +86,7 @@
   font-family: var(--font-display, 'Noto Serif SC', serif);
   font-size: 2rem;
   font-weight: 600;
-  color: #e0f7ff;
+  color: var(--color-moonlight);
   margin: 0 0 var(--space-xs, 8px);
   letter-spacing: 0.05em;
   text-shadow: 0 0 30px rgba(244, 211, 94, 0.4);
@@ -105,7 +105,7 @@
   padding: var(--space-sm, 12px);
   background: rgba(10, 20, 40, 0.6);
   backdrop-filter: blur(12px);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   margin-bottom: var(--space-lg, 24px);
   border: 1px solid rgba(244, 211, 94, 0.15);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(244, 211, 94, 0.03);
@@ -120,12 +120,17 @@
   padding: var(--space-sm, 10px) var(--space-md, 16px);
   border: none;
   background: transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-weight: 500;
   color: rgba(160, 200, 220, 0.6);
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 .tab svg {
@@ -140,14 +145,14 @@
 
 .tab.active {
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.2), rgba(244, 180, 80, 0.15));
-  color: #F4D35E;
+  color: var(--color-golden);
   border: 1px solid rgba(244, 211, 94, 0.3);
   box-shadow: 0 0 16px rgba(244, 211, 94, 0.2), inset 0 0 10px rgba(244, 211, 94, 0.05);
   text-shadow: 0 0 10px rgba(244, 211, 94, 0.5);
 }
 
 .tab.active svg {
-  stroke: #F4D35E;
+  stroke: var(--color-golden);
   filter: drop-shadow(0 0 4px rgba(244, 211, 94, 0.5));
 }
 
@@ -155,6 +160,7 @@
 .searchWrapper {
   position: relative;
   margin-bottom: var(--space-md, 16px);
+  padding: 0 var(--space-4);
 }
 
 .searchIcon {
@@ -175,9 +181,9 @@
   background: rgba(10, 20, 40, 0.7);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(244, 211, 94, 0.2);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 0.9rem;
-  color: #e0f7ff;
+  color: var(--color-moonlight);
   outline: none;
   transition: all 0.25s ease;
 }
@@ -282,16 +288,16 @@
   gap: 12px;
   padding: 24px;
   color: var(--color-silver, #A8B5C9);
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .searchHintAction {
   padding: 8px 16px;
-  background: var(--color-primary, #F4D35E);
-  color: var(--color-dark, #1a1a2e);
+  background: var(--color-golden, #F4D35E);
+  color: var(--color-night-deep, #1a1a2e);
   border: none;
-  border-radius: 20px;
-  font-size: 13px;
+  border-radius: var(--radius-2xl);
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 
@@ -299,7 +305,7 @@
   width: 100px;
   height: 100px;
   margin-bottom: var(--space-lg, 24px);
-  color: var(--color-primary, #F4D35E);
+  color: var(--color-golden, #F4D35E);
   opacity: 0.6;
 }
 
@@ -338,7 +344,7 @@
       transparent 100%),
     rgba(10, 15, 30, 0.7);
   backdrop-filter: blur(12px);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: var(--space-lg, 20px);
   border: 1px solid rgba(244, 211, 94, 0.1);
   box-shadow:
@@ -390,10 +396,10 @@
   gap: 4px;
   padding: 4px 10px;
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.9), rgba(244, 180, 80, 0.9));
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   font-size: 0.7rem;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--color-night-deep);
   box-shadow: 0 2px 8px rgba(244, 211, 94, 0.5), 0 0 15px rgba(244, 211, 94, 0.3);
   text-shadow: none;
 }
@@ -401,7 +407,7 @@
 .featuredBadge svg {
   width: 12px;
   height: 12px;
-  fill: #0a0a1a;
+  fill: var(--color-night-deep);
 }
 
 /* Post Author */
@@ -433,7 +439,7 @@
 .authorAvatar svg {
   width: 20px;
   height: 20px;
-  color: var(--color-primary, #F4D35E);
+  color: var(--color-golden, #F4D35E);
 }
 
 .authorInfo {
@@ -445,12 +451,12 @@
 .authorName {
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--color-moonlight, #E8E8E8);
+  color: var(--color-moonlight);
 }
 
 .postDate {
   font-size: 0.75rem;
-  color: var(--color-silver, #A8B5C9);
+  color: var(--color-silver);
 }
 
 /* Post Title */
@@ -458,7 +464,7 @@
   font-family: var(--font-display, 'Noto Serif SC', serif);
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--color-moonlight, #E8E8E8);
+  color: var(--color-moonlight);
   margin: 0 0 var(--space-sm, 8px);
   line-height: 1.4;
 }
@@ -466,7 +472,7 @@
 /* Post Snippet */
 .postSnippet {
   font-size: 0.9rem;
-  color: var(--color-silver, #A8B5C9);
+  color: var(--color-silver);
   line-height: 1.6;
   margin: 0 0 var(--space-md, 16px);
   display: -webkit-box;
@@ -483,14 +489,14 @@
   margin-bottom: var(--space-md, 16px);
   padding: 8px 12px;
   background: rgba(244, 211, 94, 0.1);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(244, 211, 94, 0.2);
 }
 
 .engagementScore {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-golden, #F4D35E);
+  color: var(--color-golden);
 }
 
 /* Post Actions */
@@ -511,7 +517,7 @@
   min-width: 44px;
   border: none;
   background: transparent;
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   font-size: 0.8rem;
   color: rgba(244, 211, 94, 0.4);
   cursor: pointer;
@@ -531,11 +537,11 @@
 }
 
 .actionBtn.liked {
-  color: #e74c3c;
+  color: var(--color-error, #e74c3c);
 }
 
 .actionBtn.liked svg {
-  fill: #e74c3c;
+  fill: var(--color-error, #e74c3c);
 }
 
 .actionBtn.favorited {
@@ -552,7 +558,7 @@
 }
 
 .actionBtn.deleteBtn {
-  color: #e74c3c;
+  color: var(--color-error, #e74c3c);
 }
 
 .actionBtn.deleteBtn:hover {
@@ -598,7 +604,7 @@
 .endMessage {
   text-align: center;
   padding: var(--space-lg, 24px) 0;
-  color: var(--color-silver-dim, #8a95a5);
+  color: var(--color-silver-dim);
   font-size: var(--text-sm, 0.875rem);
   opacity: 0.7;
 }
@@ -687,7 +693,7 @@
 
   .postCard {
     padding: var(--space-md, 16px);
-    border-radius: 16px;
+    border-radius: var(--radius-xl);
   }
 
   .postTitle {
@@ -697,5 +703,18 @@
   .postSnippet {
     font-size: 0.85rem;
     -webkit-line-clamp: 2;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn {
+    animation: none;
+  }
+  .floatAnimation {
+    animation: none;
+  }
+  .fadeInUp {
+    animation: none;
   }
 }

@@ -74,14 +74,14 @@
 }
 
 .headerIcon {
-  font-size: 32px;
+  font-size: var(--text-32);
   margin-bottom: var(--space-2);
   display: block;
 }
 
 .headerTitle {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: var(--text-28);
   font-weight: 600;
   color: var(--color-moonlight);
   margin: 0 0 var(--space-2);
@@ -122,7 +122,7 @@
   padding: var(--space-2) var(--space-4);
   background: rgba(30, 32, 48, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   font-size: var(--text-sm);
   color: var(--color-silver);
   cursor: pointer;
@@ -177,7 +177,7 @@
   padding: var(--space-4);
   background: linear-gradient(145deg, rgba(30, 32, 48, 0.95) 0%, rgba(20, 22, 35, 0.98) 100%);
   border: 1px solid rgba(244, 211, 94, 0.2);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   cursor: pointer;
   transition: all 0.3s var(--ease-dream);
   position: relative;
@@ -204,14 +204,14 @@
 .continueThumb {
   width: 80px;
   height: 100px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.15) 0%, rgba(244, 211, 94, 0.05) 100%);
   border: 1px solid rgba(244, 211, 94, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 28px;
+  font-size: var(--text-28);
   overflow: hidden;
 }
 
@@ -250,7 +250,7 @@
 .progressBar {
   height: 4px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   margin-bottom: 6px;
 }
@@ -258,7 +258,7 @@
 .progressFill {
   height: 100%;
   background: linear-gradient(90deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   transition: width 0.3s ease;
 }
 
@@ -292,7 +292,7 @@
 
 .card {
   position: relative;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   cursor: pointer;
   transition: all 0.4s var(--ease-dream);
@@ -321,7 +321,7 @@
 /* Cover / Book */
 .cardCover {
   aspect-ratio: 3 / 4;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid rgba(244, 211, 94, 0.15);
   transition: border-color 0.3s ease;
@@ -359,7 +359,7 @@
 }
 
 .cardEmoji {
-  font-size: 48px;
+  font-size: var(--text-48);
   margin-bottom: var(--space-3);
   filter: drop-shadow(0 0 10px rgba(244, 211, 94, 0.3));
 }
@@ -392,7 +392,7 @@
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  border-radius: 18px;
+  border-radius: var(--radius-2xl);
 }
 
 /* Info below cover */
@@ -426,8 +426,8 @@
   right: 8px;
   padding: 2px 8px;
   background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%);
-  border-radius: 10px;
-  font-size: 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--color-night-deep);
   box-shadow: 0 2px 8px rgba(244, 211, 94, 0.4);
@@ -482,7 +482,7 @@
 
 .skeletonCard {
   aspect-ratio: 3 / 5;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.03) 0%,
@@ -496,4 +496,19 @@
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page::before {
+    animation: none;
+  }
+  .header {
+    animation: none;
+  }
+  .empty {
+    animation: none;
+  }
+  .skeletonCard {
+    animation: none;
+  }
 }

@@ -45,11 +45,11 @@
 
 /* Large 404 Code */
 .code {
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
   font-size: clamp(6rem, 20vw, 12rem);
   font-weight: bold;
   color: transparent;
-  background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-moonlight) 100%);
+  background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-moonlight) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   opacity: 0.15;
@@ -88,17 +88,17 @@
 }
 
 .title {
-  font-family: 'Noto Serif SC', 'Georgia', serif;
+  font-family: var(--font-display);
   font-size: clamp(1.5rem, 5vw, 2rem);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-moonlight);
   margin: 0 0 1rem;
   letter-spacing: 0.05em;
 }
 
 .description {
   font-size: 1rem;
-  color: var(--color-text-secondary);
+  color: var(--color-silver);
   line-height: 1.8;
   margin: 0 0 2rem;
   max-width: 400px;
@@ -122,15 +122,36 @@
 
 .floatingIcon {
   position: absolute;
-  font-size: 1.5rem;
+  width: 24px;
+  height: 24px;
   animation: floatIcon 5s ease-in-out infinite;
   opacity: 0.7;
+}
+
+.floatingIcon svg {
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes floatIcon {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   25% { transform: translateY(-5px) rotate(5deg); }
   75% { transform: translateY(5px) rotate(-5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star {
+    animation: none;
+  }
+  .code {
+    animation: none;
+  }
+  .moon {
+    animation: none;
+  }
+  .floatingIcon {
+    animation: none;
+  }
 }
 
 /* Responsive */

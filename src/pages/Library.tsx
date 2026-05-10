@@ -1,36 +1,36 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { libraryApi, LibraryCollection } from '../services/api'
-import { showToast } from '../hooks/useDreamStore'
+import { showToast, AchievementIcon } from '../hooks/useDreamStore'
 import { EmptyState } from '../components/ui/EmptyState'
 import styles from './Library.module.css'
 
 // 主题配置
 const THEMES = [
-  { id: 'all', label: '全部', emoji: '✨' },
-  { id: 'adventure', label: '冒险', emoji: '⚔️' },
-  { id: 'romance', label: '浪漫', emoji: '💫' },
-  { id: 'nightmare', label: '噩梦', emoji: '🌑' },
-  { id: 'mystery', label: '悬疑', emoji: '🔮' },
-  { id: 'fantasy', label: '奇幻', emoji: '🌙' },
-  { id: 'scifi', label: '科幻', emoji: '🚀' },
+  { id: 'all', label: '全部', iconKey: 'sparkle' },
+  { id: 'adventure', label: '冒险', iconKey: 'sword' },
+  { id: 'romance', label: '浪漫', iconKey: 'heart' },
+  { id: 'nightmare', label: '噩梦', iconKey: 'moon' },
+  { id: 'mystery', label: '悬疑', iconKey: 'gem' },
+  { id: 'fantasy', label: '奇幻', iconKey: 'moon' },
+  { id: 'scifi', label: '科幻', iconKey: 'rocket' },
 ]
 
-// 主题 emoji 映射
-const THEME_EMOJI: Record<string, string> = {
-  adventure: '⚔️',
-  romance: '💫',
-  nightmare: '🌑',
-  mystery: '🔮',
-  fantasy: '🌙',
-  scifi: '🚀',
+// 主题 iconKey 映射
+const THEME_ICONS: Record<string, string> = {
+  adventure: 'sword',
+  romance: 'heart',
+  nightmare: 'moon',
+  mystery: 'gem',
+  fantasy: 'moon',
+  scifi: 'rocket',
 }
 
 interface Collection {
   id: string
   title: string
   theme: string
-  emoji: string
+  iconKey: string
   storyCount: number
   isNew?: boolean
   coverGradient?: string
@@ -39,7 +39,7 @@ interface Collection {
 interface ReadingProgress {
   collectionId: string
   title: string
-  emoji: string
+  iconKey: string
   currentEpisode: number
   totalEpisodes: number
   percent: number
@@ -66,7 +66,7 @@ export function Library() {
             id: c.id,
             title: c.title,
             theme: c.theme || 'mystery',
-            emoji: THEME_EMOJI[c.theme || 'mystery'] || '✨',
+            iconKey: THEME_ICONS[c.theme || 'mystery'] || 'sparkle',
             storyCount: c.storyCount,
             isNew: isNewCollection(c.createdAt),
           }))
@@ -108,7 +108,7 @@ export function Library() {
       <div className={styles.container}>
         {/* Header */}
         <header className={styles.header}>
-          <span className={styles.headerIcon}>📚</span>
+          <AchievementIcon iconKey="book" className={styles.headerIcon} />
           <h1 className={styles.headerTitle}>梦境图书馆</h1>
           <p className={styles.headerSubtitle}>珍藏每一段奇幻旅程</p>
         </header>
@@ -124,7 +124,7 @@ export function Library() {
                 aria-label={`筛选${theme.label}主题`}
                 aria-pressed={activeTheme === theme.id}
               >
-                <span>{theme.emoji}</span>
+                <AchievementIcon iconKey={theme.iconKey} />
                 <span>{theme.label}</span>
               </button>
             ))}
@@ -142,7 +142,7 @@ export function Library() {
             </h2>
             <div className={styles.continueCard} onClick={handleContinueReading}>
               <div className={styles.continueThumb}>
-                <span>{readingProgress.emoji}</span>
+                <AchievementIcon iconKey={readingProgress.iconKey} />
               </div>
               <div className={styles.continueInfo}>
                 <span className={styles.continueMeta}>{readingProgress.currentEpisode} / {readingProgress.totalEpisodes} 章</span>
@@ -182,7 +182,7 @@ export function Library() {
               >
                 <div className={styles.cardCover}>
                   <div className={styles.cardCoverInner}>
-                    <span className={styles.cardEmoji}>{collection.emoji}</span>
+                    <AchievementIcon iconKey={collection.iconKey} className={styles.cardEmoji} />
                     <h3 className={styles.cardTitle}>{collection.title}</h3>
                     <span className={styles.cardTheme}>
                       {THEMES.find(t => t.id === collection.theme)?.label || collection.theme}

@@ -6,12 +6,31 @@ import styles from './Collection.module.css'
 
 // 主题 emoji 映射
 const THEME_EMOJI: Record<string, string> = {
-  adventure: '⚔️',
-  romance: '💫',
-  nightmare: '🌑',
-  mystery: '🔮',
-  fantasy: '🌙',
-  scifi: '🚀',
+  adventure: 'compass',
+  romance: 'sparkles',
+  nightmare: 'newmoon',
+  mystery: 'gem',
+  fantasy: 'moon',
+  scifi: 'rocket',
+}
+
+const COLLECTION_ICONS: Record<string, { d: string; viewBox?: string; fill?: string; stroke?: string; strokeWidth?: string }> = {
+  compass: { d: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  sparkles: { d: 'M9.649 14.15c-.19 0-.38-.07-.53-.22l-3.5-3.5a.752.752 0 0 1 0-1.06l3.5-3.5c.29-.29.77-.29 1.06 0s.29.77 0 1.06L6.28 9.92l2.97 2.97c.29.29.29.77 0 1.06-.15.15-.34.22-.53.22zM21.54 1.06l-3.5 3.5c-.29.29-.77.29-1.06 0s-.29-.77 0-1.06l2.97-2.97-2.97-2.97c-.29-.29-.29-.77 0-1.06s.77-.29 1.06 0l3.5 3.5c.29.29.29.77 0 1.06zM15.54 8.46l-3.5 3.5c-.29.29-.77.29-1.06 0s-.29-.77 0-1.06l2.97-2.97-2.97-2.97c-.29-.29-.29-.77 0-1.06s.77-.29 1.06 0l3.5 3.5c.29.29.29.77 0 1.06z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  newmoon: { d: 'M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  gem: { d: 'M12 2L2 9l10 13 10-13L12 2zM12 5.5l6 4.5v7L12 20 6 17v-7l6-4.5z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  moon: { d: 'M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' },
+  rocket: { d: 'M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119 8.54a6 6 0 1 0 7.63 7.63', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', viewBox: '0 0 24 24' }
+}
+
+function CollectionIcon({ iconKey, className }: { iconKey: string; className?: string }) {
+  const icon = COLLECTION_ICONS[iconKey]
+  if (!icon) return null
+  return (
+    <svg viewBox={icon.viewBox || '0 0 24 24'} fill={icon.fill || 'none'} stroke={icon.stroke || 'currentColor'} strokeWidth={icon.strokeWidth || '1.5'} className={className}>
+      <path d={icon.d} />
+    </svg>
+  )
 }
 
 export function Collection() {
@@ -83,7 +102,7 @@ export function Collection() {
     )
   }
 
-  const emoji = THEME_EMOJI[collection.theme || 'mystery'] || '✨'
+  const themeIcon = THEME_EMOJI[collection.theme || 'mystery'] || 'sparkles'
 
   return (
     <div className={styles.page}>
@@ -109,7 +128,7 @@ export function Collection() {
         <header className={styles.header}>
           <div className={styles.cover}>
             <div className={styles.coverInner}>
-              <span className={styles.emoji}>{emoji}</span>
+              <CollectionIcon iconKey={themeIcon} className={styles.emoji} />
               <div className={styles.coverGlow} />
             </div>
           </div>

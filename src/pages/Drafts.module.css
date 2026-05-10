@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0a0a14 0%, #12121f 50%, #0d0d18 100%);
+  background: linear-gradient(180deg, var(--color-night-deep) 0%, var(--color-night-mid) 50%, var(--color-night-deep) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -90,16 +90,16 @@
 
 .title {
   font-family: 'Noto Serif SC', 'Songti SC', serif;
-  font-size: 28px;
+  font-size: var(--text-28);
   font-weight: 600;
-  color: #ffd700;
+  color: var(--color-golden);
   margin: 0 0 8px 0;
   text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
   letter-spacing: 2px;
 }
 
 .subtitle {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
   letter-spacing: 1px;
@@ -108,7 +108,7 @@
 .draftCard {
   background: linear-gradient(135deg, rgba(30, 30, 50, 0.9) 0%, rgba(20, 20, 35, 0.95) 100%);
   border: 1px solid rgba(255, 215, 0, 0.15);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: 20px;
   margin-bottom: 24px;
   animation: fadeInUp 0.5s ease-out 0.1s both;
@@ -144,14 +144,14 @@
   padding: 4px 12px;
   background: rgba(255, 215, 0, 0.15);
   border: 1px solid rgba(255, 215, 0, 0.3);
-  border-radius: 20px;
-  font-size: 12px;
-  color: #ffd700;
+  border-radius: var(--radius-2xl);
+  font-size: var(--text-xs);
+  color: var(--color-golden);
   font-weight: 500;
 }
 
 .draftDate {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.4);
 }
 
@@ -160,7 +160,7 @@
 }
 
 .draftDesc {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.7);
   margin: 0 0 16px 0;
   line-height: 1.6;
@@ -170,14 +170,14 @@
 .questionsPreview,
 .storyPreview {
   background: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 12px 14px;
   margin-bottom: 12px;
 }
 
 .previewLabel {
   display: block;
-  font-size: 11px;
+  font-size: var(--text-3xs);
   color: rgba(255, 215, 0, 0.7);
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -186,7 +186,7 @@
 }
 
 .previewText {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.85);
   margin: 0;
   line-height: 1.5;
@@ -204,12 +204,12 @@
 .continueBtn {
   flex: 1;
   height: 44px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%) !important;
+  background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%) !important;
   border: none !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-md) !important;
   font-size: 15px !important;
   font-weight: 600 !important;
-  color: #1a1a2e !important;
+  color: var(--color-night-deep) !important;
   cursor: pointer;
   transition: all 0.3s ease !important;
   box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
@@ -229,7 +229,7 @@
   padding: 0 20px !important;
   background: transparent !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-md) !important;
   font-size: 14px !important;
   color: rgba(255, 255, 255, 0.6) !important;
   cursor: pointer;
@@ -238,7 +238,7 @@
 
 .deleteBtn:hover {
   border-color: rgba(255, 100, 100, 0.5) !important;
-  color: #ff6b6b !important;
+  color: var(--color-heart) !important;
   background: rgba(255, 100, 100, 0.1) !important;
 }
 
@@ -266,14 +266,14 @@
 }
 
 .emptyTitle {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: rgba(255, 255, 255, 0.8);
   margin: 0 0 8px 0;
 }
 
 .emptyDesc {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.4);
   margin: 0 0 32px 0;
 }
@@ -281,12 +281,12 @@
 .startBtn {
   height: 48px;
   padding: 0 32px !important;
-  background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%) !important;
+  background: linear-gradient(135deg, var(--color-golden) 0%, var(--color-golden-bright) 100%) !important;
   border: none !important;
-  border-radius: 12px !important;
-  font-size: 16px !important;
+  border-radius: var(--radius-lg) !important;
+  font-size: var(--text-md) !important;
   font-weight: 600 !important;
-  color: #1a1a2e !important;
+  color: var(--color-night-deep) !important;
   cursor: pointer;
   transition: all 0.3s ease !important;
   box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
@@ -310,7 +310,7 @@
   padding: 16px 18px;
   background: rgba(30, 30, 50, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: left;
@@ -328,14 +328,13 @@
 }
 
 .actionIcon {
-  font-size: 24px;
-  width: 44px;
-  height: 44px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 215, 0, 0.1);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
 }
 
@@ -347,13 +346,13 @@
 }
 
 .actionTitle {
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .actionDesc {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.4);
 }
 
@@ -362,4 +361,14 @@
   height: 20px;
   color: rgba(255, 255, 255, 0.3);
   flex-shrink: 0;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .auroraGradient {
+    animation: none;
+  }
+  .floatAnimation {
+    animation: none;
+  }
 }

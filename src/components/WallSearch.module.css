@@ -23,9 +23,9 @@
       rgba(255, 255, 255, 0.03) 100%);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  color: #ffffff;
-  font-size: 14px;
+  border-radius: var(--radius-lg);
+  color: var(--color-moonlight);
+  font-size: var(--text-sm);
   outline: none;
   transition: all 0.25s ease;
 }
@@ -76,7 +76,7 @@
 .searching {
   position: absolute;
   right: 14px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.4);
   animation: pulse 1s ease-in-out infinite;
 }
@@ -84,4 +84,10 @@
 @keyframes pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .searching {
+    animation: none;
+  }
 }

@@ -156,7 +156,9 @@ export function DreamWall() {
       if (user?.openid) {
         loadMyPosts(user.openid)
       } else {
-        // Not logged in, no loading needed
+        // Not logged in, clear posts and show empty state
+        setPosts([])
+        setHasMore(false)
         setLoading(false)
       }
     } else if (activeTab === 'friends') {
@@ -164,6 +166,9 @@ export function DreamWall() {
       if (user?.openid) {
         loadFriendPosts(1, true)
       } else {
+        // Not logged in, clear posts and show empty state
+        setPosts([])
+        setHasMore(false)
         setLoading(false)
       }
     } else {
@@ -408,9 +413,9 @@ export function DreamWall() {
               <circle cx="20" cy="52" r="3" fill="url(#wallBubbleGrad)" opacity="0.65" />
               <circle cx="40" cy="50" r="3.5" fill="url(#wallBubbleGrad)" opacity="0.7" />
               {/* Tiny sparkle dots */}
-              <circle cx="25" cy="10" r="1.5" fill="#F4D35E" opacity="0.6" />
-              <circle cx="8" cy="30" r="1" fill="#F4D35E" opacity="0.5" />
-              <circle cx="52" cy="28" r="1.5" fill="#F4D35E" opacity="0.5" />
+              <circle cx="25" cy="10" r="1.5" fill="var(--color-golden)" opacity="0.6" />
+              <circle cx="8" cy="30" r="1" fill="var(--color-golden)" opacity="0.5" />
+              <circle cx="52" cy="28" r="1.5" fill="var(--color-golden)" opacity="0.5" />
               <defs>
                 <linearGradient id="wallMoonGrad" x1="10" y1="8" x2="50" y2="52">
                   <stop offset="0%" stopColor="#FFD666" />

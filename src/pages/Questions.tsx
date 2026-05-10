@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDreamStore } from '../hooks/useDreamStore'
+import { useDreamStore, showToast, AchievementIcon } from '../hooks/useDreamStore'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { api } from '../services/api'
 import { createStoryStream } from '../services/sseClient'
+import { openidService } from '../services/openidService'
 import { Textarea } from '../components/ui/Textarea'
-import { showToast } from '../hooks/useDreamStore'
 import { TypewriterText } from '../components/ui/TypewriterText'
 import { RevealScreen } from '../components/RevealScreen'
 import { Breadcrumb } from '../components/Breadcrumb'
@@ -19,7 +19,7 @@ const SKIPPED_ANSWER = '（未回答）'
 
 export function Questions() {
   const navigate = useNavigate()
-  const { currentSession, setAnswer, nextQuestion, prevQuestion, setStory } = useDreamStore()
+  const { currentSession, setAnswer, nextQuestion, prevQuestion, setStory, user } = useDreamStore()
   const [currentAnswer, setCurrentAnswer] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -197,6 +197,8 @@ export function Questions() {
 
       // Now use SSE to stream story generation
       setIsWaitingForAI(false)
+      // Pass guest openid if user is not logged in
+      const guestOpenid = user ? undefined : openidService.get() ?? undefined
       const cleanup = createStoryStream(sessionId, {
         onStart: (data) => {
           console.log('[Questions] Story streaming started:', data.title)
@@ -225,7 +227,7 @@ export function Questions() {
           setLoading(false)
           showToast(errorMsg, 'error')
         }
-      })
+      }, guestOpenid)
       sseCleanupRef.current = cleanup
     } catch (err) {
       clearTimeout(timeoutId)
@@ -302,7 +304,7 @@ export function Questions() {
           <div className={styles.progressInfo}>
             <span className={styles.progressText}>
               {isLastQuestion ? (
-                <span className={styles.lastLabel}>最后一题 ✨</span>
+                <span className={styles.lastLabel}>最后一题 <AchievementIcon iconKey="sparkle" /></span>
               ) : (
                 `追问 ${currentQuestionIndex + 1} / ${questions.length}`
               )}
@@ -472,7 +474,7 @@ export function Questions() {
 
         {/* 底部提示 */}
         <div className={styles.footer}>
-          <p className={styles.tip}>✨ 回答越详细，故事越精彩</p>
+          <p className={styles.tip}><AchievementIcon iconKey="sparkle" /> 回答越详细，故事越精彩</p>
         </div>
       </div>
 

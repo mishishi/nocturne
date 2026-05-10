@@ -50,7 +50,7 @@
 .revealLoaderMoonCore {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, #F4D35E 0%, #FFD666 100%);
+  background: radial-gradient(circle, var(--color-golden) 0%, var(--color-golden-bright) 100%);
   border-radius: 50%;
   animation: revealLoaderPulse 1.5s ease-in-out infinite;
 }
@@ -781,7 +781,7 @@ button.fabMenuItem:disabled,
     rgba(10, 15, 35, 0.98) 50%,
     rgba(8, 12, 28, 0.99) 100%
   );
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   padding: 6px;
   overflow: hidden;
   box-shadow:
@@ -825,8 +825,8 @@ button.fabMenuItem:disabled,
   justify-content: center;
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.2), rgba(244, 211, 94, 0.05));
   border: 1px solid rgba(244, 211, 94, 0.25);
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   animation: iconGlow 3s ease-in-out infinite;
 }
 
@@ -836,7 +836,7 @@ button.fabMenuItem:disabled,
 
 .menuHeaderTitle {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-moonlight);
   letter-spacing: 0.02em;
@@ -844,7 +844,7 @@ button.fabMenuItem:disabled,
 }
 
 .menuHeaderSubtitle {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--color-silver-dim);
   margin: 2px 0 0;
   letter-spacing: 0.03em;
@@ -860,9 +860,9 @@ button.fabMenuItem:disabled,
   padding: 10px 12px;
   background: transparent;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   color: var(--color-moonlight);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 450;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -878,7 +878,7 @@ button.fabMenuItem:disabled,
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.12) 0%, rgba(244, 211, 94, 0.04) 100%);
   opacity: 0;
   transition: opacity 0.2s ease;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 .shareMenuItem:hover::before {
@@ -919,7 +919,7 @@ button.fabMenuItem:disabled,
   justify-content: center;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
@@ -941,13 +941,25 @@ button.fabMenuItem:disabled,
 }
 
 .menuSecondary {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--color-silver-dim);
   font-weight: 400;
 }
 
 .shareMenuItem:hover .menuSecondary {
   color: rgba(244, 211, 94, 0.6);
+}
+
+.menuBadge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: linear-gradient(135deg, rgba(244, 211, 94, 0.2), rgba(244, 211, 94, 0.1));
+  border: 1px solid rgba(244, 211, 94, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--color-moonlight, #F4D35E);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* Speaking indicator */
@@ -967,7 +979,7 @@ button.fabMenuItem:disabled,
 
 .voiceSubMenuInner {
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 6px;
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -977,7 +989,7 @@ button.fabMenuItem:disabled,
   align-items: center;
   gap: 6px;
   padding: 4px 8px 6px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--color-silver-dim);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1006,9 +1018,9 @@ button.fabMenuItem:disabled,
   padding: 8px 10px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-moonlight);
-  font-size: 12px;
+  font-size: var(--text-xs);
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
@@ -1026,7 +1038,7 @@ button.fabMenuItem:disabled,
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 7px;
+  border-radius: var(--radius-sq);
   flex-shrink: 0;
   transition: all 0.15s ease;
 }
@@ -1064,8 +1076,8 @@ button.fabMenuItem:disabled,
   padding: 8px 12px;
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.06), rgba(244, 211, 94, 0.02));
   border: 1px solid rgba(244, 211, 94, 0.1);
-  border-radius: 10px;
-  font-size: 11px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-3xs);
   color: var(--color-silver);
   letter-spacing: 0.01em;
 }
@@ -1299,6 +1311,49 @@ button.fabMenuItem:disabled,
   opacity: 0.03;
   color: var(--color-golden);
   z-index: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revealLoader {
+    animation: none;
+  }
+  .errorMoon {
+    animation: none;
+  }
+  .skeletonItem {
+    animation: none;
+  }
+  .storyReveal {
+    animation: none;
+  }
+  .particle {
+    animation: none;
+  }
+  .decorLeft,
+  .decorRight {
+    animation: none;
+  }
+  .decor {
+    animation: none;
+  }
+  .storyContent {
+    animation: none;
+  }
+  .fadeInUp {
+    animation: none;
+  }
+  .celestialReveal {
+    animation: none;
+  }
+  .brocadeStar {
+    animation: none;
+  }
+  .iconGlow {
+    animation: none;
+  }
+  .speaking {
+    animation: none;
+  }
 }
 
 @media (max-width: 768px) {

@@ -1,15 +1,8 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useDreamStore, ACHIEVEMENTS, type Achievement } from '../hooks/useDreamStore'
+import { useDreamStore, ACHIEVEMENTS, MEDALS, AchievementIcon, type Achievement } from '../hooks/useDreamStore'
 import { AchievementShareCard } from './AchievementShareCard'
 import styles from './AchievementCenter.module.css'
-
-// Medal definitions (mirrors server-side MEDALS and Profile.tsx)
-const MEDALS = [
-  { id: 'moonlight', name: '月光勋章', icon: '🌙', description: '朋友圈首次分享' },
-  { id: 'newmoon', name: '新月勋章', icon: '🌑', description: '邀请好友成功' },
-  { id: 'meteor', name: '流星成就', icon: '☄️', description: '连续分享7天' }
-]
 
 interface AchievementCenterProps {
   isOpen: boolean
@@ -123,7 +116,7 @@ export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
               >
                 <div className={styles.achievementIcon}>
                   {isUnlocked ? (
-                    <span className={styles.iconEmoji}>{achievement.icon}</span>
+                    <AchievementIcon iconKey={achievement.icon} className={styles.iconSvg} />
                   ) : (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.iconLock} aria-hidden="true">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -174,7 +167,7 @@ export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
 
           {activeTab === 'locked' && lockedAchievements.length === 0 && (
             <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>🎉</span>
+              <AchievementIcon iconKey="sparkle" className={styles.emptyIcon} />
               <p>太棒了！所有成就都已解锁！</p>
             </div>
           )}
@@ -212,7 +205,7 @@ export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
           {activeTab === 'medals' && unlockedMedals.map(medal => (
             <div key={medal.id} className={`${styles.achievementCard} ${styles.unlocked}`}>
               <div className={styles.achievementIcon}>
-                <span className={styles.iconEmoji}>{medal.icon}</span>
+                <AchievementIcon iconKey={medal.icon} className={styles.iconSvg} />
               </div>
               <div className={styles.achievementInfo}>
                 <div className={styles.achievementName}>{medal.name}</div>
@@ -243,7 +236,7 @@ export function AchievementCenter({ isOpen, onClose }: AchievementCenterProps) {
 
           {activeTab === 'medals' && MEDALS.length === 0 && (
             <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>🏅</span>
+              <AchievementIcon iconKey="trophy" className={styles.emptyIcon} />
               <p>暂无勋章</p>
             </div>
           )}

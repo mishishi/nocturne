@@ -103,10 +103,16 @@
 
 .deleteBtn:hover {
   background: rgba(231, 76, 60, 0.2);
-  color: #e74c3c;
+  color: var(--color-notification);
 }
 
 .deleteBtn svg {
   width: 14px;
   height: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none;
+  }
 }

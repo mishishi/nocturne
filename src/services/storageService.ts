@@ -9,14 +9,9 @@
 
 type StorageType = 'localStorage' | 'sessionStorage'
 
-interface StorageItem {
-  value: string
-  timestamp: number
-}
-
 class StorageService {
   private cache: Map<string, string> = new Map()
-  private pendingWrites: Map<string, NodeJS.Timeout> = new Map()
+  private pendingWrites: Map<string, ReturnType<typeof setTimeout>> = new Map()
   private storage: Storage
   private prefix: string
 
@@ -192,6 +187,21 @@ class StorageService {
 // 单例实例
 export const storage = new StorageService('localStorage', 'yeelin_')
 export const session = new StorageService('sessionStorage', 'yeelin_')
+
+// Zustand persist 存储适配器
+import type { StateStorage } from 'zustand/middleware'
+
+export const storageAdapter: StateStorage = {
+  getItem: (name: string): string | null => {
+    return storage.get(name)
+  },
+  setItem: (name: string, value: string): void => {
+    storage.set(name, value)
+  },
+  removeItem: (name: string): void => {
+    storage.remove(name)
+  },
+}
 
 // 页面卸载前刷新待写入
 if (typeof window !== 'undefined') {

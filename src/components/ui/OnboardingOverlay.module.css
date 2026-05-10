@@ -11,7 +11,7 @@
 .backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8, 12, 25, 0.99);
+  background: rgba(8, 12, 25, 0.85);
 }
 
 /* Ambient glow */
@@ -51,7 +51,7 @@
 
 .progressDot.active {
   width: 24px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--color-golden);
   box-shadow: 0 0 12px rgba(244, 211, 94, 0.5);
 }
@@ -61,25 +61,38 @@
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* Skip hint - always visible but subtle */
+/* Skip button - top right, larger touch target */
 .skipHint {
   position: absolute;
-  bottom: var(--space-8);
-  left: 50%;
-  transform: translateX(-50%);
-  background: transparent;
-  border: none;
+  top: calc(60px + env(safe-area-inset-top) + var(--space-4));
+  right: var(--space-4);
+  background: rgba(139, 157, 195, 0.15);
+  border: 1px solid rgba(139, 157, 195, 0.25);
+  border-radius: var(--radius-lg);
   color: var(--color-silver);
-  font-size: 0.8125rem;
-  opacity: 0.5;
+  font-size: 0.9375rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.2s, color 0.2s;
-  padding: var(--space-2) var(--space-4);
+  transition: all 0.2s var(--ease-dream);
+  padding: var(--space-3) var(--space-5);
+  min-height: 44px;
+  min-width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  z-index: 10;
 }
 
 .skipHint:hover {
-  opacity: 0.8;
+  background: rgba(139, 157, 195, 0.25);
+  border-color: rgba(139, 157, 195, 0.4);
   color: var(--color-moonlight);
+  transform: scale(1.02);
+}
+
+.skipHint:active {
+  transform: scale(0.96);
 }
 
 /* ============================================
@@ -244,37 +257,69 @@
   min-width: 220px;
 }
 
-/* Emotion preview */
+/* Emotion preview hint */
+.emotionHint {
+  font-size: 0.8125rem;
+  color: var(--color-silver);
+  opacity: 0.6;
+  margin-bottom: var(--space-4);
+  animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
+/* Emotion preview - match Dream page emotionCard style */
 .emotionPreview {
-  display: flex;
-  gap: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 320px;
   animation: fadeInUp 0.5s ease-out 0.3s both;
 }
 
 .emotionTag {
-  width: 36px;
-  height: 36px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--tag-color, var(--color-border));
-  border-radius: var(--radius-full);
-  font-size: 1rem;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: rgba(26, 58, 92, 0.3);
+  border: 2px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
   opacity: 0;
   animation: tagPop 0.4s ease forwards;
 }
 
+.emotionTagIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tag-color, rgba(26, 58, 92, 0.6));
+  border-radius: 50%;
+}
+
+.emotionTagIcon svg {
+  width: 55%;
+  height: 55%;
+  stroke: #fff;
+  fill: none;
+}
+
+.emotionTagLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-moonlight);
+}
+
 @keyframes tagPop {
-  0% {
+  from {
     opacity: 0;
-    transform: scale(0.5);
+    transform: scale(0.9);
   }
-  60% {
-    transform: scale(1.1);
-  }
-  100% {
-    opacity: 0.7;
+  to {
+    opacity: 1;
     transform: scale(1);
   }
 }
@@ -373,5 +418,28 @@
 
   .ctaText {
     font-size: 1.25rem;
+  }
+
+  .emotionHint {
+    font-size: 0.75rem;
+  }
+
+  .emotionPreview {
+    gap: var(--space-2);
+    max-width: 280px;
+  }
+
+  .emotionTag {
+    padding: var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .emotionTagIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .emotionTagLabel {
+    font-size: 0.75rem;
   }
 }

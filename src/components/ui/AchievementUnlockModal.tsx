@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import type { Achievement } from '../../hooks/useDreamStore'
+import { AchievementIcon, type Achievement } from '../../hooks/useDreamStore'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { AchievementShareCard } from '../AchievementShareCard'
 import styles from './AchievementUnlockModal.module.css'
@@ -78,7 +78,7 @@ export function AchievementUnlockModal({ achievement, isOpen, onClose }: Achieve
 
           {/* Icon */}
           <div className={styles.iconWrapper}>
-            <span className={styles.icon}>{achievement.icon}</span>
+            <AchievementIcon iconKey={achievement.icon} className={styles.icon} />
           </div>
 
           {/* Text */}

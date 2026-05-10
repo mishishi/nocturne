@@ -17,7 +17,7 @@ export function StarField() {
 
   useEffect(() => {
     const generateStars = () => {
-      const count = window.innerWidth < 768 ? 50 : 80
+      const count = window.innerWidth < 768 ? 30 : 35
       const newStars: Star[] = []
 
       for (let i = 0; i < count; i++) {
@@ -26,7 +26,7 @@ export function StarField() {
           x: Math.random() * 100,
           y: Math.random() * 100,
           size: Math.random() * 2 + 1,
-          opacity: Math.random() * 0.5 + 0.2,
+          opacity: Math.random() * 0.2 + 0.1,
           duration: Math.random() * 3 + 2,
           delay: Math.random() * 5
         })

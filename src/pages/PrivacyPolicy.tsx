@@ -7,7 +7,7 @@ import styles from './Legal.module.css'
  * 依据 GDPR 和中国《个人信息保护法》要求编写
  */
 export function PrivacyPolicy() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isEnglish = i18n.language === 'en'
 
   return (

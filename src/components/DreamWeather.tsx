@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useDreamStore, DreamSession } from '../hooks/useDreamStore'
+import { useDreamStore, DreamSession, AchievementIcon } from '../hooks/useDreamStore'
 import styles from './DreamWeather.module.css'
 
 interface WeatherType {
   id: string
-  icon: string
+  iconKey: string
   label: string
   description: string
   color: string
@@ -14,42 +14,42 @@ interface WeatherType {
 const WEATHER_TYPES: Record<string, WeatherType> = {
   peaceful: {
     id: 'peaceful',
-    icon: '🌤️',
+    iconKey: 'sun',
     label: '晴朗',
     description: '心境平和',
     color: '#64D8CB'
   },
   adventure: {
     id: 'adventure',
-    icon: '🌪️',
+    iconKey: 'wind',
     label: '风暴',
     description: '充满冒险',
     color: '#F4A261'
   },
   mystery: {
     id: 'mystery',
-    icon: '🌙',
+    iconKey: 'moon',
     label: '朦胧',
     description: '神秘莫测',
     color: '#9B7EBD'
   },
   nightmare: {
     id: 'nightmare',
-    icon: '⛈️',
+    iconKey: 'bolt',
     label: '雷雨',
     description: '电闪雷鸣',
     color: '#E76F51'
   },
   joyful: {
     id: 'joyful',
-    icon: '✨',
+    iconKey: 'sparkle',
     label: '流星',
     description: '美好欢愉',
     color: '#F4D35E'
   },
   fantasy: {
     id: 'fantasy',
-    icon: '🌈',
+    iconKey: 'rainbow',
     label: '彩虹',
     description: '奇幻绚烂',
     color: '#A8DADC'
@@ -131,7 +131,7 @@ export function DreamWeather() {
       aria-label={`梦境天气：${weather.label}`}
     >
       <div className={styles.currentWeather}>
-        <span className={styles.weatherIcon}>{weather.icon}</span>
+        <AchievementIcon iconKey={weather.iconKey} className={styles.weatherIcon} />
         <div className={styles.weatherInfo}>
           <span className={styles.weatherLabel}>{weather.label}</span>
           <span className={styles.weatherDesc}>{weather.description}</span>
@@ -160,7 +160,7 @@ export function DreamWeather() {
                 className={`${styles.weatherItem} ${weather.id === w.id ? styles.active : ''}`}
                 style={{ '--weather-color': w.color } as React.CSSProperties}
               >
-                <span className={styles.itemIcon}>{w.icon}</span>
+                <AchievementIcon iconKey={w.iconKey} className={styles.itemIcon} />
                 <span className={styles.itemLabel}>{w.label}</span>
               </div>
             ))}

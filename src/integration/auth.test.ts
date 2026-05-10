@@ -40,6 +40,8 @@ describe('Auth Integration', () => {
       avatar: null,
       points: 100,
       isMember: false,
+      medals: [],
+      consecutiveShares: 0,
     }
 
     act(() => {
@@ -59,6 +61,8 @@ describe('Auth Integration', () => {
       avatar: null,
       points: 50,
       isMember: true,
+      medals: [],
+      consecutiveShares: 0,
     }
 
     useDreamStore.getState().setUser(mockUser, 'token_456')
@@ -76,6 +80,8 @@ describe('Auth Integration', () => {
       avatar: null,
       points: 0,
       isMember: false,
+      medals: [],
+      consecutiveShares: 0,
     }
 
     act(() => {

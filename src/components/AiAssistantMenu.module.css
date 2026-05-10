@@ -33,7 +33,7 @@
     rgba(10, 15, 35, 0.98) 50%,
     rgba(8, 12, 28, 0.99) 100%
   );
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   padding: 6px;
   overflow: hidden;
   box-shadow:
@@ -90,8 +90,8 @@
   justify-content: center;
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.2), rgba(244, 211, 94, 0.05));
   border: 1px solid rgba(244, 211, 94, 0.25);
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+}
   animation: iconGlow 3s ease-in-out infinite;
 }
 
@@ -101,7 +101,7 @@
 
 .headerTitle {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-moonlight);
   letter-spacing: 0.02em;
@@ -109,7 +109,7 @@
 }
 
 .headerSubtitle {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--color-silver-dim);
   margin: 2px 0 0;
   letter-spacing: 0.03em;
@@ -126,9 +126,9 @@
   padding: 11px 14px;
   background: transparent;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   color: var(--color-moonlight);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 450;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -144,7 +144,7 @@
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.12) 0%, rgba(244, 211, 94, 0.04) 100%);
   opacity: 0;
   transition: opacity 0.2s ease;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 .menuItem:hover::before {
@@ -173,7 +173,7 @@
   justify-content: center;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
@@ -206,7 +206,7 @@
 }
 
 .menuSecondary {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--color-silver-dim);
   font-weight: 400;
 }
@@ -233,7 +233,7 @@
 
 .voiceSectionInner {
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 6px;
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -254,7 +254,7 @@
 }
 
 .sectionTitle {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--color-silver-dim);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -275,9 +275,9 @@
   padding: 9px 10px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-moonlight);
-  font-size: 12px;
+  font-size: var(--text-xs);
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
@@ -312,7 +312,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 7px;
+  border-radius: var(--radius-sq);
   flex-shrink: 0;
 }
 
@@ -350,8 +350,8 @@
   padding: 8px 12px;
   background: linear-gradient(135deg, rgba(244, 211, 94, 0.06), rgba(244, 211, 94, 0.02));
   border: 1px solid rgba(244, 211, 94, 0.1);
-  border-radius: 10px;
-  font-size: 11px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-3xs);
   color: var(--color-silver);
   letter-spacing: 0.01em;
 }

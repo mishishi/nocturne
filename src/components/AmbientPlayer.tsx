@@ -1,4 +1,4 @@
-import { useAmbientAudio, AMBIENT_SOUNDS } from '../hooks/useAmbientAudio'
+import { useAmbientAudio, AMBIENT_SOUNDS, AmbientIcon } from '../hooks/useAmbientAudio'
 import styles from './AmbientPlayer.module.css'
 
 export function AmbientPlayer() {
@@ -7,7 +7,7 @@ export function AmbientPlayer() {
   return (
     <div className={styles.container}>
       <h3 className={styles.title}>
-        <span className={styles.icon}>🎵</span>
+        <AmbientIcon iconKey="moon" className={styles.icon} />
         氛围音乐
       </h3>
 
@@ -20,7 +20,7 @@ export function AmbientPlayer() {
             onClick={() => changeSound(sound.id)}
             aria-pressed={soundType === sound.id}
           >
-            <span className={styles.soundIcon}>{sound.icon}</span>
+            <AmbientIcon iconKey={sound.icon} className={styles.soundIcon} />
             <span className={styles.soundLabel}>{sound.label}</span>
           </button>
         ))}

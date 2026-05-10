@@ -214,19 +214,19 @@ export function Dashboard() {
             <div className={styles.statLabel}>总帖子数</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statValue} style={{ color: '#48c78e' }}>
+            <div className={styles.statValue} style={{ color: 'var(--color-success)' }}>
               {stats?.trends?.approvedLast7Days ?? 0}
             </div>
             <div className={styles.statLabel}>本周通过</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statValue} style={{ color: '#ed6464' }}>
+            <div className={styles.statValue} style={{ color: 'var(--color-error)' }}>
               {stats?.trends?.rejectedLast7Days ?? 0}
             </div>
             <div className={styles.statLabel}>本周拒绝</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statValue} style={{ color: '#58a6ff' }}>
+            <div className={styles.statValue} style={{ color: 'var(--color-moonlight)' }}>
               {stats?.totalComments ?? 0}
             </div>
             <div className={styles.statLabel}>总评论数</div>
