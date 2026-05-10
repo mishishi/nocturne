@@ -12,7 +12,7 @@ import { useDreamStore, ACHIEVEMENTS, MEDALS, DreamSession } from '../hooks/useD
 import { useSettingsStore } from '../hooks/useSettingsStore'
 import { usePushNotification } from '../hooks/usePushNotification'
 import { useSupportChat } from '../hooks/useSupportChat'
-import { shareApi, UserStats, checkInApi, api, wallApi, authApi, type Session, type DreamWallPost } from '../services/api'
+import { shareApi, UserStats, api, wallApi, authApi, type Session, type DreamWallPost } from '../services/api'
 import { openidService } from '../services/openidService'
 import { hasValidToken } from '../utils/auth'
 import styles from './Profile.module.css'
@@ -201,19 +201,6 @@ export function Profile() {
       }
     }
     fetchStats()
-
-    // Fetch check-in status
-    const fetchCheckInStatus = async () => {
-      try {
-        const status = await checkInApi.getStatus()
-        if (status.success && status.data) {
-          setCheckInStatus(status.data.checkedInToday, status.data.consecutiveDays)
-        }
-      } catch (err) {
-        console.error('Failed to fetch check-in status:', err)
-      }
-    }
-    fetchCheckInStatus()
   }, [user?.openid, currentSession.openid])
 
   const handleCreateInvite = async () => {
