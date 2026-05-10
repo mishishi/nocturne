@@ -4,7 +4,7 @@ import { checkInApi, achievementApi, apiWithRetry, authApi } from '../services/a
 import { useAuthStore } from './useAuthStore'
 import { openidService } from '../services/openidService'
 import { storage } from '../services/storageService'
-import { getAuthToken, setAuthToken, clearAuthToken, markLogout, markLogin } from '../utils/auth'
+import { getAuthToken, setAuthToken, clearAuthToken, markLogout, markLogin, clearRefreshToken } from '../utils/auth'
 
 // Zustand persist 存储适配器 - 直接使用原生 localStorage
 // 注意：storageService 的 prefix 机制与 Zustand persist 的 name 冲突，
