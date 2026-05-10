@@ -39,23 +39,6 @@ export function Home() {
     localStorage.setItem(LAST_VISIT_KEY, today)
   }, [history.length])
 
-  // Fetch check-in status for logged-in users
-  useEffect(() => {
-    if (!user?.openid || !hasValidToken()) return
-
-    const fetchCheckInStatus = async () => {
-      try {
-        const status = await checkInApi.getStatus()
-        if (status.success && status.data) {
-          setCheckInStatus(status.data.checkedInToday, status.data.consecutiveDays)
-        }
-      } catch (err) {
-        console.error('Failed to fetch check-in status:', err)
-      }
-    }
-    fetchCheckInStatus()
-  }, [user?.openid, setCheckInStatus])
-
   // Handle check-in
   const handleCheckIn = async () => {
     // Check both user.openid and hasValidToken() to handle edge cases
