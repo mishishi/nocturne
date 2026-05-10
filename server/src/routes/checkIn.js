@@ -2,22 +2,22 @@ import { prisma } from '../config/database.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { successResponse, errorResponse } from '../config/response.js'
 
-// Helper: get today's date in YYYY-MM-DD format
+// Helper: get today's date in YYYY-MM-DD format (UTC to avoid timezone issues)
 function getTodayDate() {
   const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
+  const year = now.getUTCFullYear()
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(now.getUTCDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
 
-// Helper: get yesterday's date in YYYY-MM-DD format
+// Helper: get yesterday's date in YYYY-MM-DD format (UTC)
 function getYesterdayDate() {
   const now = new Date()
-  now.setDate(now.getDate() - 1)
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
+  now.setUTCDate(now.getUTCDate() - 1)
+  const year = now.getUTCFullYear()
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(now.getUTCDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
 
@@ -55,14 +55,14 @@ async function calculateConsecutiveDays(userId) {
   const current = new Date(startDate)
 
   while (true) {
-    const year = current.getFullYear()
-    const month = String(current.getMonth() + 1).padStart(2, '0')
-    const day = String(current.getDate()).padStart(2, '0')
+    const year = current.getUTCFullYear()
+    const month = String(current.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(current.getUTCDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
 
     if (checkedInDates.has(dateStr)) {
       consecutiveDays++
-      current.setDate(current.getDate() - 1)
+      current.setUTCDate(current.getUTCDate() - 1)
     } else {
       break
     }

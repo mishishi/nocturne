@@ -39,6 +39,28 @@ export function Home() {
     localStorage.setItem(LAST_VISIT_KEY, today)
   }, [history.length])
 
+  // Fetch check-in status from server on mount
+  useEffect(() => {
+    // Use hasValidToken() instead of user?.openid because Zustand persist
+    // may not have rehydrated yet on first render
+    if (!hasValidToken()) return
+
+    const fetchCheckInStatus = async () => {
+      try {
+        const result = await checkInApi.getStatus()
+        if (result.success && result.data) {
+          setCheckInStatus(result.data.checkedInToday, result.data.consecutiveDays)
+          // Check and unlock achievements after status is updated
+          useDreamStore.getState().checkAndUnlockAchievements()
+        }
+      } catch (err) {
+        console.error('Failed to fetch check-in status:', err)
+      }
+    }
+
+    fetchCheckInStatus()
+  }, [setCheckInStatus])
+
   // Handle check-in
   const handleCheckIn = async () => {
     // Check both user.openid and hasValidToken() to handle edge cases

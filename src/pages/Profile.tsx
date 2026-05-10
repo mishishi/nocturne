@@ -12,7 +12,7 @@ import { useDreamStore, ACHIEVEMENTS, MEDALS, DreamSession } from '../hooks/useD
 import { useSettingsStore } from '../hooks/useSettingsStore'
 import { usePushNotification } from '../hooks/usePushNotification'
 import { useSupportChat } from '../hooks/useSupportChat'
-import { shareApi, UserStats, api, wallApi, authApi, type Session, type DreamWallPost } from '../services/api'
+import { shareApi, UserStats, api, wallApi, authApi, checkInApi, type Session, type DreamWallPost } from '../services/api'
 import { openidService } from '../services/openidService'
 import { hasValidToken } from '../utils/auth'
 import styles from './Profile.module.css'
@@ -144,6 +144,28 @@ export function Profile() {
       })
     return () => { isMounted = false }
   }, [user?.openid])
+
+  // Fetch check-in status from server
+  useEffect(() => {
+    // Use hasValidToken() instead of user?.openid because Zustand persist
+    // may not have rehydrated yet on first render
+    if (!hasValidToken()) return
+
+    const fetchCheckInStatus = async () => {
+      try {
+        const result = await checkInApi.getStatus()
+        if (result.success && result.data) {
+          setCheckInStatus(result.data.checkedInToday, result.data.consecutiveDays)
+          // Check and unlock achievements after status is updated
+          useDreamStore.getState().checkAndUnlockAchievements()
+        }
+      } catch (err) {
+        console.error('Failed to fetch check-in status:', err)
+      }
+    }
+
+    fetchCheckInStatus()
+  }, [setCheckInStatus])
 
   // Fetch favorites when tab is active
   useEffect(() => {
