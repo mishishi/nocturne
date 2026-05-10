@@ -256,7 +256,7 @@ export function Home() {
       <DailyHighlights />
 
       {/* Check-in Card - visible to all users */}
-      {user ? (
+      {hasValidToken() ? (
         <section className={styles.checkInSection}>
           <div className={styles.checkInCard}>
             <div className={styles.checkInLeft}>
