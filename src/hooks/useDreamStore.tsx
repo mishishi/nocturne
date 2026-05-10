@@ -37,8 +37,10 @@ const storageAdapter = {
       if (old) {
         // 迁移：删除旧 key
         localStorage.removeItem(oldKey)
+        return old
       }
-      return old
+      // 明确返回 null 表示没有存储数据（不能返回 undefined，否则 Zustand persist 会视为"无数据"）
+      return null
     } catch {
       return null
     }

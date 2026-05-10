@@ -8,7 +8,7 @@ import { AchievementCenter } from '../components/AchievementCenter'
 import { DailyHighlights } from '../components/DailyHighlights'
 import { useDreamStore, ACHIEVEMENTS, showToast, type DreamSession } from '../hooks/useDreamStore'
 import { checkInApi } from '../services/api'
-import { hasValidToken } from '../utils/auth'
+import { hasValidToken, verifyToken } from '../utils/auth'
 import styles from './Home.module.css'
 
 const LAST_VISIT_KEY = 'yeelin_last_visit'
@@ -18,7 +18,16 @@ export function Home() {
   const [showAchievementCenter, setShowAchievementCenter] = useState(false)
   const [isReturningUser, setIsReturningUser] = useState(false)
   const [isCheckingIn, setIsCheckingIn] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const handleOnboardingComplete = useCallback(() => {}, [])
+
+  // Delay onboarding overlay to let user see main CTA first
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowOnboarding(true)
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Detect returning user (has visited before, not same day)
   useEffect(() => {
@@ -49,11 +58,15 @@ export function Home() {
 
   // Handle check-in
   const handleCheckIn = async () => {
-    if (!user?.openid) {
+    // Check both user.openid and hasValidToken() to handle edge cases
+    // where persist rehydration might have failed to restore login state
+    if (!user?.openid || !hasValidToken()) {
       showToast('请先登录后再签到', 'error')
       return
     }
-    if (!hasValidToken()) {
+    // Verify token with backend before making the call
+    const isValid = await verifyToken()
+    if (!isValid) {
       showToast('登录已过期，请重新登录', 'error')
       return
     }
@@ -159,7 +172,7 @@ export function Home() {
         </button>
       )}
 
-      <OnboardingOverlay onComplete={handleOnboardingComplete} />
+      {showOnboarding && <OnboardingOverlay onComplete={handleOnboardingComplete} />}
       {/* Hero Section */}
       <section className={styles.hero}>
         <div className={styles.moon}>
