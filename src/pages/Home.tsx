@@ -25,7 +25,7 @@ export function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowOnboarding(true)
-    }, 2000)
+    }, 5000)
     return () => clearTimeout(timer)
   }, [])
 
@@ -160,8 +160,8 @@ export function Home() {
         )}
       </div>
 
-      {/* Achievement Badge */}
-      {achievements.length > 0 && (
+      {/* Achievement Badge - only show for returning users */}
+      {!isNewUser && achievements.length > 0 && (
         <button
           className={styles.achievementBadge}
           onClick={() => setShowAchievementCenter(true)}
@@ -233,7 +233,8 @@ export function Home() {
           </Link>
         </div>
 
-        {/* Social Proof */}
+        {/* Social Proof - hidden for new users, shown after first story */}
+        {!isNewUser && (
         <div className={styles.socialProof}>
           <div className={styles.socialProofItem}>
             <span className={styles.socialProofNumber}>10,000+</span>
@@ -250,6 +251,7 @@ export function Home() {
             <span className={styles.socialProofLabel}>AI 智能解读</span>
           </div>
         </div>
+        )}
 
         {/* Achievement progress hint - only for returning users */}
         {!isNewUser && (
@@ -260,8 +262,8 @@ export function Home() {
       {/* Daily Highlights - visible to all users */}
       <DailyHighlights />
 
-      {/* Check-in Card - visible to all users */}
-      {hasValidToken() ? (
+      {/* Check-in Card - only show for users who have completed at least one dream */}
+      {!isNewUser && hasValidToken() ? (
         <section className={styles.checkInSection}>
           <div className={styles.checkInCard}>
             <div className={styles.checkInLeft}>
@@ -310,8 +312,8 @@ export function Home() {
         </section>
       )}
 
-      {/* Sample Stories - only for new users */}
-      {isNewUser && (
+      {/* Sample Stories - shown after user's first story for social proof */}
+      {!isNewUser && history.length > 0 && (
         <section className={styles.sampleSection}>
           <h2 className={styles.sampleTitle}>别人的梦境</h2>
           <p className={styles.sampleSubtitle}>每一次记录，都是一场独特的冒险</p>
@@ -328,7 +330,8 @@ export function Home() {
         </section>
       )}
 
-      {/* Steps Section */}
+      {/* Steps Section - hidden for new users, shown after first story */}
+      {!isNewUser && (
       <section className={styles.steps}>
         <div className={styles.stepsGrid}>
           <Card className={styles.stepCard}>
@@ -375,6 +378,7 @@ export function Home() {
           </Card>
         </div>
       </section>
+      )}
 
       {/* Footer Quote */}
       <footer className={styles.footer}>
