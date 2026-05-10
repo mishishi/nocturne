@@ -42,7 +42,7 @@ const formatStatValue = (value: number | null): string => {
 
 export function Profile() {
   const navigate = useNavigate()
-  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus, setHistory } = useDreamStore()
+  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus, setHistory, _hasHydrated } = useDreamStore()
   const { language, setLanguage } = useSettingsStore()
   const { permission, isSubscribed, reminderEnabled, reminderTime, isSupported, subscribe, unsubscribe, toggleReminder, updateReminderTime } = usePushNotification()
   const { open: openSupportChat } = useSupportChat({ websiteId: import.meta.env.VITE_CRISP_WEBSITE_ID || '' })
@@ -833,7 +833,7 @@ export function Profile() {
                 </svg>
               </button>
             </div>
-            {user && (
+            {_hasHydrated && user && (
               <>
               <div className={`${styles.settingItem} ${styles.dangerItem}`}>
                 <div className={styles.settingInfo}>
