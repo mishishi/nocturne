@@ -1,0 +1,185 @@
+.container {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary, #fff);
+  margin: 0;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-accent, #A78BFA);
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+}
+
+.statsRow {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  position: relative;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary, #fff);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statChange {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.trendUp {
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.trendDown {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.trendSame {
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.section {
+  margin-bottom: 16px;
+}
+
+.section:last-of-type {
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tagList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tagItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(var(--tag-color-rgb, 139, 92, 246), 0.15);
+  border: 1px solid var(--tag-color, rgba(139, 92, 246, 0.3));
+  border-radius: 20px;
+}
+
+.tagLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tag-color, #A78BFA);
+}
+
+.tagCount {
+  font-size: 11px;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+}
+
+.keywordList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.keyword {
+  font-size: 13px;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.insight {
+  padding: 12px;
+  background: rgba(167, 139, 250, 0.1);
+  border-radius: 10px;
+  border-left: 3px solid var(--color-accent, #A78BFA);
+}
+
+.insight p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.8));
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .statsRow {
+    gap: 8px;
+  }
+
+  .stat {
+    padding: 10px 6px;
+  }
+
+  .statValue {
+    font-size: 24px;
+  }
+
+  .tagList {
+    gap: 6px;
+  }
+
+  .tagItem {
+    padding: 4px 10px;
+  }
+}

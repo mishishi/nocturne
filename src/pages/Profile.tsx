@@ -8,6 +8,7 @@ import { Statistics } from '../components/Statistics'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
+import { DreamTrendReport } from '../components/DreamTrendReport'
 import { useDreamStore, ACHIEVEMENTS, MEDALS, DreamSession } from '../hooks/useDreamStore'
 import { useSettingsStore } from '../hooks/useSettingsStore'
 import { usePushNotification } from '../hooks/usePushNotification'
@@ -130,20 +131,20 @@ export function Profile() {
         }
       } catch (err) {
         console.error('Failed to sync history from backend:', err)
-        // Fallback to local history for display
+        // Fallback to local history for display - use getState() to avoid stale closure
         if (isMounted) {
-          setTotalDreams(history.length)
-          setTotalWords(history.reduce((acc, item) => acc + item.story.length, 0))
+          const localHistory = useDreamStore.getState().history
+          setTotalDreams(localHistory.length)
+          setTotalWords(localHistory.reduce((acc, item) => acc + item.story.length, 0))
         }
+      } finally {
+        if (isMounted) setIsStatsLoading(false)
       }
     }
 
     syncHistory()
-      .finally(() => {
-        if (isMounted) setIsStatsLoading(false)
-      })
     return () => { isMounted = false }
-  }, [user?.openid])
+  }, [user?.openid, setHistory])
 
   // Fetch check-in status from server
   useEffect(() => {
@@ -364,6 +365,9 @@ export function Profile() {
                 <span className={styles.statLabel}>累计文字</span>
               </div>
             </div>
+
+            {/* Dream Trend Report */}
+            <DreamTrendReport history={history} />
 
             {/* Check-in Stats */}
             <div className={styles.section}>
