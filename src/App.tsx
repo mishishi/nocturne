@@ -24,7 +24,7 @@ import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { OfflineBanner } from './components/OfflineBanner'
 import { SWUpdatePrompt } from './components/SWUpdatePrompt'
 import { SupportChat } from './components/SupportChat'
-import { CookieConsent, hasCookieConsent, getCookiePreferences } from './components/CookieConsent'
+import { hasCookieConsent, getCookiePreferences } from './components/CookieConsent'
 import { useDreamStore, ACHIEVEMENTS } from './hooks/useDreamStore'
 import { useAchievementSound } from './hooks/useAchievementSound'
 import { hasValidToken } from './utils/auth'
@@ -99,10 +99,11 @@ const PAGE_TITLES: Record<string, string> = {
 function App() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, user, syncAchievementsFromServer } = useDreamStore()
+  const { recentlyUnlocked, clearRecentlyUnlocked, fontSize, theme, reduceMotion, user, syncAchievementsFromServer, _hasHydrated } = useDreamStore()
   const { language: settingsLanguage } = useSettingsStore()
   const { playSound } = useAchievementSound()
   const lastPlayedRef = useRef<string | null>(null)
+  const [isHydrated, setIsHydrated] = useState(_hasHydrated)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
   const [showReEngagement, setShowReEngagement] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
@@ -145,6 +146,13 @@ function App() {
     }
     setCookieConsent(prefs)
   }
+
+  // Track hydration state - update when Zustand persist rehydration completes
+  useEffect(() => {
+    if (_hasHydrated) {
+      setIsHydrated(true)
+    }
+  }, [_hasHydrated])
 
   // Analytics: Configure and track page views (only if analytics consent given)
   useEffect(() => {
@@ -237,11 +245,12 @@ function App() {
 
 
   // Sync achievements from server on app start (for users who logged in on other devices)
+  // NOTE: depends on user so it re-runs after Zustand persist rehydration completes
   useEffect(() => {
-    if (user && hasValidToken()) {
+    if (_hasHydrated && user && hasValidToken()) {
       syncAchievementsFromServer()
     }
-  }, [])
+  }, [_hasHydrated, user])
 
   // Register Toast callback for background task error notifications
   useEffect(() => {
@@ -282,6 +291,24 @@ function App() {
     if (recentlyUnlocked.length > 0) {
       clearRecentlyUnlocked(recentlyUnlocked[0])
     }
+  }
+
+  // Show loading screen while Zustand persist rehydrates from localStorage
+  if (!isHydrated) {
+    return (
+      <I18nextProvider i18n={i18n}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+          color: '#fff'
+        }}>
+          <LoadingSpinner size="large" />
+        </div>
+      </I18nextProvider>
+    )
   }
 
   return (
@@ -384,9 +411,6 @@ function App() {
       <OfflineBanner />
       <PWAInstallPrompt />
       <SWUpdatePrompt />
-
-      {/* Cookie Consent Banner */}
-      <CookieConsent onConsentChange={handleCookieConsentChange} />
 
       {/* Customer Support - Crisp.chat (only if user consented) */}
       {import.meta.env.VITE_CRISP_WEBSITE_ID && cookieConsent?.客服 && (
