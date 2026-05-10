@@ -2,9 +2,7 @@ import { prisma } from '../config/database.js'
 import { authService } from '../services/authService.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { successResponse, errorResponse } from '../config/response.js'
-
-// VAPID keys - in production, use environment variables
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U'
+import { sendPushNotification } from '../services/pushService.js'
 
 export default async function pushRoutes(fastify) {
   // POST /api/push/subscribe - 订阅推送通知 (需登录)
@@ -96,19 +94,17 @@ export default async function pushRoutes(fastify) {
         return res.status(401).send(errorResponse('用户未找到', 'USER_NOT_FOUND'))
       }
 
-      // Get user's subscription
-      const subscription = await prisma.pushSubscription.findFirst({
-        where: { openid: tokenUser.openid }
+      // Send test push notification
+      const sent = await sendPushNotification(prisma, {
+        openid: tokenUser.openid,
+        title: '✨ 夜棂测试通知',
+        body: '恭喜！你的推送通知已配置成功',
+        data: { url: '/notifications' }
       })
 
-      if (!subscription) {
-        return res.status(404).send(errorResponse('未找到订阅', 'SUBSCRIPTION_NOT_FOUND'))
+      if (!sent) {
+        return res.status(404).send(errorResponse('未找到订阅或发送失败', 'SUBSCRIPTION_NOT_FOUND'))
       }
-
-      // In a real implementation, you would send a push notification here
-      // using web-push library with the VAPID keys
-      // For now, we just return success
-      console.log('[Push] Would send test notification to:', subscription.endpoint)
 
       return res.send(successResponse({ message: '测试通知已发送' }))
     } catch (error) {

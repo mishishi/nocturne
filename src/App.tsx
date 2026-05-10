@@ -53,6 +53,7 @@ import { DemoExperience } from './pages/DemoExperience'
 import { Library } from './pages/Library'
 import { Collection } from './pages/Collection'
 import { Drafts } from './pages/Drafts'
+import { QuickRecord } from './pages/QuickRecord'
 import { NotFound } from './pages/NotFound'
 
 // Lazy-loaded admin pages (less frequently accessed)
@@ -71,6 +72,7 @@ const StreamingLayoutDemo = lazy(() => import('./pages/StreamingLayoutDemo').the
 const PAGE_TITLES: Record<string, string> = {
   '/': '夜棂 - 穿越梦境的星门',
   '/dream': '记录梦境 - 夜棂',
+  '/quick-record': '快速记录 - 夜棂',
   '/demo': '体验梦境 - 夜棂',
   '/questions': '回答问题 - 夜棂',
   '/history': '历史记录 - 夜棂',
@@ -324,6 +326,7 @@ function App() {
             <Routes>
             <Route path="/" element={<PageErrorBoundary><Home /></PageErrorBoundary>} />
             <Route path="/dream" element={<PageErrorBoundary><Dream /></PageErrorBoundary>} />
+            <Route path="/quick-record" element={<PageErrorBoundary><QuickRecord /></PageErrorBoundary>} />
             <Route path="/demo" element={<PageErrorBoundary><DemoExperience /></PageErrorBoundary>} />
             <Route path="/questions" element={<PageErrorBoundary><Questions /></PageErrorBoundary>} />
             <Route path="/story/:sessionId" element={<PageErrorBoundary><Story /></PageErrorBoundary>} />

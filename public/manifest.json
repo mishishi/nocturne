@@ -33,6 +33,13 @@
   ],
   "shortcuts": [
     {
+      "name": "快速记录",
+      "short_name": "快记",
+      "description": "快速记录梦境片段",
+      "url": "/quick-record",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
       "name": "记录梦境",
       "short_name": "记录",
       "description": "打开梦境记录页",
