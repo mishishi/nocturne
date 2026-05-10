@@ -41,14 +41,14 @@ async function tryRefreshToken(): Promise<boolean> {
 
     if (!res.ok) {
       // 刷新失败，清除本地状态并重定向到登录
-      useDreamStore.getState().logout()
+      await useDreamStore.getState().logout()
       window.location.href = '/login'
       return false
     }
 
     const data = await res.json()
     if (!data.success) {
-      useDreamStore.getState().logout()
+      await useDreamStore.getState().logout()
       window.location.href = '/login'
       return false
     }
@@ -61,7 +61,7 @@ async function tryRefreshToken(): Promise<boolean> {
     return true
   } catch (err) {
     console.error('[API] Token refresh failed:', err)
-    useDreamStore.getState().logout()
+    await useDreamStore.getState().logout()
     window.location.href = '/login'
     return false
   } finally {
@@ -215,7 +215,7 @@ export async function retryWrapper<T>(
   const finalError = new Error(
     `${operationName} failed after ${maxRetries + 1} attempts: ${lastError?.message || 'Unknown error'}`
   )
-  finalError.cause = lastError
+  ;(finalError as any).cause = lastError
   console.error(`[API Retry] ${finalError.message}`)
   throw finalError
 }

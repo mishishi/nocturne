@@ -91,8 +91,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   const activeTab = ADMIN_TABS.find(tab => location.pathname.startsWith(tab.path))?.path || '/admin/pending'
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/')
   }
 

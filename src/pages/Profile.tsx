@@ -8,20 +8,13 @@ import { Statistics } from '../components/Statistics'
 import { Breadcrumb } from '../components/Breadcrumb'
 import { PersonalizedRecommendations } from '../components/PersonalizedRecommendations'
 import { AIQualityAnalytics } from '../components/AIQualityAnalytics'
-import { useDreamStore, ACHIEVEMENTS, DreamSession } from '../hooks/useDreamStore'
+import { useDreamStore, ACHIEVEMENTS, MEDALS, DreamSession } from '../hooks/useDreamStore'
 import { useSettingsStore } from '../hooks/useSettingsStore'
 import { usePushNotification } from '../hooks/usePushNotification'
 import { useSupportChat } from '../hooks/useSupportChat'
 import { shareApi, UserStats, checkInApi, api, wallApi, authApi, type Session, type DreamWallPost } from '../services/api'
 import { openidService } from '../services/openidService'
 import styles from './Profile.module.css'
-
-// Medal definitions (mirrors server-side MEDALS)
-const MEDALS = [
-  { id: 'moonlight', name: '月光勋章', icon: '🌙', description: '朋友圈首次分享' },
-  { id: 'newmoon', name: '新月勋章', icon: '🌑', description: '邀请好友成功' },
-  { id: 'meteor', name: '流星成就', icon: '☄️', description: '连续分享7天' }
-]
 
 const FONT_SIZE_OPTIONS = [
   { value: 'small' as const, label: '小', size: '12px' },
@@ -63,6 +56,7 @@ export function Profile() {
   const [favorites, setFavorites] = useState<DreamWallPost[]>([])
   const [storyFavorites, setStoryFavorites] = useState<Array<{ sessionId: string; storyTitle: string; story: string; createdAt: string; date: string }>>([])
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'favorites' | 'settings'>('overview')
+  const [showPointsInfo, setShowPointsInfo] = useState(false)
 
   // Initialize with local history to avoid flash of zeros, will be updated by backend sync
   const [totalDreams, setTotalDreams] = useState<number | null>(null)
@@ -248,7 +242,7 @@ export function Profile() {
       const res = await authApi.deleteAccount()
       if (res.success) {
         setShowDeleteAccountConfirm(false)
-        logout()
+        await logout()
         navigate('/')
         showToast('账号已删除')
       } else {
@@ -395,6 +389,45 @@ export function Profile() {
             </div>
           </div>
         </div>
+
+          {/* Points Explanation */}
+          <button
+            className={styles.pointsInfoToggle}
+            onClick={() => setShowPointsInfo(!showPointsInfo)}
+            aria-expanded={showPointsInfo}
+          >
+            <span>积分说明</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`${styles.pointsInfoIcon} ${showPointsInfo ? styles.pointsInfoIconOpen : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          {showPointsInfo && (
+            <div className={styles.pointsInfoSection}>
+              <div className={styles.pointsInfoGroup}>
+                <h4 className={styles.pointsInfoTitle}>如何获得积分</h4>
+                <ul className={styles.pointsInfoList}>
+                  <li><span className={styles.pointsInfoMethod}>发朋友圈</span><span className={styles.pointsInfoValue}>+5</span></li>
+                  <li><span className={styles.pointsInfoMethod}>分享链接</span><span className={styles.pointsInfoValue}>+2</span></li>
+                  <li><span className={styles.pointsInfoMethod}>好友完成分享</span><span className={styles.pointsInfoValue}>+10</span></li>
+                </ul>
+              </div>
+              <div className={styles.pointsInfoGroup}>
+                <h4 className={styles.pointsInfoTitle}>积分消耗</h4>
+                <ul className={styles.pointsInfoList}>
+                  <li><span className={styles.pointsInfoMethod}>AI 梦境解读</span><span className={styles.pointsInfoValue}>-10</span></li>
+                  <li><span className={styles.pointsInfoMethod}>故事重新生成</span><span className={styles.pointsInfoValue}>-8</span></li>
+                  <li><span className={styles.pointsInfoMethod}>梦墙置顶 (24h)</span><span className={styles.pointsInfoValue}>-15</span></li>
+                </ul>
+              </div>
+            </div>
+          )}
 
           {/* Medals */}
           <div className={styles.medalsGrid}>
@@ -750,6 +783,29 @@ export function Profile() {
           <div className={styles.settingsList}>
             <div className={styles.settingItem}>
               <div className={styles.settingInfo}>
+                <span className={styles.settingLabel}>Cookie 偏好设置</span>
+                <span className={styles.settingDesc}>选择您偏好的 Cookie 使用方式</span>
+              </div>
+              <button
+                className={styles.exportBtn}
+                onClick={() => {
+                  if (localStorage.getItem('cookieConsent') === 'accepted') {
+                    localStorage.removeItem('cookieConsent')
+                    showToast('已关闭 Cookie 偏好，下次访问将重新提示', 'info')
+                  } else {
+                    localStorage.setItem('cookieConsent', 'accepted')
+                    showToast('已开启 Cookie 偏好记录', 'success')
+                  }
+                }}
+                aria-label="设置 Cookie 偏好"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
                 <span className={styles.settingLabel}>清除所有历史记录</span>
                 <span className={styles.settingDesc}>此操作不可恢复</span>
               </div>
@@ -865,8 +921,8 @@ export function Profile() {
         message="确定要退出当前登录吗？"
         confirmText="退出"
         cancelText="取消"
-        onConfirm={() => {
-          logout()
+        onConfirm={async () => {
+          await logout()
           navigate('/login')
         }}
         onCancel={() => setShowLogoutConfirm(false)}

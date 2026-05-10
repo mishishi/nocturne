@@ -1,23 +1,65 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { checkInApi, achievementApi, apiWithRetry } from '../services/api'
+import { checkInApi, achievementApi, apiWithRetry, authApi } from '../services/api'
 import { useAuthStore } from './useAuthStore'
 import { openidService } from '../services/openidService'
 import { storage } from '../services/storageService'
-import { getAuthToken, setAuthToken, clearAuthToken } from '../utils/auth'
+import { getAuthToken, setAuthToken, clearAuthToken, markLogout, markLogin } from '../utils/auth'
 
-// Zustand persist 存储适配器 - 使用 storageService 实现内存缓存+防抖写入
+// Zustand persist 存储适配器 - 直接使用原生 localStorage
+// 注意：storageService 的 prefix 机制与 Zustand persist 的 name 冲突，
+// 为避免 key 不匹配，直接使用原生 localStorage
+// eslint-disable-next-line @typescript-eslint/no-explicit any
 const storageAdapter = {
   getItem: (name: string): string | null => {
-    return storage.get(name) ?? null
+    try {
+      // 优先查找正确 key，其次查找旧版双重前缀 key（兼容迁移）
+      const correct = localStorage.getItem(name)
+      if (correct) {
+        // 防御：如果存储的是 [object Object] 或无效 JSON，清除并返回 null
+        if (correct === '[object Object]' || (correct.startsWith('{') && !correct.endsWith('}'))) {
+          console.warn(`[Storage] Detected corrupted data in ${name}, clearing...`)
+          localStorage.removeItem(name)
+          return null
+        }
+        try {
+          JSON.parse(correct)
+          return correct
+        } catch {
+          console.warn(`[Storage] Failed to parse ${name}, clearing...`)
+          localStorage.removeItem(name)
+          return null
+        }
+      }
+      // 旧版 key 带了一层 yeelin_ 前缀
+      const oldKey = 'yeelin_' + name
+      const old = localStorage.getItem(oldKey)
+      if (old) {
+        // 迁移：删除旧 key
+        localStorage.removeItem(oldKey)
+      }
+      return old
+    } catch {
+      return null
+    }
   },
   setItem: (name: string, value: string): void => {
-    storage.set(name, value)
+    try {
+      localStorage.setItem(name, value)
+    } catch {
+      // Storage full or unavailable
+    }
   },
   removeItem: (name: string): void => {
-    storage.remove(name)
+    try {
+      localStorage.removeItem(name)
+      localStorage.removeItem('yeelin_' + name) // 也清理旧 key
+    } catch {
+      // Ignore
+    }
   }
-}
+};
+
 import type { User } from '../types'
 
 // Re-export User from shared types
@@ -88,13 +130,52 @@ export interface PendingRequest {
 
 // Predefined tags
 export const DREAM_TAGS = [
-  { id: 'peaceful', label: '平静', icon: '😌', color: '#64D8CB' },
-  { id: 'adventure', label: '冒险', icon: '⚔️', color: '#F4A261' },
-  { id: 'mystery', label: '神秘', icon: '🔮', color: '#9B7EBD' },
-  { id: 'nightmare', label: '噩梦', icon: '😱', color: '#E76F51' },
-  { id: 'joyful', label: '欢乐', icon: '😊', color: '#F4D35E' },
-  { id: 'fantasy', label: '奇幻', icon: '✨', color: '#A8DADC' }
+  { id: 'peaceful', label: '平静', icon: 'peaceful', color: '#64D8CB' },
+  { id: 'adventure', label: '冒险', icon: 'adventure', color: '#F4A261' },
+  { id: 'mystery', label: '神秘', icon: 'mystery', color: '#9B7EBD' },
+  { id: 'nightmare', label: '噩梦', icon: 'nightmare', color: '#E76F51' },
+  { id: 'joyful', label: '欢乐', icon: 'joyful', color: '#F4D35E' },
+  { id: 'fantasy', label: '奇幻', icon: 'fantasy', color: '#A8DADC' }
 ]
+
+// SVG icons for emotion tags (consistent dreamy style)
+export const EMOTION_ICONS: Record<string, JSX.Element> = {
+  peaceful: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  ),
+  adventure: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 20h18L12 4z" />
+      <path d="M12 4l4 8h-8l4-8z" />
+    </svg>
+  ),
+  mystery: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  ),
+  nightmare: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      <path d="M8 3l-1 2M16 3l1 2" strokeOpacity="0.5" />
+      <path d="M3 12h2M19 12h2" strokeOpacity="0.5" />
+    </svg>
+  ),
+  joyful: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </svg>
+  ),
+  fantasy: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+      <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1zM19 5l0.75 2.25L22 8l-2.25.75L19 11l-.75-2.25L16 8l2.25-.75L19 5z" strokeOpacity="0.6" />
+    </svg>
+  )
+}
 
 export interface Achievement {
   id: string
@@ -105,6 +186,13 @@ export interface Achievement {
   // 解锁条件提示（未解锁时显示）
   hint?: string
 }
+
+// Medal definitions (mirrors server-side MEDALS)
+export const MEDALS = [
+  { id: 'moonlight', name: '月光勋章', icon: '🌙', description: '朋友圈首次分享' },
+  { id: 'newmoon', name: '新月勋章', icon: '🌑', description: '邀请好友成功' },
+  { id: 'meteor', name: '流星成就', icon: '☄️', description: '连续分享7天' }
+]
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
@@ -127,6 +215,62 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: '保存10个故事',
     icon: '📚',
     hint: '保存更多故事以解锁'
+  },
+  {
+    id: 'first_share',
+    title: '初次分享',
+    description: '首次分享梦境到梦墙',
+    icon: '🔗',
+    hint: '分享故事到梦墙即可解锁'
+  },
+  {
+    id: 'social_butterfly',
+    title: '社交蝴蝶',
+    description: '拥有5位好友',
+    icon: '🦋',
+    hint: '添加更多好友以解锁'
+  },
+  {
+    id: 'dream_wall_contributor',
+    title: '梦墙使者',
+    description: '在梦墙发布3篇内容',
+    icon: '🌌',
+    hint: '在梦墙发布更多内容'
+  },
+  {
+    id: 'early_bird',
+    title: '早起鸟',
+    description: '连续签到3天',
+    icon: '🐦',
+    hint: '坚持每日签到'
+  },
+  {
+    id: 'reflective',
+    title: '内省者',
+    description: '为5个故事添加私人笔记',
+    icon: '📝',
+    hint: '在故事详情页添加笔记'
+  },
+  {
+    id: 'tag_explorer',
+    title: '标签探索者',
+    description: '使用过所有梦境标签',
+    icon: '🏷️',
+    hint: '尝试使用不同标签记录梦境'
+  },
+  {
+    id: 'popular_dream',
+    title: '人气梦境',
+    description: '单篇梦墙内容获得10个赞',
+    icon: '💖',
+    hint: '发布优质内容吸引更多点赞'
+  },
+  {
+    id: 'dream_master',
+    title: '梦境大师',
+    description: '解锁所有其他成就',
+    icon: '👑',
+    hint: '继续探索，解锁所有成就'
   }
 ]
 
@@ -170,6 +314,11 @@ interface DreamState {
   checkedInToday: boolean
   consecutiveDays: number
 
+  // Achievement tracking
+  wallPostCount: number  // Track wall posts for dream_wall_contributor
+  hasSharedToWall: boolean  // Track first_share
+  tagsUsed: string[]  // Track unique tags used
+
   // Settings
   fontSize: 'small' | 'medium' | 'large'
   theme: 'starry' | 'aurora' | 'dark' | 'light'
@@ -200,6 +349,7 @@ interface DreamState {
   unlockAchievement: (id: string) => void
   clearRecentlyUnlocked: (id: string) => void
   addPoints: (amount: number) => void
+  deductPoints: (amount: number) => boolean  // Returns false if insufficient points
   unlockMedal: (medalId: string) => void
   setShareStats: (stats: { points: number; medals: string[]; consecutiveShares: number; lastShareDate: string | null }) => void
   setFontSize: (size: 'small' | 'medium' | 'large') => void
@@ -207,6 +357,8 @@ interface DreamState {
   setReduceMotion: (reduce: boolean) => void
   setAmbientSound: (sound: 'none' | 'dreamPad' | 'whiteNoise' | 'rain') => void
   setAmbientVolume: (volume: number) => void
+  incrementWallPostCount: () => void
+  setHasSharedToWall: (shared: boolean) => void
   reset: () => void
   // Auth actions
   setUser: (user: User | null, token?: string | null, previousOpenid?: string) => void
@@ -220,6 +372,7 @@ interface DreamState {
   setCheckInStatus: (checkedInToday: boolean, consecutiveDays: number) => void
   // Achievement actions
   syncAchievementsFromServer: () => Promise<void>
+  checkAndUnlockAchievements: () => void
 }
 
 // Helper to check 7-day streak
@@ -276,6 +429,9 @@ const initialState = {
   pendingRequests: { received: [] as PendingRequest[], sent: [] as PendingRequest[] },
   checkedInToday: false,
   consecutiveDays: 0,
+  wallPostCount: 0,
+  hasSharedToWall: false,
+  tagsUsed: [],
   fontSize: 'medium' as const,
   theme: 'starry' as const,
   reduceMotion: false,
@@ -417,6 +573,20 @@ export const useDreamStore = create<DreamState>()(
           newAchievements.push('week_streak')
         }
 
+        // Track tags used across all history
+        const allTags = [...new Set([...state.tagsUsed, ...newSession.tags])]
+
+        // Tag explorer - use all 6 different tags
+        if (allTags.length >= 6 && !newAchievements.includes('tag_explorer')) {
+          newAchievements.push('tag_explorer')
+        }
+
+        // Reflective - 5 stories with private notes
+        const storiesWithNotes = historyWithNew.filter(s => s.privateNote && s.privateNote.trim().length > 0).length
+        if (storiesWithNotes >= 5 && !newAchievements.includes('reflective')) {
+          newAchievements.push('reflective')
+        }
+
         // Track newly unlocked achievements
         const newlyUnlocked = newAchievements.filter(
           id => !state.achievements.includes(id)
@@ -426,6 +596,7 @@ export const useDreamStore = create<DreamState>()(
           history: [newSession, ...state.history],
           achievements: newAchievements,
           recentlyUnlocked: newlyUnlocked,
+          tagsUsed: allTags,
           currentSession: initialState.currentSession
         }))
 
@@ -440,6 +611,10 @@ export const useDreamStore = create<DreamState>()(
                 checkedInToday: true,
                 consecutiveDays: checkInResult.data.consecutiveDays
               })
+              // Check early_bird achievement (3 consecutive days)
+              if (checkInResult.data.consecutiveDays >= 3) {
+                get().checkAndUnlockAchievements()
+              }
             }
           } catch (error) {
             console.error('Failed to record check-in:', error)
@@ -555,6 +730,13 @@ export const useDreamStore = create<DreamState>()(
           points: state.points + amount
         })),
 
+      deductPoints: (amount) => {
+        const state = get()
+        if (state.points < amount) return false
+        set({ points: state.points - amount })
+        return true
+      },
+
       unlockMedal: (medalId) =>
         set((state) => {
           if (state.medals.includes(medalId)) return state
@@ -584,6 +766,71 @@ export const useDreamStore = create<DreamState>()(
       setAmbientVolume: (volume) =>
         set({ ambientVolume: volume }),
 
+      incrementWallPostCount: () =>
+        set((state) => {
+          const newCount = state.wallPostCount + 1
+          const newAchievements = [...state.achievements]
+
+          // First share achievement
+          if (!state.hasSharedToWall && !newAchievements.includes('first_share')) {
+            newAchievements.push('first_share')
+          }
+
+          // Dream wall contributor - 3 posts
+          if (newCount >= 3 && !newAchievements.includes('dream_wall_contributor')) {
+            newAchievements.push('dream_wall_contributor')
+          }
+
+          const newlyUnlocked = newAchievements.filter(
+            id => !state.achievements.includes(id)
+          )
+
+          return {
+            wallPostCount: newCount,
+            hasSharedToWall: true,
+            achievements: newAchievements,
+            recentlyUnlocked: newlyUnlocked.length > 0
+              ? [...state.recentlyUnlocked, ...newlyUnlocked]
+              : state.recentlyUnlocked
+          }
+        }),
+
+      setHasSharedToWall: (shared) =>
+        set({ hasSharedToWall: shared }),
+
+      checkAndUnlockAchievements: () => {
+        const state = get()
+        const newAchievements = [...state.achievements]
+
+        // Early bird - 3 consecutive check-in days
+        if (state.consecutiveDays >= 3 && !newAchievements.includes('early_bird')) {
+          newAchievements.push('early_bird')
+        }
+
+        // Social butterfly - 5 friends
+        if (state.friends.length >= 5 && !newAchievements.includes('social_butterfly')) {
+          newAchievements.push('social_butterfly')
+        }
+
+        // Dream master - all other achievements unlocked
+        const otherAchievements = ACHIEVEMENTS.filter(a =>
+          a.id !== 'dream_master' && !newAchievements.includes(a.id)
+        )
+        if (otherAchievements.length === 0 && !newAchievements.includes('dream_master')) {
+          newAchievements.push('dream_master')
+        }
+
+        if (newAchievements.length > state.achievements.length) {
+          const newlyUnlocked = newAchievements.filter(
+            id => !state.achievements.includes(id)
+          )
+          set({
+            achievements: newAchievements,
+            recentlyUnlocked: [...state.recentlyUnlocked, ...newlyUnlocked]
+          })
+        }
+      },
+
       reset: () =>
         set({ currentSession: initialState.currentSession }),
 
@@ -595,8 +842,10 @@ export const useDreamStore = create<DreamState>()(
         // Also update the auth store
         useAuthStore.getState().setUser(user, token)
         set({ user, token: token ?? null })
-        // Sync achievements from server when user logs in
+        // Mark user as logged in for hasValidToken() check
         if (user) {
+          markLogin()
+          // Sync achievements from server when user logs in
           useDreamStore.getState().syncAchievementsFromServer()
         }
         // Migrate history items from guest openid to logged-in openid
@@ -611,15 +860,23 @@ export const useDreamStore = create<DreamState>()(
         }
       },
 
-      logout: () => {
+      logout: async () => {
+        // 调用后端接口清除 httpOnly cookies
+        try {
+          await authApi.logout()
+        } catch (e) {
+          console.warn('[Logout] 后端登出失败，继续本地登出流程', e)
+        }
         openidService.remove()
         // Clear token Cookie
         clearAuthToken()
-        // Clear the persist storage entirely
-        localStorage.removeItem('yeelin-dream-storage')
+        // Clear login state flag
+        markLogout()
+        // Clear refresh token
+        clearRefreshToken()
         // Also clear the auth store
         useAuthStore.getState().logout()
-        // Reset to initial state
+        // Reset to initial state (preserve persist settings like theme, fontSize)
         set({
           ...initialState,
           user: null,
@@ -670,8 +927,17 @@ export const useDreamStore = create<DreamState>()(
         // token removed - stored in Cookie for security
         // friends removed - should be loaded from API, not persisted
         checkedInToday: state.checkedInToday,
-        consecutiveDays: state.consecutiveDays
-      })
+        consecutiveDays: state.consecutiveDays,
+        wallPostCount: state.wallPostCount,
+        hasSharedToWall: state.hasSharedToWall,
+        tagsUsed: state.tagsUsed
+      }) as DreamState,
+      // Restore login state flag when rehydrating user
+      onRehydrateStorage: () => (state) => {
+        if (state?.user) {
+          markLogin()
+        }
+      }
     }
   )
 )
