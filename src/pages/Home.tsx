@@ -14,7 +14,7 @@ import styles from './Home.module.css'
 const LAST_VISIT_KEY = 'yeelin_last_visit'
 
 export function Home() {
-  const { achievements, history, user, currentSession, checkedInToday, consecutiveDays, setCheckInStatus, _hasHydrated } = useDreamStore()
+  const { achievements, history, user, currentSession, checkedInToday, consecutiveDays, setCheckInStatus } = useDreamStore()
   const [showAchievementCenter, setShowAchievementCenter] = useState(false)
   const [isReturningUser, setIsReturningUser] = useState(false)
   const [isCheckingIn, setIsCheckingIn] = useState(false)
@@ -256,7 +256,7 @@ export function Home() {
       <DailyHighlights />
 
       {/* Check-in Card - visible to all users */}
-      {_hasHydrated ? user ? (
+      {user ? (
         <section className={styles.checkInSection}>
           <div className={styles.checkInCard}>
             <div className={styles.checkInLeft}>
@@ -303,7 +303,7 @@ export function Home() {
             <span className={styles.checkInGuestArrow}>→</span>
           </Link>
         </section>
-      ) : null}
+      )}
 
       {/* Sample Stories - only for new users */}
       {isNewUser && (

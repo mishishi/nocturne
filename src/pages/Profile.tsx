@@ -14,6 +14,7 @@ import { usePushNotification } from '../hooks/usePushNotification'
 import { useSupportChat } from '../hooks/useSupportChat'
 import { shareApi, UserStats, checkInApi, api, wallApi, authApi, type Session, type DreamWallPost } from '../services/api'
 import { openidService } from '../services/openidService'
+import { hasValidToken } from '../utils/auth'
 import styles from './Profile.module.css'
 
 const FONT_SIZE_OPTIONS = [
@@ -42,7 +43,7 @@ const formatStatValue = (value: number | null): string => {
 
 export function Profile() {
   const navigate = useNavigate()
-  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus, setHistory, _hasHydrated } = useDreamStore()
+  const { history, achievements, clearHistory, fontSize, setFontSize, theme, setTheme, reduceMotion, setReduceMotion, points, medals, consecutiveShares, setShareStats, currentSession, logout, user, checkedInToday, consecutiveDays, setCheckInStatus, setHistory } = useDreamStore()
   const { language, setLanguage } = useSettingsStore()
   const { permission, isSubscribed, reminderEnabled, reminderTime, isSupported, subscribe, unsubscribe, toggleReminder, updateReminderTime } = usePushNotification()
   const { open: openSupportChat } = useSupportChat({ websiteId: import.meta.env.VITE_CRISP_WEBSITE_ID || '' })
@@ -833,7 +834,7 @@ export function Profile() {
                 </svg>
               </button>
             </div>
-            {_hasHydrated && user && (
+            {hasValidToken() && (
               <>
               <div className={`${styles.settingItem} ${styles.dangerItem}`}>
                 <div className={styles.settingInfo}>
