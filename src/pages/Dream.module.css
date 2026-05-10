@@ -94,6 +94,13 @@
   opacity: 0.8;
 }
 
+.privacyNotice {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+  margin: var(--space-2) 0 0 0;
+  opacity: 0.7;
+}
+
 /* ============================================
    Emotion Selection
    ============================================ */
@@ -139,10 +146,20 @@
   transform: translateY(-2px);
 }
 
+.emotionCard:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
 .emotionCard.selected {
   background: rgba(244, 211, 94, 0.1);
   border-color: var(--tag-color, var(--color-golden));
   box-shadow: 0 0 20px rgba(244, 211, 94, 0.15);
+}
+
+.emotionCard.selected .emotionIcon {
+  transform: scale(1.1);
+  box-shadow: 0 0 16px var(--tag-color, rgba(244, 211, 94, 0.4));
 }
 
 .emotionCard:disabled {
@@ -152,8 +169,21 @@
 }
 
 .emotionIcon {
-  font-size: 2rem;
-  line-height: 1;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tag-color, rgba(26, 58, 92, 0.6));
+  border-radius: 50%;
+  transition: all 0.25s var(--ease-dream);
+}
+
+.emotionIcon svg {
+  width: 60%;
+  height: 60%;
+  stroke: #fff;
+  fill: none;
 }
 
 .emotionLabel {
@@ -372,7 +402,7 @@
 }
 
 .retryBtn:hover {
-  background: #d85a3c;
+  background: var(--color-sunset);
   transform: scale(1.02);
 }
 

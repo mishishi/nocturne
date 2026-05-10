@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useDreamStore, DREAM_TAGS } from '../hooks/useDreamStore'
+import { useDreamStore, DREAM_TAGS, EMOTION_ICONS } from '../hooks/useDreamStore'
 import { useVoiceWaveform } from '../hooks/useVoiceWaveform'
 import { api } from '../services/api'
 import { openidService } from '../services/openidService'
@@ -481,6 +481,7 @@ export function Dream() {
             <div className={styles.stepHeader}>
               <h1 className={styles.title}>昨晚的梦，你感觉如何？</h1>
               <p className={styles.subtitle}>选择最接近的情绪标签</p>
+              <p className={styles.privacyNotice}>🔒 默认私密，仅你可见</p>
             </div>
 
             <div
@@ -505,7 +506,7 @@ export function Dream() {
                     animationDelay: `${index * 0.05}s`
                   } as React.CSSProperties}
                 >
-                  <span className={styles.emotionIcon}>{tag.icon}</span>
+                  <span className={styles.emotionIcon}>{EMOTION_ICONS[tag.icon]}</span>
                   <span className={styles.emotionLabel}>{tag.label}</span>
                 </button>
               ))}
@@ -551,6 +552,7 @@ export function Dream() {
             <div className={styles.stepHeader}>
               <h1 className={styles.title}>描述你记得的画面</h1>
               <p className={styles.subtitle}>场景、人物、颜色、声音，任何细节都好</p>
+              <p className={styles.privacyNotice}>🔒 默认私密，仅你可见</p>
             </div>
 
             {/* Voice Input */}
@@ -617,6 +619,7 @@ export function Dream() {
                   setError('')
                   setIsNetworkError(false)
                 }}
+                aria-label="梦境描述"
                 placeholder="我梦到了...
 
 比如：
@@ -661,6 +664,7 @@ export function Dream() {
             <div className={styles.stepHeader}>
               <h1 className={styles.title}>梦里有这些吗？</h1>
               <p className={styles.subtitle}>快速勾选，帮助 AI 更好地理解</p>
+              <p className={styles.privacyNotice}>🔒 默认私密，仅你可见</p>
             </div>
 
             <div className={styles.elementsGrid}>
